@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProfessorPintScene",
+  "type": "object",
+  "required": ["id", "start", "end", "bg", "characters", "subtitle"],
+  "properties": {
+    "id": { "type": "string" },
+    "start": { "type": "integer", "minimum": 0 },
+    "end": { "type": "integer", "minimum": 1 },
+    "bg": { "type": "string", "enum": ["pub", "classroom"] },
+    "boardText": { "type": "string" },
+    "camera": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number", "minimum": 0.1, "maximum": 3 }
+      }
+    },
+    "characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["character", "x", "y", "emotion"],
+        "properties": {
+          "character": { "type": "string", "enum": ["professorPint", "averageJoe"] },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "emotion": { "type": "string", "enum": ["neutral", "happy", "shocked", "thinking", "angry", "sad", "confused"] },
+          "talking": { "type": "boolean" },
+          "gesture": { "type": "string", "enum": ["idle", "wave", "point", "hold", "shrug", "explain"] },
+          "prop": { "type": "string" },
+          "propPosition": { "type": "string", "enum": ["hold", "float", "none"] }
+        }
+      }
+    },
+    "subtitle": { "type": "string" },
+    "transition": { "type": "string", "enum": ["crossfade", "wipe", "zoomIn", "slide", "iris", "none"] }
+  }
+}

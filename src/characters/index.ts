@@ -1,0 +1,1 @@
+export { ProfessorPint } from './ProfessorPint';
