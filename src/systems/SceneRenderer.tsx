@@ -1,9 +1,11 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, Sequence, useCurrentFrame } from 'remotion';
 import { Camera } from './Camera';
 import { Subtitles } from './Subtitles';
 import { Transition, getTransitionProgress } from './Transitions';
 import type { TransitionType } from './Transitions';
+import { AudioPlayer, isTalkingAtFrame } from './AudioSync';
+import type { AudioSegment } from './AudioSync';
 import { ProfessorPint } from '../characters/ProfessorPint';
 import { Pub } from '../backgrounds/Pub';
 import type { Emotion } from '../animations/emotions';
@@ -149,10 +151,16 @@ const renderCharacter = (
 
 interface SceneRendererProps {
   scenes: SceneData[];
+  /** Audio segments for lip sync (from ElevenLabsTTS) */
+  audioSegments?: AudioSegment[];
   showDebug?: boolean;
 }
 
-export const SceneRenderer: React.FC<SceneRendererProps> = ({ scenes, showDebug = false }) => {
+export const SceneRenderer: React.FC<SceneRendererProps> = ({
+  scenes,
+  audioSegments = [],
+  showDebug = false,
+}) => {
   const frame = useCurrentFrame();
 
   const currentScene = findSceneAtFrame(scenes, frame);
@@ -177,6 +185,14 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({ scenes, showDebug 
     ? getTransitionProgress(frame, currentScene.start, transition.duration)
     : 1;
 
+  // Audio-driven talking: if audio segments exist, override scene talking state
+  const resolveCharacterTalking = (char: SceneCharacter): boolean => {
+    if (audioSegments.length > 0) {
+      return isTalkingAtFrame(audioSegments, char.id, frame);
+    }
+    return char.talking;
+  };
+
   // Build scene content
   const sceneContent = (
     <Camera
@@ -198,17 +214,25 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({ scenes, showDebug 
 
       {/* Characters */}
       {currentScene.characters.map((char) => {
-        // Find previous emotion for this character
         const prevChar = previousScene?.characters.find((c) => c.id === char.id);
         const prevEmotion: Emotion = prevChar?.emotion ?? char.emotion;
+        // Use audio-driven talking if available
+        const talkingChar = { ...char, talking: resolveCharacterTalking(char) };
 
-        return renderCharacter(char, prevEmotion, emotionProgress);
+        return renderCharacter(talkingChar, prevEmotion, emotionProgress);
       })}
     </Camera>
   );
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#1A1A1A' }}>
+      {/* Audio playback */}
+      {audioSegments.length > 0 && audioSegments.map((seg, i) => (
+        <Sequence key={`audio-seq-${i}`} from={seg.startFrame}>
+          <AudioPlayer segments={[seg]} volume={1} />
+        </Sequence>
+      ))}
+
       {/* Apply transition to scene content */}
       {transition.type !== 'none' && transitionProgress < 1 ? (
         <Transition type={transition.type} progress={transitionProgress}>
@@ -243,7 +267,16 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({ scenes, showDebug 
           <br />
           Frame {frame} | {currentScene.start}-{currentScene.end}
           <br />
-          {currentScene.characters.map((c) => `${c.id}: ${c.emotion}${c.talking ? ' (talking)' : ''}`).join(' | ')}
+          {currentScene.characters.map((c) => {
+            const talking = resolveCharacterTalking(c);
+            return `${c.id}: ${c.emotion}${talking ? ' (talking)' : ''}`;
+          }).join(' | ')}
+          {audioSegments.length > 0 && (
+            <>
+              <br />
+              Audio: {audioSegments.length} segments
+            </>
+          )}
         </div>
       )}
     </AbsoluteFill>
