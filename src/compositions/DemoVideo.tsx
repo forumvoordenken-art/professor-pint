@@ -1,142 +1,135 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, interpolate } from 'remotion';
-import { ProfessorPint } from '../characters/ProfessorPint';
-import { Pub } from '../backgrounds/Pub';
-import { Subtitles } from '../systems/Subtitles';
-import { Camera } from '../systems/Camera';
-import type { Emotion } from '../animations/emotions';
+import { SceneRenderer } from '../systems/SceneRenderer';
+import type { SceneData } from '../systems/SceneRenderer';
 
 // Demo: 20 seconds at 30fps = 600 frames
-// Scenes showcase all animation features
+// Showcases: SceneRenderer, camera moves, transitions, emotion changes, talking
 
-interface SceneConfig {
-  startFrame: number;
-  endFrame: number;
-  emotion: Emotion;
-  talking: boolean;
-  subtitle: string;
-  boardText: string;
-}
-
-const SCENES: SceneConfig[] = [
+const DEMO_SCENES: SceneData[] = [
   {
-    startFrame: 0,
-    endFrame: 120,
-    emotion: 'neutral',
-    talking: false,
+    id: 'intro',
+    start: 0,
+    end: 120,
+    bg: 'pub',
+    boardText: "TODAY'S TOPIC",
+    camera: { x: 0, y: -50, zoom: 1.1 },
+    characters: [
+      {
+        id: 'professorPint',
+        x: 960,
+        y: 420,
+        scale: 2,
+        emotion: 'neutral',
+        talking: false,
+      },
+    ],
     subtitle: '',
-    boardText: "TODAY'S TOPIC",
+    transition: { type: 'crossfade', duration: 20 },
   },
   {
-    startFrame: 120,
-    endFrame: 240,
-    emotion: 'happy',
-    talking: true,
+    id: 'welcome',
+    start: 120,
+    end: 240,
+    bg: 'pub',
+    boardText: "TODAY'S TOPIC",
+    camera: { x: 50, y: 0, zoom: 1.3 },
+    characters: [
+      {
+        id: 'professorPint',
+        x: 960,
+        y: 420,
+        scale: 2,
+        emotion: 'happy',
+        talking: true,
+      },
+    ],
     subtitle: 'Welcome to the pub! Pull up a stool.',
-    boardText: "TODAY'S TOPIC",
+    transition: { type: 'crossfade', duration: 15 },
   },
   {
-    startFrame: 240,
-    endFrame: 360,
-    emotion: 'thinking',
-    talking: true,
-    subtitle: "Ever wondered why your brain lies to you about money?",
-    boardText: 'WHY YOU\'RE BROKE',
+    id: 'question',
+    start: 240,
+    end: 360,
+    bg: 'pub',
+    boardText: "WHY YOU'RE BROKE",
+    camera: { x: -30, y: 20, zoom: 1.15 },
+    characters: [
+      {
+        id: 'professorPint',
+        x: 960,
+        y: 420,
+        scale: 2,
+        emotion: 'thinking',
+        talking: true,
+      },
+    ],
+    subtitle: 'Ever wondered why your brain lies to you about money?',
+    transition: { type: 'wipe', duration: 18 },
   },
   {
-    startFrame: 360,
-    endFrame: 480,
-    emotion: 'shocked',
-    talking: true,
-    subtitle: 'Your savings account is losing value every single day!',
+    id: 'revelation',
+    start: 360,
+    end: 480,
+    bg: 'pub',
     boardText: 'INFLATION = -3%/yr',
+    camera: { x: 0, y: -20, zoom: 1.5 },
+    characters: [
+      {
+        id: 'professorPint',
+        x: 960,
+        y: 420,
+        scale: 2,
+        emotion: 'shocked',
+        talking: true,
+      },
+    ],
+    subtitle: 'Your savings account is losing value every single day!',
+    transition: { type: 'zoomIn', duration: 15 },
   },
   {
-    startFrame: 480,
-    endFrame: 540,
-    emotion: 'angry',
-    talking: true,
-    subtitle: "And nobody told you. That's the real scandal.",
+    id: 'anger',
+    start: 480,
+    end: 540,
+    bg: 'pub',
     boardText: 'THE TRUTH',
+    camera: { x: 60, y: 10, zoom: 1.6 },
+    characters: [
+      {
+        id: 'professorPint',
+        x: 960,
+        y: 420,
+        scale: 2,
+        emotion: 'angry',
+        talking: true,
+      },
+    ],
+    subtitle: "And nobody told you. That's the real scandal.",
+    transition: { type: 'slide', duration: 15 },
   },
   {
-    startFrame: 540,
-    endFrame: 600,
-    emotion: 'happy',
-    talking: false,
-    subtitle: "But don't worry. That's what I'm here for.",
+    id: 'outro',
+    start: 540,
+    end: 600,
+    bg: 'pub',
     boardText: 'PROFESSOR PINT',
+    camera: { x: 0, y: 0, zoom: 1 },
+    characters: [
+      {
+        id: 'professorPint',
+        x: 960,
+        y: 420,
+        scale: 2,
+        emotion: 'happy',
+        talking: false,
+      },
+    ],
+    subtitle: "But don't worry. That's what I'm here for.",
+    transition: { type: 'iris', duration: 20 },
   },
 ];
 
 export const DemoVideo: React.FC = () => {
-  const frame = useCurrentFrame();
-
-  // Find current scene
-  const currentScene = SCENES.find(
-    (s) => frame >= s.startFrame && frame < s.endFrame
-  ) || SCENES[0];
-
-  // Find previous scene for emotion transitions
-  const sceneIndex = SCENES.indexOf(currentScene);
-  const previousScene = sceneIndex > 0 ? SCENES[sceneIndex - 1] : currentScene;
-
-  // Calculate emotion transition progress (over 10 frames from scene start)
-  const framesIntoScene = frame - currentScene.startFrame;
-  const emotionProgress = Math.min(1, framesIntoScene / 10);
-
-  // Character position (centered, standing behind bar area)
-  const charX = 960;
-  const charY = 420;
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: '#1A1A1A' }}>
-      {/* Background */}
-      <AbsoluteFill>
-        <Pub boardText={currentScene.boardText} width={1920} height={1080} />
-      </AbsoluteFill>
-
-      {/* Character */}
-      <div
-        style={{
-          position: 'absolute',
-          left: charX - 240,
-          top: charY - 180,
-          transform: 'scale(2)',
-          transformOrigin: 'center top',
-        }}
-      >
-        <ProfessorPint
-          emotion={currentScene.emotion}
-          previousEmotion={previousScene.emotion}
-          emotionTransitionProgress={emotionProgress}
-          talking={currentScene.talking}
-          scale={1}
-        />
-      </div>
-
-      {/* Subtitles */}
-      <Subtitles
-        text={currentScene.subtitle}
-        startFrame={currentScene.startFrame + 5}
-        endFrame={currentScene.endFrame - 5}
-      />
-
-      {/* Scene indicator (debug, remove later) */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 20,
-          right: 20,
-          color: 'rgba(255,255,255,0.3)',
-          fontSize: 14,
-          fontFamily: 'monospace',
-        }}
-      >
-        Scene {sceneIndex + 1}/{SCENES.length} | Frame {frame} | {currentScene.emotion} | {currentScene.talking ? 'talking' : 'idle'}
-      </div>
-    </AbsoluteFill>
-  );
+  return <SceneRenderer scenes={DEMO_SCENES} showDebug />;
 };
 
 export default DemoVideo;
