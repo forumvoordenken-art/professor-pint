@@ -6,6 +6,8 @@ import { Transition, getTransitionProgress } from './Transitions';
 import type { TransitionType } from './Transitions';
 import { AudioPlayer, isTalkingAtFrame } from './AudioSync';
 import type { AudioSegment } from './AudioSync';
+import { OverlayRenderer } from './Overlays';
+import type { OverlayData } from './Overlays';
 import { ProfessorPint } from '../characters/ProfessorPint';
 import { Pub } from '../backgrounds/Pub';
 import type { Emotion } from '../animations/emotions';
@@ -43,6 +45,7 @@ export interface SceneData {
   characters: SceneCharacter[];
   subtitle: string;
   transition?: SceneTransition;
+  overlays?: OverlayData[];
 }
 
 // ---- Helper: find scene at frame ----
@@ -153,12 +156,15 @@ interface SceneRendererProps {
   scenes: SceneData[];
   /** Audio segments for lip sync (from ElevenLabsTTS) */
   audioSegments?: AudioSegment[];
+  /** Global overlays (shown across all scenes) */
+  globalOverlays?: OverlayData[];
   showDebug?: boolean;
 }
 
 export const SceneRenderer: React.FC<SceneRendererProps> = ({
   scenes,
   audioSegments = [],
+  globalOverlays = [],
   showDebug = false,
 }) => {
   const frame = useCurrentFrame();
@@ -240,6 +246,14 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
         </Transition>
       ) : (
         sceneContent
+      )}
+
+      {/* Overlays (data cards, charts, etc.) */}
+      {currentScene.overlays && currentScene.overlays.length > 0 && (
+        <OverlayRenderer overlays={currentScene.overlays} />
+      )}
+      {globalOverlays.length > 0 && (
+        <OverlayRenderer overlays={globalOverlays} />
       )}
 
       {/* Subtitles (outside camera/transition so they stay stable) */}

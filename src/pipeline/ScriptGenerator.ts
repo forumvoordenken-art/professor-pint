@@ -5,6 +5,7 @@
 import type { SceneData } from '../systems/SceneRenderer';
 import type { Emotion } from '../animations/emotions';
 import type { TransitionType } from '../systems/Transitions';
+import type { OverlayData } from '../systems/Overlays';
 
 // ---- Script Config ----
 
@@ -200,6 +201,94 @@ const SUBTITLE_TEMPLATES: Record<string, Record<string, string>> = {
   },
 };
 
+// ---- Overlay generation per beat ----
+
+const generateOverlays = (
+  beatType: string,
+  topic: string,
+  startFrame: number,
+  endFrame: number,
+): OverlayData[] => {
+  const overlays: OverlayData[] = [];
+  const pad = 15; // frames padding from scene edges
+
+  switch (beatType) {
+    case 'intro':
+      // Topic card lower third
+      overlays.push({
+        type: 'topicCard',
+        startFrame: startFrame + pad,
+        endFrame: endFrame - pad,
+        props: { topic, subtitle: 'Professor Pint explains...' },
+      });
+      break;
+
+    case 'explain':
+      // Fact box with key insight
+      overlays.push({
+        type: 'factBox',
+        startFrame: startFrame + pad + 10,
+        endFrame: endFrame - pad,
+        props: {
+          text: `Most people misunderstand ${topic}. Here's why it matters.`,
+          accent: '?',
+          position: 'right',
+        },
+      });
+      break;
+
+    case 'example':
+      // Bar chart example
+      overlays.push({
+        type: 'barChart',
+        startFrame: startFrame + pad,
+        endFrame: endFrame - pad,
+        props: {
+          title: 'The Numbers',
+          bars: [
+            { label: 'Year 1', value: 100, color: '#D4A012' },
+            { label: 'Year 5', value: 128, color: '#E8B830' },
+            { label: 'Year 10', value: 163, color: '#F0C850' },
+            { label: 'Year 20', value: 265, color: '#FFD700' },
+          ],
+          position: 'left',
+        },
+      });
+      break;
+
+    case 'revelation':
+      // Stat card with big number
+      overlays.push({
+        type: 'statCard',
+        startFrame: startFrame + pad,
+        endFrame: endFrame - pad,
+        props: {
+          value: '165%',
+          label: 'Growth over 20 years',
+          position: 'right',
+          color: '#FF6B35',
+        },
+      });
+      break;
+
+    case 'recap':
+      // Summary fact box
+      overlays.push({
+        type: 'factBox',
+        startFrame: startFrame + pad,
+        endFrame: endFrame - pad,
+        props: {
+          text: `Key takeaway: Understand ${topic} and you're already ahead of 90% of people.`,
+          accent: '★',
+          position: 'right',
+        },
+      });
+      break;
+  }
+
+  return overlays;
+};
+
 // ---- Main generator ----
 
 /**
@@ -232,6 +321,8 @@ export const generateScript = (config: ScriptConfig): SceneData[] => {
     const subtitle = subtitleTemplate.replace(/\{topic\}/g, topic);
     const boardText = beat.boardText ?? generateBoardText(beat, topic, i);
 
+    const overlays = generateOverlays(beat.type, topic, startFrame, endFrame);
+
     scenes.push({
       id: `${beat.type}-${i}`,
       start: startFrame,
@@ -251,6 +342,7 @@ export const generateScript = (config: ScriptConfig): SceneData[] => {
       ],
       subtitle,
       transition: beat.transition,
+      overlays,
     });
 
     currentFrame = endFrame;

@@ -23,6 +23,8 @@
     "dev": "remotion studio",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
-    "lint": "eslint src && tsc"
+    "lint": "eslint src && tsc",
+    "render": "node scripts/render.mjs",
+    "render:dry": "node scripts/render.mjs --dry-run"
   }
 }
