@@ -10,8 +10,16 @@ import { OverlayRenderer } from './Overlays';
 import type { OverlayData } from './Overlays';
 import { ProfessorPint } from '../characters/ProfessorPint';
 import { AverageJoe } from '../characters/AverageJoe';
+import { Pharaoh } from '../characters/Pharaoh';
+import { Worker } from '../characters/Worker';
 import { Pub } from '../backgrounds/Pub';
 import { Classroom } from '../backgrounds/Classroom';
+import { Pyramids } from '../backgrounds/Pyramids';
+import { DesertConstruction } from '../backgrounds/DesertConstruction';
+import { InsidePyramid } from '../backgrounds/InsidePyramid';
+import { NileRiver } from '../backgrounds/NileRiver';
+import { WorkersVillage } from '../backgrounds/WorkersVillage';
+import { SphinxView } from '../backgrounds/SphinxView';
 import type { Emotion } from '../animations/emotions';
 import { MusicPlayer, SFXPlayer } from './MusicSFX';
 import type { MusicTrack, SoundEffect } from './MusicSFX';
@@ -75,6 +83,18 @@ const renderBackground = (bg: string, boardText: string): React.ReactNode => {
       return <Pub boardText={boardText} width={1920} height={1080} />;
     case 'classroom':
       return <Classroom boardText={boardText} width={1920} height={1080} />;
+    case 'pyramids':
+      return <Pyramids boardText={boardText} width={1920} height={1080} />;
+    case 'desertConstruction':
+      return <DesertConstruction boardText={boardText} width={1920} height={1080} />;
+    case 'insidePyramid':
+      return <InsidePyramid boardText={boardText} width={1920} height={1080} />;
+    case 'nileRiver':
+      return <NileRiver boardText={boardText} width={1920} height={1080} />;
+    case 'workersVillage':
+      return <WorkersVillage boardText={boardText} width={1920} height={1080} />;
+    case 'sphinxView':
+      return <SphinxView boardText={boardText} width={1920} height={1080} />;
     default:
       // Fallback: solid color with label
       return (
@@ -141,6 +161,48 @@ const renderCharacter = (
           }}
         >
           <AverageJoe
+            emotion={char.emotion}
+            previousEmotion={previousEmotion}
+            emotionTransitionProgress={emotionProgress}
+            talking={char.talking}
+            scale={1}
+          />
+        </div>
+      );
+    case 'pharaoh':
+      return (
+        <div
+          key={char.id}
+          style={{
+            position: 'absolute',
+            left: char.x - 130 * charScale,
+            top: char.y - 100 * charScale,
+            transform: `scale(${charScale})`,
+            transformOrigin: 'center top',
+          }}
+        >
+          <Pharaoh
+            emotion={char.emotion}
+            previousEmotion={previousEmotion}
+            emotionTransitionProgress={emotionProgress}
+            talking={char.talking}
+            scale={1}
+          />
+        </div>
+      );
+    case 'worker':
+      return (
+        <div
+          key={char.id}
+          style={{
+            position: 'absolute',
+            left: char.x - 130 * charScale,
+            top: char.y - 90 * charScale,
+            transform: `scale(${charScale})`,
+            transformOrigin: 'center top',
+          }}
+        >
+          <Worker
             emotion={char.emotion}
             previousEmotion={previousEmotion}
             emotionTransitionProgress={emotionProgress}

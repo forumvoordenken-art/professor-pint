@@ -2,6 +2,7 @@ import React from 'react';
 import { Composition } from 'remotion';
 import { DemoVideo } from './compositions/DemoVideo';
 import { DialogueDemo } from './compositions/DialogueDemo';
+import { PyramidsOfGiza } from './compositions/PyramidsOfGiza';
 import {
   CompoundInterestVideo,
   InflationVideo,
@@ -12,6 +13,7 @@ import {
 import { ProfessorPint } from './characters/ProfessorPint';
 import { AverageJoe } from './characters/AverageJoe';
 import { Pharaoh } from './characters/Pharaoh';
+import { Worker } from './characters/Worker';
 import { WallStreetBroker } from './characters/WallStreetBroker';
 import { CryptoBro } from './characters/CryptoBro';
 import { Banker } from './characters/Banker';
@@ -20,6 +22,11 @@ import { TaxAdvisor } from './characters/TaxAdvisor';
 import { Pub } from './backgrounds/Pub';
 import { Classroom } from './backgrounds/Classroom';
 import { Pyramids } from './backgrounds/Pyramids';
+import { DesertConstruction } from './backgrounds/DesertConstruction';
+import { InsidePyramid } from './backgrounds/InsidePyramid';
+import { NileRiver } from './backgrounds/NileRiver';
+import { WorkersVillage } from './backgrounds/WorkersVillage';
+import { SphinxView } from './backgrounds/SphinxView';
 
 // ---- Character preview helper ----
 const CharPreview: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -60,6 +67,9 @@ const MarketVendorPreview: React.FC = () => (
 const TaxAdvisorPreview: React.FC = () => (
   <CharPreview><TaxAdvisor emotion="thinking" talking={true} scale={2} /></CharPreview>
 );
+const WorkerPreview: React.FC = () => (
+  <CharPreview><Worker emotion="happy" talking={true} scale={2} /></CharPreview>
+);
 
 // Background preview wrappers
 const PubPreview: React.FC = () => (
@@ -70,6 +80,21 @@ const ClassroomPreview: React.FC = () => (
 );
 const PyramidsPreview: React.FC = () => (
   <Pyramids boardText="ANCIENT ECONOMICS" width={1920} height={1080} />
+);
+const DesertConstructionPreview: React.FC = () => (
+  <DesertConstruction boardText="BUILDING A PYRAMID" width={1920} height={1080} />
+);
+const InsidePyramidPreview: React.FC = () => (
+  <InsidePyramid boardText="INSIDE THE TOMB" width={1920} height={1080} />
+);
+const NileRiverPreview: React.FC = () => (
+  <NileRiver boardText="THE GREAT NILE" width={1920} height={1080} />
+);
+const WorkersVillagePreview: React.FC = () => (
+  <WorkersVillage boardText="WORKERS VILLAGE" width={1920} height={1080} />
+);
+const SphinxViewPreview: React.FC = () => (
+  <SphinxView boardText="THE GREAT SPHINX" width={1920} height={1080} />
 );
 
 export const RemotionRoot: React.FC = () => {
@@ -88,6 +113,16 @@ export const RemotionRoot: React.FC = () => {
         id="DialogueDemo"
         component={DialogueDemo}
         durationInFrames={900}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ===== PYRAMIDS OF GIZA (12 min) ===== */}
+      <Composition
+        id="Pyramids-of-Giza"
+        component={PyramidsOfGiza}
+        durationInFrames={21600}
         fps={30}
         width={1920}
         height={1080}
@@ -159,6 +194,15 @@ export const RemotionRoot: React.FC = () => {
         height={600}
       />
 
+      <Composition
+        id="Worker-Preview"
+        component={WorkerPreview}
+        durationInFrames={300}
+        fps={30}
+        width={800}
+        height={600}
+      />
+
       {/* ===== BACKGROUND PREVIEWS ===== */}
       <Composition
         id="Pub-Preview"
@@ -179,6 +223,47 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="Pyramids-Preview"
         component={PyramidsPreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      <Composition
+        id="DesertConstruction-Preview"
+        component={DesertConstructionPreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="InsidePyramid-Preview"
+        component={InsidePyramidPreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="NileRiver-Preview"
+        component={NileRiverPreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="WorkersVillage-Preview"
+        component={WorkersVillagePreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="SphinxView-Preview"
+        component={SphinxViewPreview}
         durationInFrames={300}
         fps={30}
         width={1920}

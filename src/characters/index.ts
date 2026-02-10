@@ -6,3 +6,4 @@ export { CryptoBro } from './CryptoBro';
 export { Banker } from './Banker';
 export { MarketVendor } from './MarketVendor';
 export { TaxAdvisor } from './TaxAdvisor';
+export { Worker } from './Worker';

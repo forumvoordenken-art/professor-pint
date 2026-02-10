@@ -1,0 +1,899 @@
+import React from 'react';
+import { SceneRenderer } from '../systems/SceneRenderer';
+import type { SceneData } from '../systems/SceneRenderer';
+
+// Piramiden van Giza – volledige 12-minuten video
+// 21 600 frames @ 30 fps = 720 s = 12 min
+// Based on National Geographic NL article
+
+const S: SceneData[] = [
+  // ============================================================
+  //  ACT 1 — PUB INTRO  (0 – 1 800 · 60 s)
+  // ============================================================
+  {
+    id: 'intro-1',
+    start: 0,
+    end: 300,
+    bg: 'pub',
+    boardText: 'PROFESSOR PINT',
+    camera: { x: 0, y: -40, zoom: 1.05 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 420, scale: 2, emotion: 'neutral', talking: false },
+    ],
+    subtitle: '',
+    transition: { type: 'crossfade', duration: 25 },
+  },
+  {
+    id: 'intro-2',
+    start: 300,
+    end: 600,
+    bg: 'pub',
+    boardText: 'PROFESSOR PINT',
+    camera: { x: 40, y: 0, zoom: 1.25 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 420, scale: 2, emotion: 'happy', talking: true },
+    ],
+    subtitle: 'Welkom terug bij Professor Pint! Pak een kruk en een biertje erbij.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+  {
+    id: 'intro-3',
+    start: 600,
+    end: 900,
+    bg: 'pub',
+    boardText: 'PIRAMIDEN VAN GIZA',
+    camera: { x: -20, y: 10, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 420, scale: 2, emotion: 'happy', talking: true },
+    ],
+    subtitle: 'Vandaag nemen we je mee naar het oude Egypte. We gaan het hebben over de Piramiden van Giza.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+  {
+    id: 'intro-4',
+    start: 900,
+    end: 1200,
+    bg: 'pub',
+    boardText: '2550 V.CHR.',
+    camera: { x: 30, y: -10, zoom: 1.35 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 420, scale: 2, emotion: 'thinking', talking: true },
+    ],
+    subtitle: 'Hoe bouwde je vierduizend jaar geleden een bouwwerk van honderdzevenenveertig meter hoog? Zonder kranen, zonder wielen, zonder machines?',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'intro-5',
+    start: 1200,
+    end: 1500,
+    bg: 'pub',
+    boardText: '2,3 MILJOEN BLOKKEN',
+    camera: { x: 0, y: 0, zoom: 1.5 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 420, scale: 2, emotion: 'shocked', talking: true },
+    ],
+    subtitle: 'Met tweeëntwintig honderd miljoen stenen blokken, die elk tussen de twee en dertien ton wegen. Laat dat even op je inwerken.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'intro-6',
+    start: 1500,
+    end: 1800,
+    bg: 'pub',
+    boardText: 'LATEN WE GAAN!',
+    camera: { x: -10, y: 20, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 420, scale: 2, emotion: 'happy', talking: true },
+    ],
+    subtitle: 'Kom, we gaan erheen. Ik neem je mee naar de woestijn!',
+    transition: { type: 'zoomIn', duration: 20 },
+  },
+
+  // ============================================================
+  //  ACT 2 — GIZA OVERZICHT  (1 800 – 3 600 · 60 s)
+  // ============================================================
+  {
+    id: 'giza-1',
+    start: 1800,
+    end: 2160,
+    bg: 'pyramids',
+    boardText: 'GIZA PLATEAU',
+    camera: { x: 0, y: -60, zoom: 0.95 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
+    ],
+    subtitle: 'Hier zijn we dan. Het Giza-plateau. Drieduizend jaar lang het grootste bouwwerk ter wereld.',
+    transition: { type: 'wipe', duration: 20 },
+  },
+  {
+    id: 'giza-2',
+    start: 2160,
+    end: 2520,
+    bg: 'pyramids',
+    boardText: 'DRIE PIRAMIDEN',
+    camera: { x: -80, y: -30, zoom: 1.1 },
+    characters: [
+      { id: 'professorPint', x: 250, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+    ],
+    subtitle: 'Je ziet hier drie piramiden. Links die van Chafre, in het midden de Grote Piramide van Choefoe, en rechts de kleinere van Menkaoere.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+  {
+    id: 'giza-3',
+    start: 2520,
+    end: 2880,
+    bg: 'pyramids',
+    boardText: 'GRAFMONUMENTEN',
+    camera: { x: 0, y: 0, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
+    ],
+    subtitle: 'De farao\'s van het oude Egypte hadden een goddelijke status. Na hun dood werden ze als goden beschouwd.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'giza-4',
+    start: 2880,
+    end: 3240,
+    bg: 'pyramids',
+    boardText: 'HET HIERNAMAALS',
+    camera: { x: 50, y: -20, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+      { id: 'pharaoh', x: 1500, y: 480, scale: 1.6, emotion: 'neutral', talking: false },
+    ],
+    subtitle: 'Ter voorbereiding op het hiernamaals lieten ze deze enorme grafmonumenten bouwen. Een huis voor de eeuwigheid.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'giza-5',
+    start: 3240,
+    end: 3600,
+    bg: 'pyramids',
+    boardText: 'WIE LIGT WAAR?',
+    camera: { x: 0, y: 10, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
+      { id: 'pharaoh', x: 1500, y: 480, scale: 1.6, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Laten we ze een voor een bekijken. We beginnen met de grootste: de piramide van Choefoe.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+
+  // ============================================================
+  //  ACT 3 — CHOEFOE'S PIRAMIDE  (3 600 – 5 400 · 60 s)
+  // ============================================================
+  {
+    id: 'khufu-1',
+    start: 3600,
+    end: 3960,
+    bg: 'pyramids',
+    boardText: 'CHOEFOE · 2550 V.CHR.',
+    camera: { x: 0, y: -80, zoom: 1.4 },
+    characters: [
+      { id: 'professorPint', x: 250, y: 520, scale: 1.6, emotion: 'neutral', talking: true },
+    ],
+    subtitle: 'Farao Choefoe was rond vijfentwintighonderd voor Christus de eerste die hier een piramide liet bouwen.',
+    transition: { type: 'wipe', duration: 18 },
+  },
+  {
+    id: 'khufu-2',
+    start: 3960,
+    end: 4320,
+    bg: 'pyramids',
+    boardText: '147 METER HOOG',
+    camera: { x: 0, y: -100, zoom: 1.6 },
+    characters: [
+      { id: 'professorPint', x: 250, y: 540, scale: 1.4, emotion: 'shocked', talking: true },
+    ],
+    subtitle: 'De oorspronkelijke hoogte? Honderdzevenenveertig meter. Dat is bijna vijftig verdiepingen hoog! Tegenwoordig is hij nog honderdachtendertig meter.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'khufu-3',
+    start: 4320,
+    end: 4680,
+    bg: 'desertConstruction',
+    boardText: '2,3 MILJOEN BLOKKEN',
+    camera: { x: 0, y: -40, zoom: 1.1 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'neutral', talking: false },
+    ],
+    subtitle: 'Hij bevat ongeveer twee komma drie miljoen stenen blokken. Elk blok weegt tussen de twee en dertien ton.',
+    transition: { type: 'slide', duration: 18 },
+  },
+  {
+    id: 'khufu-4',
+    start: 4680,
+    end: 5040,
+    bg: 'desertConstruction',
+    boardText: 'GROOTSTE PIRAMIDE',
+    camera: { x: 50, y: -20, zoom: 1.25 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Dit is de grootste piramide op het hele plateau. En een van de zeven wereldwonderen van de oudheid.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'khufu-5',
+    start: 5040,
+    end: 5400,
+    bg: 'desertConstruction',
+    boardText: 'NATIONAAL PROJECT',
+    camera: { x: -30, y: 10, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'thinking', talking: false },
+    ],
+    subtitle: 'Maar hoe hebben ze dit in hemelsnaam voor elkaar gekregen? Daar komen we zo op. Eerst kijken we naar de andere piramiden.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+
+  // ============================================================
+  //  ACT 4 — CHAFRE & DE SFINX  (5 400 – 7 200 · 60 s)
+  // ============================================================
+  {
+    id: 'khafre-1',
+    start: 5400,
+    end: 5760,
+    bg: 'pyramids',
+    boardText: 'CHAFRE · 2520 V.CHR.',
+    camera: { x: -120, y: -30, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
+    ],
+    subtitle: 'Ongeveer dertig jaar later bouwde farao Chafre de op een na grootste piramide. Honderdzesenendertig meter hoog.',
+    transition: { type: 'wipe', duration: 18 },
+  },
+  {
+    id: 'khafre-2',
+    start: 5760,
+    end: 6120,
+    bg: 'sphinxView',
+    boardText: 'DE SFINX',
+    camera: { x: -40, y: 0, zoom: 1.1 },
+    characters: [
+      { id: 'professorPint', x: 1400, y: 500, scale: 1.8, emotion: 'shocked', talking: true },
+    ],
+    subtitle: 'Maar het meest bijzondere aan Chafre\'s complex? De Sfinx. Het grootste en bekendste sfinxbeeld ter wereld.',
+    transition: { type: 'slide', duration: 18 },
+  },
+  {
+    id: 'khafre-3',
+    start: 6120,
+    end: 6480,
+    bg: 'sphinxView',
+    boardText: '73M LANG · 20M HOOG',
+    camera: { x: -80, y: -20, zoom: 1.25 },
+    characters: [
+      { id: 'professorPint', x: 1400, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+    ],
+    subtitle: 'Drieënzeventig meter lang en twintig meter hoog. Een lichaam van een leeuw met het hoofd van een farao. Uitgehouwen uit één enorm kalksteenblok.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'khafre-4',
+    start: 6480,
+    end: 6840,
+    bg: 'sphinxView',
+    boardText: 'MYSTERIE',
+    camera: { x: -60, y: 20, zoom: 1.35 },
+    characters: [
+      { id: 'professorPint', x: 1400, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+    ],
+    subtitle: 'Het is nog steeds onduidelijk of de Sfinx daadwerkelijk onder Chafre\'s heerschappij werd uitgehouwen. Het blijft een mysterie.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'khafre-5',
+    start: 6840,
+    end: 7200,
+    bg: 'sphinxView',
+    boardText: 'ICONISCH BEELD',
+    camera: { x: -100, y: -10, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 1400, y: 500, scale: 1.8, emotion: 'happy', talking: true },
+    ],
+    subtitle: 'Maar wat we wel weten: dit beeld heeft al viereneenhalf duizend jaar de woestijnstormen doorstaan. Indrukwekkend.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+
+  // ============================================================
+  //  ACT 5 — MENKAOERE  (7 200 – 8 640 · 48 s)
+  // ============================================================
+  {
+    id: 'menk-1',
+    start: 7200,
+    end: 7560,
+    bg: 'pyramids',
+    boardText: 'MENKAOERE · 2490 V.CHR.',
+    camera: { x: 120, y: -10, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 1500, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
+    ],
+    subtitle: 'De derde piramide werd rond tweeduizend vierhonderdnegentig voor Christus gebouwd door farao Menkaoere.',
+    transition: { type: 'wipe', duration: 18 },
+  },
+  {
+    id: 'menk-2',
+    start: 7560,
+    end: 7920,
+    bg: 'pyramids',
+    boardText: '65 METER HOOG',
+    camera: { x: 100, y: 0, zoom: 1.4 },
+    characters: [
+      { id: 'professorPint', x: 1500, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+    ],
+    subtitle: 'Hij is aanzienlijk kleiner: ongeveer vijfenzestig meter hoog. Maar van binnen is hij verrassend indrukwekkend.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'menk-3',
+    start: 7920,
+    end: 8280,
+    bg: 'insidePyramid',
+    boardText: 'BINNENIN MENKAOERE',
+    camera: { x: 0, y: -20, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'shocked', talking: true },
+    ],
+    subtitle: 'Unieke nisversieringen in de kamers en een indrukwekkend gewelfd plafond. Deze farao had smaak.',
+    transition: { type: 'iris', duration: 20 },
+  },
+  {
+    id: 'menk-4',
+    start: 8280,
+    end: 8640,
+    bg: 'insidePyramid',
+    boardText: 'VERDWENEN SARCOFAAG',
+    camera: { x: 20, y: 10, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'sad', talking: true },
+    ],
+    subtitle: 'En dan het trieste verhaal: in achttienhonderdachtendertig werd zijn sarcofaag per schip naar Groot-Brittannië vervoerd. Het schip zonk in de Middellandse Zee. De sarcofaag is nooit teruggevonden.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+
+  // ============================================================
+  //  ACT 6 — WIE BOUWDEN ZE?  (8 640 – 10 800 · 72 s)
+  // ============================================================
+  {
+    id: 'who-1',
+    start: 8640,
+    end: 9000,
+    bg: 'pub',
+    boardText: 'WIE BOUWDE ZE?',
+    camera: { x: 0, y: -20, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'thinking', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'thinking', talking: false },
+    ],
+    subtitle: 'Oké, even terug naar de pub. Want nu komt de grote vraag: wie hebben die piramiden eigenlijk gebouwd?',
+    transition: { type: 'slide', duration: 18 },
+  },
+  {
+    id: 'who-2',
+    start: 9000,
+    end: 9360,
+    bg: 'pub',
+    boardText: 'SLAVEN?',
+    camera: { x: 30, y: 0, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'angry', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'shocked', talking: false },
+    ],
+    subtitle: 'De Griekse historicus Herodotus beweerde ooit dat het slaven waren. Maar dat klopt niet. Dat is een mythe.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'who-3',
+    start: 9360,
+    end: 9720,
+    bg: 'pub',
+    boardText: 'VAKMENSEN',
+    camera: { x: -20, y: 10, zoom: 1.25 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'happy', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Het waren gespecialiseerde bouwarbeiders. Vakmensen! Archeologisch bewijs toont aan dat ze goed werden verzorgd.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'who-4',
+    start: 9720,
+    end: 10080,
+    bg: 'workersVillage',
+    boardText: 'ARBEIDERSSTEDEN',
+    camera: { x: 0, y: -30, zoom: 1.1 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Er werden speciale steden aangelegd voor de bouw. Tienduizenden arbeiders woonden hier samen.',
+    transition: { type: 'wipe', duration: 18 },
+  },
+  {
+    id: 'who-5',
+    start: 10080,
+    end: 10440,
+    bg: 'workersVillage',
+    boardText: 'GOED VERZORGD',
+    camera: { x: 40, y: 0, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Resten van bakkerijen en dierenbotten laten zien dat de arbeiders goed werden gevoed. Brood, vlees, bier. Niet slecht voor vierduizend jaar geleden.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'who-6',
+    start: 10440,
+    end: 10800,
+    bg: 'workersVillage',
+    boardText: 'NATIONAAL PROJECT',
+    camera: { x: -30, y: 20, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'neutral', talking: false },
+    ],
+    subtitle: 'Arbeiders, voedsel en materialen kwamen uit heel Egypte. Het was een nationaal project dat de macht en rijkdom van de farao onderstreepte.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+
+  // ============================================================
+  //  ACT 7 — TRANSPORT OVER DE NIJL  (10 800 – 12 600 · 60 s)
+  // ============================================================
+  {
+    id: 'nile-1',
+    start: 10800,
+    end: 11160,
+    bg: 'nileRiver',
+    boardText: 'DE NIJL',
+    camera: { x: 0, y: -20, zoom: 1.05 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'happy', talking: true },
+    ],
+    subtitle: 'Maar hoe kwamen al die miljoenen stenen blokken bij de piramiden? Via de Nijl natuurlijk!',
+    transition: { type: 'wipe', duration: 20 },
+  },
+  {
+    id: 'nile-2',
+    start: 11160,
+    end: 11520,
+    bg: 'nileRiver',
+    boardText: 'STEENTRANSPORT',
+    camera: { x: 40, y: 0, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'thinking', talking: true },
+      { id: 'worker', x: 1500, y: 500, scale: 1.5, emotion: 'neutral', talking: false },
+    ],
+    subtitle: 'Papyrusteksten en archeologische vondsten tonen aan dat schippers de Nijl en kunstmatige waterwegen gebruikten.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'nile-3',
+    start: 11520,
+    end: 11880,
+    bg: 'nileRiver',
+    boardText: 'BOTEN & WATERWEGEN',
+    camera: { x: -30, y: 10, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'neutral', talking: true },
+      { id: 'worker', x: 1500, y: 500, scale: 1.5, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Enorme boten vervoerden de stenen blokken stroomafwaarts. Sommige blokken kwamen van honderden kilometers verderop.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'nile-4',
+    start: 11880,
+    end: 12240,
+    bg: 'nileRiver',
+    boardText: 'LOGISTIEK WONDER',
+    camera: { x: 60, y: -10, zoom: 1.25 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'shocked', talking: true },
+    ],
+    subtitle: 'Bedenk even: geen GPS, geen motoren, geen modern gereedschap. En toch organiseerden ze het transport van miljoenen tonnen steen. Een logistiek wonder.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'nile-5',
+    start: 12240,
+    end: 12600,
+    bg: 'nileRiver',
+    boardText: 'HEEL EGYPTE WERKTE MEE',
+    camera: { x: 0, y: 0, zoom: 1.1 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'happy', talking: true },
+      { id: 'worker', x: 1500, y: 500, scale: 1.5, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Het hele land werkte mee. Van de steengroeves in het zuiden tot de bouwplaats bij Giza. Eén groot teamwork.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+
+  // ============================================================
+  //  ACT 8 — BOUWMETHODEN  (12 600 – 14 760 · 72 s)
+  // ============================================================
+  {
+    id: 'build-1',
+    start: 12600,
+    end: 12960,
+    bg: 'desertConstruction',
+    boardText: 'HOE BOUWDEN ZE?',
+    camera: { x: 0, y: -50, zoom: 1.05 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'neutral', talking: false },
+    ],
+    subtitle: 'Goed, de stenen zijn er. Maar hoe bouw je daar een piramide van? Daar zijn verschillende theorieën over.',
+    transition: { type: 'wipe', duration: 18 },
+  },
+  {
+    id: 'build-2',
+    start: 12960,
+    end: 13320,
+    bg: 'desertConstruction',
+    boardText: 'HELLINGEN / SCHANSEN',
+    camera: { x: -40, y: -20, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'thinking', talking: false },
+    ],
+    subtitle: 'De meest geaccepteerde theorie: hellingen. Grote schansen van aarde en steen waarmee ze de blokken omhoog sleepten.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'build-3',
+    start: 13320,
+    end: 13680,
+    bg: 'desertConstruction',
+    boardText: 'SLEDEN & TOUWEN',
+    camera: { x: 50, y: 0, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
+      { id: 'averageJoe', x: 1100, y: 540, scale: 1.4, emotion: 'neutral', talking: false },
+    ],
+    subtitle: 'Met sleden, touwen, rollers en hefbomen werkten teams van arbeiders samen. De hellingen werden gladgemaakt met water of natte klei.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'build-4',
+    start: 13680,
+    end: 14040,
+    bg: 'desertConstruction',
+    boardText: 'ZIGZAG OF SPIRAAL?',
+    camera: { x: 0, y: -60, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'thinking', talking: false },
+    ],
+    subtitle: 'Sommige wetenschappers denken dat de hellingen in een zigzag- of spiraalpatroon rond de piramide liepen. Maar daar is geen hard bewijs voor.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'build-5',
+    start: 14040,
+    end: 14400,
+    bg: 'desertConstruction',
+    boardText: 'INTERNE HELLINGEN?',
+    camera: { x: -20, y: -30, zoom: 1.25 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'shocked', talking: true },
+    ],
+    subtitle: 'Er is zelfs een theorie dat de hellingen binnenin de piramide zaten! Een soort intern rampsysteem. Fascinerend idee.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'build-6',
+    start: 14400,
+    end: 14760,
+    bg: 'desertConstruction',
+    boardText: 'PRECISIEWERK',
+    camera: { x: 30, y: 10, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
+      { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Wat we wel zeker weten: het was ongelooflijk precisiewerk. De blokken passen zo strak op elkaar dat je er geen mes tussen krijgt.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+
+  // ============================================================
+  //  ACT 9 — BINNENIN DE PIRAMIDE  (14 760 – 16 920 · 72 s)
+  // ============================================================
+  {
+    id: 'inside-1',
+    start: 14760,
+    end: 15120,
+    bg: 'insidePyramid',
+    boardText: 'BINNENIN',
+    camera: { x: 0, y: 0, zoom: 1.05 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'neutral', talking: true },
+    ],
+    subtitle: 'Kom, we gaan naar binnen. Pas op je hoofd, de gangen zijn laag.',
+    transition: { type: 'iris', duration: 22 },
+  },
+  {
+    id: 'inside-2',
+    start: 15120,
+    end: 15480,
+    bg: 'insidePyramid',
+    boardText: 'GRAFKAMERS',
+    camera: { x: -30, y: -20, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'thinking', talking: true },
+    ],
+    subtitle: 'Binnenin vind je grafkamers, smalle gangen en valse doorgangen. Alles ontworpen om grafrovers te misleiden.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'inside-3',
+    start: 15480,
+    end: 15840,
+    bg: 'insidePyramid',
+    boardText: 'HIËROGLIEFEN',
+    camera: { x: 40, y: 10, zoom: 1.35 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'happy', talking: true },
+    ],
+    subtitle: 'Op de muren zie je hiërogliefen. Teksten over het hiernamaals, spreuken voor de reis van de farao naar de godenwereld.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'inside-4',
+    start: 15840,
+    end: 16200,
+    bg: 'insidePyramid',
+    boardText: 'GEWELFD PLAFOND',
+    camera: { x: 0, y: -40, zoom: 1.25 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'shocked', talking: true },
+    ],
+    subtitle: 'Kijk eens naar dat plafond. Een perfect gewelfd plafond, gebouwd zonder cement of mortel. Pure ingenieurskunst.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'inside-5',
+    start: 16200,
+    end: 16560,
+    bg: 'insidePyramid',
+    boardText: 'GRAFROVERS',
+    camera: { x: -20, y: 20, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 480, scale: 1.8, emotion: 'angry', talking: true },
+      { id: 'averageJoe', x: 1300, y: 500, scale: 1.6, emotion: 'shocked', talking: false },
+    ],
+    subtitle: 'Helaas zijn bijna alle piramiden al in de oudheid geplunderd door grafrovers. De meeste schatten zijn verdwenen.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'inside-6',
+    start: 16560,
+    end: 16920,
+    bg: 'insidePyramid',
+    boardText: 'VALLEN & VALSE GANGEN',
+    camera: { x: 30, y: -10, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 480, scale: 1.8, emotion: 'thinking', talking: true },
+      { id: 'averageJoe', x: 1300, y: 500, scale: 1.6, emotion: 'thinking', talking: false },
+    ],
+    subtitle: 'De Egyptenaren probeerden de grafrovers tegen te houden met valstrikken, zware stenen deuren en doodlopende gangen. Maar het mocht niet baten.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+
+  // ============================================================
+  //  ACT 10 — MYSTERIES  (16 920 – 18 900 · 66 s)
+  // ============================================================
+  {
+    id: 'mystery-1',
+    start: 16920,
+    end: 17280,
+    bg: 'pyramids',
+    boardText: 'ONOPGELOSTE MYSTERIES',
+    camera: { x: 0, y: -50, zoom: 1.1 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 500, scale: 2, emotion: 'thinking', talking: true },
+    ],
+    subtitle: 'Ondanks al ons onderzoek zijn er nog steeds grote mysteries. De oude Egyptische koningen namen hun geheimen mee in het graf.',
+    transition: { type: 'wipe', duration: 18 },
+  },
+  {
+    id: 'mystery-2',
+    start: 17280,
+    end: 17640,
+    bg: 'pyramids',
+    boardText: 'HOE PRECIES?',
+    camera: { x: 30, y: -20, zoom: 1.25 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 500, scale: 2, emotion: 'thinking', talking: true },
+    ],
+    subtitle: 'We weten nog steeds niet exact hoe de blokken binnenin de piramiden werden geplaatst. Hoe hoger je komt, hoe moeilijker het wordt.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'mystery-3',
+    start: 17640,
+    end: 18000,
+    bg: 'pyramids',
+    boardText: 'GEEN ZAGEN, GEEN WIELEN',
+    camera: { x: -20, y: 0, zoom: 1.35 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 500, scale: 2, emotion: 'shocked', talking: true },
+    ],
+    subtitle: 'Geen zagen, geen wielen, geen ijzeren gereedschap. En toch bouwden ze een bouwwerk dat vierduizend jaar later nog steeds overeind staat.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'mystery-4',
+    start: 18000,
+    end: 18360,
+    bg: 'insidePyramid',
+    boardText: 'NIEUWE TECHNOLOGIE',
+    camera: { x: 0, y: -10, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'happy', talking: true },
+    ],
+    subtitle: 'Mogelijk zullen toekomstige beeldtechnologieën, zoals muonentomografie, ons helpen om verborgen kamers en gangen te vinden.',
+    transition: { type: 'iris', duration: 18 },
+  },
+  {
+    id: 'mystery-5',
+    start: 18360,
+    end: 18540,
+    bg: 'insidePyramid',
+    boardText: 'RESTAURATIE',
+    camera: { x: 20, y: 10, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'neutral', talking: true },
+    ],
+    subtitle: 'Recent is er ook discussie over restauratiewerk door de Egyptische overheid. De piramiden blijven actueel.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'mystery-6',
+    start: 18540,
+    end: 18900,
+    bg: 'pyramids',
+    boardText: 'WAT WETEN WE NOG NIET?',
+    camera: { x: 0, y: -40, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 960, y: 500, scale: 2, emotion: 'thinking', talking: true },
+    ],
+    subtitle: 'Eén ding is zeker: we hebben nog lang niet alles ontdekt. De piramiden bewaren hun geheimen goed.',
+    transition: { type: 'crossfade', duration: 15 },
+  },
+
+  // ============================================================
+  //  ACT 11 — SAMENVATTING & CIJFERS  (18 900 – 20 340 · 48 s)
+  // ============================================================
+  {
+    id: 'sum-1',
+    start: 18900,
+    end: 19260,
+    bg: 'pub',
+    boardText: 'SAMENVATTING',
+    camera: { x: 0, y: -30, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'happy', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Terug in de pub! Laten we even samenvatten wat we geleerd hebben.',
+    transition: { type: 'slide', duration: 18 },
+  },
+  {
+    id: 'sum-2',
+    start: 19260,
+    end: 19620,
+    bg: 'pub',
+    boardText: '3 PIRAMIDEN · 3 FARAO\'S',
+    camera: { x: 30, y: 0, zoom: 1.25 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'neutral', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'thinking', talking: false },
+    ],
+    subtitle: 'Drie piramiden, drie farao\'s. Choefoe, Chafre en Menkaoere. Gebouwd tussen vijfentwintighonderd en vierentwintighonderdnegentig voor Christus.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'sum-3',
+    start: 19620,
+    end: 19980,
+    bg: 'pub',
+    boardText: 'GEEN SLAVEN',
+    camera: { x: -20, y: 10, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'happy', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Gebouwd door vakmensen, niet door slaven. Een nationaal project met arbeiders uit heel Egypte die goed werden verzorgd.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'sum-4',
+    start: 19980,
+    end: 20340,
+    bg: 'pub',
+    boardText: 'HELLINGEN & NIJL',
+    camera: { x: 20, y: -10, zoom: 1.2 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'thinking', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'neutral', talking: false },
+    ],
+    subtitle: 'Transport via de Nijl, bouw met hellingen, sleden en touwen. En een precisie die we vandaag de dag nog steeds niet helemaal begrijpen.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+
+  // ============================================================
+  //  ACT 12 — OUTRO  (20 340 – 21 600 · 42 s)
+  // ============================================================
+  {
+    id: 'outro-1',
+    start: 20340,
+    end: 20700,
+    bg: 'pub',
+    boardText: 'PROFESSOR PINT',
+    camera: { x: 0, y: -20, zoom: 1.15 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'happy', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Wat een reis was dat! Van de pub naar de woestijn en terug. De piramiden blijven een van de meest indrukwekkende prestaties uit de menselijke geschiedenis.',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'outro-2',
+    start: 20700,
+    end: 21060,
+    bg: 'pub',
+    boardText: 'VOLGENDE KEER',
+    camera: { x: 30, y: 0, zoom: 1.3 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'happy', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Volgende keer nemen we je weer mee op avontuur. Waar naartoe? Dat hoor je dan wel. Houd je biertje vast!',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'outro-3',
+    start: 21060,
+    end: 21360,
+    bg: 'pub',
+    boardText: 'PROOST! 🍺',
+    camera: { x: 0, y: 10, zoom: 1.4 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'happy', talking: true },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'happy', talking: false },
+    ],
+    subtitle: 'Ik ben Professor Pint, en ik zeg: proost op de kennis! Tot de volgende keer!',
+    transition: { type: 'crossfade', duration: 12 },
+  },
+  {
+    id: 'outro-4',
+    start: 21360,
+    end: 21600,
+    bg: 'pub',
+    boardText: 'PROFESSOR PINT',
+    camera: { x: 0, y: 0, zoom: 1 },
+    characters: [
+      { id: 'professorPint', x: 700, y: 420, scale: 2, emotion: 'happy', talking: false },
+      { id: 'averageJoe', x: 1300, y: 440, scale: 1.8, emotion: 'happy', talking: false },
+    ],
+    subtitle: '',
+    transition: { type: 'iris', duration: 25 },
+  },
+];
+
+export const PyramidsOfGiza: React.FC = () => {
+  return <SceneRenderer scenes={S} showDebug />;
+};
+
+export default PyramidsOfGiza;
