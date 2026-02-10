@@ -9,8 +9,12 @@ import type { AudioSegment } from './AudioSync';
 import { OverlayRenderer } from './Overlays';
 import type { OverlayData } from './Overlays';
 import { ProfessorPint } from '../characters/ProfessorPint';
+import { AverageJoe } from '../characters/AverageJoe';
 import { Pub } from '../backgrounds/Pub';
+import { Classroom } from '../backgrounds/Classroom';
 import type { Emotion } from '../animations/emotions';
+import { MusicPlayer, SFXPlayer } from './MusicSFX';
+import type { MusicTrack, SoundEffect } from './MusicSFX';
 
 // ---- Scene JSON Types ----
 
@@ -69,6 +73,8 @@ const renderBackground = (bg: string, boardText: string): React.ReactNode => {
   switch (bg) {
     case 'pub':
       return <Pub boardText={boardText} width={1920} height={1080} />;
+    case 'classroom':
+      return <Classroom boardText={boardText} width={1920} height={1080} />;
     default:
       // Fallback: solid color with label
       return (
@@ -122,6 +128,27 @@ const renderCharacter = (
           />
         </div>
       );
+    case 'averageJoe':
+      return (
+        <div
+          key={char.id}
+          style={{
+            position: 'absolute',
+            left: char.x - 130 * charScale,
+            top: char.y - 85 * charScale,
+            transform: `scale(${charScale})`,
+            transformOrigin: 'center top',
+          }}
+        >
+          <AverageJoe
+            emotion={char.emotion}
+            previousEmotion={previousEmotion}
+            emotionTransitionProgress={emotionProgress}
+            talking={char.talking}
+            scale={1}
+          />
+        </div>
+      );
     default:
       // Placeholder for unregistered characters
       return (
@@ -158,6 +185,10 @@ interface SceneRendererProps {
   audioSegments?: AudioSegment[];
   /** Global overlays (shown across all scenes) */
   globalOverlays?: OverlayData[];
+  /** Background music tracks */
+  musicTracks?: MusicTrack[];
+  /** Sound effects */
+  soundEffects?: SoundEffect[];
   showDebug?: boolean;
 }
 
@@ -165,6 +196,8 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
   scenes,
   audioSegments = [],
   globalOverlays = [],
+  musicTracks = [],
+  soundEffects = [],
   showDebug = false,
 }) => {
   const frame = useCurrentFrame();
@@ -232,6 +265,12 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#1A1A1A' }}>
+      {/* Background music */}
+      {musicTracks.length > 0 && <MusicPlayer tracks={musicTracks} />}
+
+      {/* Sound effects */}
+      {soundEffects.length > 0 && <SFXPlayer effects={soundEffects} />}
+
       {/* Audio playback */}
       {audioSegments.length > 0 && audioSegments.map((seg, i) => (
         <Sequence key={`audio-seq-${i}`} from={seg.startFrame}>

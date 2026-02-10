@@ -28,7 +28,7 @@
           "y": { "type": "number" },
           "emotion": { "type": "string", "enum": ["neutral", "happy", "shocked", "thinking", "angry", "sad", "confused"] },
           "talking": { "type": "boolean" },
-          "gesture": { "type": "string", "enum": ["idle", "wave", "point", "hold", "shrug", "explain"] },
+          "gesture": { "type": "string", "enum": ["idle", "wave", "point", "shrug", "explain", "cheers"] },
           "prop": { "type": "string" },
           "propPosition": { "type": "string", "enum": ["hold", "float", "none"] }
         }

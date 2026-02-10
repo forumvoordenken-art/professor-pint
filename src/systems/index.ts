@@ -6,3 +6,5 @@ export { SceneRenderer } from './SceneRenderer';
 export type { SceneData, SceneCamera, SceneCharacter, SceneTransition } from './SceneRenderer';
 export { AudioPlayer, useLipSync, isTalkingAtFrame } from './AudioSync';
 export type { PhonemeData, AudioSegment } from './AudioSync';
+export { MusicPlayer, SFXPlayer, generateTransitionSFX, generateOverlaySFX } from './MusicSFX';
+export type { MusicTrack, SoundEffect, SFXType } from './MusicSFX';

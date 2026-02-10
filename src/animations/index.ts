@@ -4,3 +4,5 @@ export { getMouthShape, getMouthShapeFromPhonemes, getTalkingBounce, getTalkingG
 export type { MouthShape } from './talking';
 export { interpolateEmotions, getEmotionParams, EmotionTransition } from './emotions';
 export type { Emotion, EmotionParams } from './emotions';
+export { getGestureState, getGestureDuration } from './gestures';
+export type { Gesture } from './gestures';
