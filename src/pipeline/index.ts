@@ -11,3 +11,6 @@ export type { PipelineConfig, PipelineOutput } from './VideoPipeline';
 
 export { loadEnv } from './env';
 export type { PipelineEnv } from './env';
+
+export { generateLLMScript, generateLLMDialogue } from './LLMClient';
+export type { LLMConfig } from './LLMClient';

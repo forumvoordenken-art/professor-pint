@@ -25,6 +25,12 @@
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc",
     "render": "node scripts/render.mjs",
-    "render:dry": "node scripts/render.mjs --dry-run"
+    "render:dry": "node scripts/render.mjs --dry-run",
+    "audio": "node scripts/generate-audio.mjs",
+    "audio:all": "node scripts/generate-audio.mjs --all",
+    "audio:dry": "node scripts/generate-audio.mjs --all --dry-run",
+    "batch": "node scripts/batch-render.mjs",
+    "batch:all": "node scripts/batch-render.mjs --all",
+    "batch:dry": "node scripts/batch-render.mjs --all --dry-run"
   }
 }

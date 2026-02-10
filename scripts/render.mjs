@@ -45,6 +45,9 @@ const KNOWN_COMPOSITIONS = {
   'budgeting': 'Budgeting',
   'the 50/30/20 budget rule': 'Budgeting',
   'box 3 belasting': 'Box3-Belasting',
+  'demo': 'DemoVideo',
+  'dialogue': 'DialogueDemo',
+  'dialogue demo': 'DialogueDemo',
 };
 
 const resolveComposition = () => {
