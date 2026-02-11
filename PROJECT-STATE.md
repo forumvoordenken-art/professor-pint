@@ -1,0 +1,187 @@
+# Professor Pint — Project State & Step Plan
+
+> **Lees dit bestand aan het begin van elke nieuwe chatsessie.**
+> Zeg: "Check PROJECT-STATE.md — waar staan we en wat moeten we doen?"
+
+**Laatste update:** 2026-02-11
+**Branch:** `claude/plan-video-pipeline-So6YH`
+
+---
+
+## Current State: Planning Complete, Implementation Not Started
+
+We have completed a thorough planning phase. Three specification documents are written, reviewed, and committed (v2.0). No code has been written yet — the existing codebase serves as reference only.
+
+---
+
+## Documents Written
+
+| Document | Status | Description |
+|----------|--------|-------------|
+| `VIDEO-SPEC.md` | v2.0 ✅ | The "bible" — brand identity, asset library structure, 10-layer scene composition, characters, cameras, animations, audio, subtitles, overlays, quality gates, YouTube metadata |
+| `PIPELINE-ARCHITECTURE.md` | v2.0 ✅ | End-to-end pipeline: Input → Script → Compose → Quality → Audio → Assembly → Preview → Render → Upload. n8n workflow, cost estimates, phased library build |
+| `FEEDBACK-SYSTEM.md` | v2.0 ✅ | Self-learning feedback via n8n approval buttons. 19 categories, 3 priority levels, rules.json injected into every LLM prompt |
+
+---
+
+## Key Decisions Made
+
+1. **Asset Library approach** — LLM composes scenes from pre-built, fine-tuned SVG components (not generating SVG from scratch)
+2. **10-layer scene composition** — sky → terrain → water → structures → vegetation → characters → props → foreground → atmosphere → lighting
+3. **Position presets** — Pre-defined x/y/scale positions so LLM doesn't guess coordinates
+4. **n8n-only feedback** — No separate dashboard. Approve/Feedback/Reject buttons in n8n
+5. **English only** — All content in English
+6. **Scene duration = guideline** — Target 10-20s per scene, max 30s, not a hard rule
+7. **"Unique" = visually different** — Variations of the same base (e.g. different lighting, angle) count
+8. **Existing code = reference only** — Current backgrounds, characters, compositions are examples, not YouTube-ready
+9. **Costs acceptable** — ~$8-20 per video, ~$130-230/month for regular production
+10. **Music source TBD** — Still needs to be decided (royalty-free library, AI-generated, etc.)
+
+---
+
+## Identified Risks & Mitigations
+
+| # | Risk | Severity | Mitigation |
+|---|------|----------|------------|
+| 1 | **Collage look** — Composing separate SVG layers may look like cutouts pasted together instead of a cohesive painting | HIGH | Test early with 5 dummy assets. Use shared color palettes, consistent lighting layers, atmosphere overlays to unify |
+| 2 | **SVG performance** — 10 layers x multiple animated elements may be too heavy for Remotion at 30fps | HIGH | Benchmark in Step 1. Set max element counts per layer if needed |
+| 3 | **LLM spatial composition** — LLM cannot "see" what it's composing, may create nonsensical layouts | MEDIUM | Position presets eliminate guesswork. LLM picks from predefined slots, not raw coordinates |
+| 4 | **TTS timing cascade** — Audio duration determines scene duration, but scenes are composed before audio exists | MEDIUM | Two-pass system: compose scenes first, then adjust timing after TTS. Pipeline already accounts for this |
+| 5 | **Context window limits** — Asset manifest + feedback rules + script might exceed LLM context | MEDIUM | Phased prompts: script generation and scene composition are separate LLM calls with different context |
+| 6 | **Subjective quality gates** — "Does this look good?" is hard to automate | LOW | Asset-level quality is guaranteed (pre-tested). Scene-level gates check structural rules only (layer count, element presence, etc.) |
+| 7 | **Large initial time investment** — Building the first ~50 universal assets before producing any video | LOW | User confirmed time is not a problem. Assets are reusable across all future videos |
+| 8 | **Untested in Remotion** — ComposedScene concept hasn't been rendered yet | HIGH | Step 1 is specifically a prototype to validate this works |
+
+---
+
+## Step Plan
+
+### Phase 0: Prototype & Validation
+> Goal: Prove the 10-layer composition system works in Remotion before building anything else.
+
+| Step | Task | Status | Details |
+|------|------|--------|---------|
+| 0.1 | **Build SceneComposer prototype** | ⬜ Not started | New component: `SceneComposer.tsx` that accepts a `ComposedScene` object and renders 10 SVG layers in order. Minimal, just prove the concept works in Remotion Studio. |
+| 0.2 | **Create 5 dummy test assets** | ⬜ Not started | Simple SVG components: 1 sky, 1 terrain, 1 structure, 1 character, 1 atmosphere overlay. Doesn't need to be pretty — just functional. |
+| 0.3 | **Test render performance** | ⬜ Not started | Render a 30s test scene at 1080p/30fps. Measure: render time, frame drops, memory usage. Set baseline performance numbers. |
+| 0.4 | **Evaluate visual cohesion** | ⬜ Not started | Does the layered output look like one unified scene or a collage? If collage → adjust approach before continuing. |
+| 0.5 | **Build position presets system** | ⬜ Not started | Define position presets (far_left_bg, center_mid, right_front, etc.) with x/y/scale/zIndex values. Test that characters placed via presets look natural. |
+
+### Phase 1: Minimum Viable Library (Universal Assets)
+> Goal: Build ~50 universal assets that work across any video theme.
+
+| Step | Task | Status | Details |
+|------|------|--------|---------|
+| 1.1 | **Sky assets (5-8)** | ⬜ Not started | Clear day, sunset, night, overcast, dawn, stormy, etc. Each with color palette variations. |
+| 1.2 | **Terrain assets (5-8)** | ⬜ Not started | Grassland, desert, forest floor, stone, snow, water edge, etc. |
+| 1.3 | **Vegetation assets (8-10)** | ⬜ Not started | Trees (oak, palm, pine), bushes, flowers, grass patches, vines. Each with idle animation. |
+| 1.4 | **Atmosphere overlays (4-6)** | ⬜ Not started | Dust particles, fog, rain, snow, fireflies, heat shimmer. |
+| 1.5 | **Lighting overlays (4-6)** | ⬜ Not started | Golden hour, moonlight, indoor warm, dramatic spotlight, candlelight. |
+| 1.6 | **Professor Pint v2** | ⬜ Not started | Rebuild main character with all 12 emotions + 16 activities. Must work at any position preset. |
+| 1.7 | **Generic crowd figures (10-12)** | ⬜ Not started | Universal crowd members that work in any era/setting with costume variations. |
+| 1.8 | **Common props (8-10)** | ⬜ Not started | Table, chair, book, torch, sign, barrel, cart, etc. |
+| 1.9 | **Asset Manifest system** | ⬜ Not started | Build `AssetManifest.ts` — JSON catalog of all available assets with metadata (tags, compatible-themes, size, animation-type). LLM receives this to know what's available. |
+| 1.10 | **Quality gate: validate all assets** | ⬜ Not started | Render every asset in isolation. Check: renders correctly, animation smooth, no SVG errors, scales properly at position presets. |
+
+### Phase 2: First Theme Library (Egypt)
+> Goal: Build ~25 Egypt-specific assets. Produce first complete test video.
+
+| Step | Task | Status | Details |
+|------|------|--------|---------|
+| 2.1 | **Egypt structures (5-6)** | ⬜ Not started | Pyramids, Sphinx, temples, obelisk, mud-brick house, market stall |
+| 2.2 | **Egypt characters (5-6)** | ⬜ Not started | Pharaoh, priest, worker, scribe, merchant, soldier |
+| 2.3 | **Egypt props (5-6)** | ⬜ Not started | Hieroglyph wall, papyrus, gold artifacts, construction tools, boats |
+| 2.4 | **Egypt terrains (3-4)** | ⬜ Not started | Desert sand, Nile riverbank, tomb interior, quarry |
+| 2.5 | **Egypt crowds** | ⬜ Not started | Worker groups, market crowds, ceremony attendees |
+| 2.6 | **Update Asset Manifest** | ⬜ Not started | Add all Egypt assets with tags and theme metadata |
+
+### Phase 3: Pipeline Core
+> Goal: Build the automated pipeline that turns a topic into a rendered video.
+
+| Step | Task | Status | Details |
+|------|------|--------|---------|
+| 3.1 | **SceneComposer (production)** | ⬜ Not started | Upgrade prototype to full production component. Handle all 10 layers, animations, transitions. |
+| 3.2 | **LLM Script Generator** | ⬜ Not started | Prompt engineering: topic + sources + asset manifest → full script with scene compositions. Two-step: script first, then scene composition. |
+| 3.3 | **Quality Gates system** | ⬜ Not started | `QualityGates.ts` — Automated checks at asset, scene, and video level. Feedback compliance checking. |
+| 3.4 | **FeedbackStore integration** | ⬜ Not started | Connect `rules.json` → LLM prompt injection. Ensure all active rules are included in every LLM call. |
+| 3.5 | **First end-to-end test** | ⬜ Not started | Generate 1 complete Egypt video: topic → LLM script → composed scenes → rendered video. No audio yet. |
+
+### Phase 4: Audio Pipeline
+> Goal: Add voice, music, and sound effects.
+
+| Step | Task | Status | Details |
+|------|------|--------|---------|
+| 4.1 | **ElevenLabs TTS integration** | ⬜ Not started | Select voice, connect API, generate speech per scene. Need API key from user. |
+| 4.2 | **Lip sync system** | ⬜ Not started | Phoneme data from ElevenLabs → mouth shape animations on Professor Pint. |
+| 4.3 | **Music source decision** | ⬜ Not started | Decide: royalty-free library, AI-generated, or manual selection. TBD with user. |
+| 4.4 | **SFX system** | ⬜ Not started | LLM selects sound effects per scene. Build SFX library or source from free libraries. |
+| 4.5 | **SRT subtitle export** | ⬜ Not started | Generate `.srt` files from script for YouTube closed captions. |
+| 4.6 | **Audio + video sync test** | ⬜ Not started | Full render with voice + music + SFX. Verify timing, levels, lip sync quality. |
+
+### Phase 5: n8n Pipeline & YouTube
+> Goal: Full automation from topic input to YouTube upload.
+
+| Step | Task | Status | Details |
+|------|------|--------|---------|
+| 5.1 | **n8n webhook server** | ⬜ Not started | Express/Fastify wrapper for pipeline triggers. |
+| 5.2 | **n8n workflow build** | ⬜ Not started | 14-step workflow as specified in PIPELINE-ARCHITECTURE.md. |
+| 5.3 | **Preview & approval flow** | ⬜ Not started | 480p quick render → n8n approval buttons → feedback loop. |
+| 5.4 | **YouTube metadata generation** | ⬜ Not started | LLM generates title, description, tags, thumbnail concept. |
+| 5.5 | **YouTube upload integration** | ⬜ Not started | n8n YouTube node: upload video + metadata + thumbnail. |
+| 5.6 | **Video schedule system** | ⬜ Not started | Topic queue with sources, scheduling, status tracking. |
+
+### Phase 6: Expand & Scale
+> Goal: More themes, more assets, production-ready.
+
+| Step | Task | Status | Details |
+|------|------|--------|---------|
+| 6.1 | **Second theme library** | ⬜ Not started | Pick next theme (Roman Empire? Medieval? Renaissance?), build ~20-25 assets. |
+| 6.2 | **Asset browsing in Remotion** | ⬜ Not started | Compositions in Root.tsx to visually browse all library assets in Remotion Studio. |
+| 6.3 | **Production pipeline testing** | ⬜ Not started | Generate 5+ videos, refine based on results. |
+| 6.4 | **Feedback system tuning** | ⬜ Not started | Review accumulated feedback rules, resolve contradictions, optimize. |
+
+---
+
+## What Exists Now (Reference Code)
+
+The current codebase has ~68 files, ~27,000 lines. This is all **reference material** — not production-ready:
+
+- **10 characters**: ProfessorPint, AverageJoe, Pharaoh, Worker, Banker, WallStreetBroker, CryptoBro, TaxAdvisor, MarketVendor, Scribe
+- **16 backgrounds**: 6 Egypt, 8 Aztec, Pub, Classroom (oil painting style — good quality reference)
+- **2 crowd systems**: Egyptian (12 types), Aztec (12 types)
+- **Systems**: SceneRenderer, Camera, CameraPath (12 presets), Subtitles, Transitions (7 types), AudioSync, MusicSFX, Overlays, SketchOverlay
+- **Pipeline**: ScriptGenerator, LLMClient, ElevenLabsTTS (partial), FeedbackStore, SceneDatabase, StyleGuide, VideoPipeline, N8nPipeline
+- **2 compositions**: PyramidsOfGiza (12 min, 55 scenes), AztekenVideo (12 min)
+
+These serve as examples of SVG quality, animation patterns, and architecture. The new system will build on these patterns but with the composable asset library approach.
+
+---
+
+## Quick Reference: New Files to Create
+
+| File | Phase | Purpose |
+|------|-------|---------|
+| `src/systems/SceneComposer.tsx` | 0.1 | Renders ComposedScene from 10 layers |
+| `src/systems/PositionPresets.ts` | 0.5 | x/y/scale/zIndex definitions for scene placement |
+| `src/pipeline/AssetManifest.ts` | 1.9 | JSON catalog of all library assets |
+| `src/pipeline/QualityGates.ts` | 3.3 | Automated quality validation |
+| `src/pipeline/SrtExporter.ts` | 4.5 | SRT subtitle file generation |
+| `src/library/` | 1.x | All asset library components (skies, terrains, etc.) |
+| `data/feedback/rules.json` | 3.4 | Feedback rules storage |
+| `data/assets/manifest.json` | 1.9 | Asset manifest data file |
+
+---
+
+## How to Continue
+
+1. Open a new chat session
+2. Say: "Check PROJECT-STATE.md — waar staan we en wat moeten we doen?"
+3. The AI reads this file, sees the current state, and picks up from the first ⬜ step
+4. After completing steps, update this file's status indicators
+5. Commit updated PROJECT-STATE.md after each session
+
+### Status Legend
+- ⬜ Not started
+- 🔄 In progress
+- ✅ Completed
+- ⛔ Blocked (with reason noted)
