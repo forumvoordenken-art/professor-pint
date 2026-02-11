@@ -22,6 +22,13 @@ import { InsidePyramid } from '../backgrounds/InsidePyramid';
 import { NileRiver } from '../backgrounds/NileRiver';
 import { WorkersVillage } from '../backgrounds/WorkersVillage';
 import { SphinxView } from '../backgrounds/SphinxView';
+import { AztecMarket } from '../backgrounds/AztecMarket';
+import { BattleScene } from '../backgrounds/BattleScene';
+import { AztecPlague } from '../backgrounds/AztecPlague';
+import { Tenochtitlan } from '../backgrounds/Tenochtitlan';
+import { AztecSacrifice } from '../backgrounds/AztecSacrifice';
+import { Chinampas } from '../backgrounds/Chinampas';
+import { CortesLanding } from '../backgrounds/CortesLanding';
 import type { Emotion } from '../animations/emotions';
 import { MusicPlayer, SFXPlayer } from './MusicSFX';
 import type { MusicTrack, SoundEffect } from './MusicSFX';
@@ -99,6 +106,20 @@ const renderBackground = (bg: string, boardText: string): React.ReactNode => {
       return <WorkersVillage boardText={boardText} width={1920} height={1080} />;
     case 'sphinxView':
       return <SphinxView boardText={boardText} width={1920} height={1080} />;
+    case 'aztecMarket':
+      return <AztecMarket boardText={boardText} width={1920} height={1080} />;
+    case 'battleScene':
+      return <BattleScene boardText={boardText} width={1920} height={1080} />;
+    case 'aztecPlague':
+      return <AztecPlague boardText={boardText} width={1920} height={1080} />;
+    case 'tenochtitlan':
+      return <Tenochtitlan boardText={boardText} width={1920} height={1080} />;
+    case 'aztecSacrifice':
+      return <AztecSacrifice boardText={boardText} width={1920} height={1080} />;
+    case 'chinampas':
+      return <Chinampas boardText={boardText} width={1920} height={1080} />;
+    case 'cortesLanding':
+      return <CortesLanding boardText={boardText} width={1920} height={1080} />;
     default:
       // Fallback: solid color with label
       return (

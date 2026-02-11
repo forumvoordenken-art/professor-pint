@@ -32,5 +32,8 @@
     "batch": "node scripts/batch-render.mjs",
     "batch:all": "node scripts/batch-render.mjs --all",
     "batch:dry": "node scripts/batch-render.mjs --all --dry-run"
+  },
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "^0.27.3"
   }
 }
