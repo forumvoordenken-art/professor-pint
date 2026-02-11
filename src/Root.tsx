@@ -27,6 +27,12 @@ import { InsidePyramid } from './backgrounds/InsidePyramid';
 import { NileRiver } from './backgrounds/NileRiver';
 import { WorkersVillage } from './backgrounds/WorkersVillage';
 import { SphinxView } from './backgrounds/SphinxView';
+import { BattleScene } from './backgrounds/BattleScene';
+import { Tenochtitlan } from './backgrounds/Tenochtitlan';
+import { AztecMarket } from './backgrounds/AztecMarket';
+import { AztecSacrifice } from './backgrounds/AztecSacrifice';
+import { Chinampas } from './backgrounds/Chinampas';
+import { AztecPlague } from './backgrounds/AztecPlague';
 
 // ---- Character preview helper ----
 const CharPreview: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -95,6 +101,24 @@ const WorkersVillagePreview: React.FC = () => (
 );
 const SphinxViewPreview: React.FC = () => (
   <SphinxView boardText="THE GREAT SPHINX" width={1920} height={1080} />
+);
+const BattleScenePreview: React.FC = () => (
+  <BattleScene boardText="DE SLAG OM TENOCHTITLAN" width={1920} height={1080} />
+);
+const TenochtitlanPreview: React.FC = () => (
+  <Tenochtitlan boardText="TENOCHTITLAN" width={1920} height={1080} />
+);
+const AztecMarketPreview: React.FC = () => (
+  <AztecMarket boardText="DE MARKT VAN TLATELOLCO" width={1920} height={1080} />
+);
+const AztecSacrificePreview: React.FC = () => (
+  <AztecSacrifice boardText="TEMPLO MAYOR CEREMONIE" width={1920} height={1080} />
+);
+const ChinampasPreview: React.FC = () => (
+  <Chinampas boardText="DRIJVENDE TUINEN" width={1920} height={1080} />
+);
+const AztecPlaguePreview: React.FC = () => (
+  <AztecPlague boardText="DE GROTE STERFTE" width={1920} height={1080} />
 );
 
 export const RemotionRoot: React.FC = () => {
@@ -264,6 +288,56 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="SphinxView-Preview"
         component={SphinxViewPreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ===== AZTEC BACKGROUND PREVIEWS ===== */}
+      <Composition
+        id="BattleScene-Preview"
+        component={BattleScenePreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="Tenochtitlan-Preview"
+        component={TenochtitlanPreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AztecMarket-Preview"
+        component={AztecMarketPreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AztecSacrifice-Preview"
+        component={AztecSacrificePreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="Chinampas-Preview"
+        component={ChinampasPreview}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="AztecPlague-Preview"
+        component={AztecPlaguePreview}
         durationInFrames={300}
         fps={30}
         width={1920}
