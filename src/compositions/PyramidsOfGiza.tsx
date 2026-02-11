@@ -1,6 +1,7 @@
 import React from 'react';
 import { SceneRenderer } from '../systems/SceneRenderer';
 import type { SceneData } from '../systems/SceneRenderer';
+import { CAMERA_PRESETS } from '../systems/CameraPath';
 
 // Piramiden van Giza – volledige 12-minuten video
 // 21 600 frames @ 30 fps = 720 s = 12 min
@@ -99,6 +100,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'GIZA PLATEAU',
     camera: { x: 0, y: -60, zoom: 0.95 },
+    cameraPath: CAMERA_PRESETS.establishingShot(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
     ],
@@ -112,6 +114,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'DRIE PIRAMIDEN',
     camera: { x: -80, y: -30, zoom: 1.1 },
+    cameraPath: CAMERA_PRESETS.sweepingPan(360),
     characters: [
       { id: 'professorPint', x: 250, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
     ],
@@ -125,6 +128,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'GRAFMONUMENTEN',
     camera: { x: 0, y: 0, zoom: 1.2 },
+    cameraPath: CAMERA_PRESETS.slowZoomIn(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
     ],
@@ -138,6 +142,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'HET HIERNAMAALS',
     camera: { x: 50, y: -20, zoom: 1.3 },
+    cameraPath: CAMERA_PRESETS.panLeftToRight(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
       { id: 'pharaoh', x: 1500, y: 480, scale: 1.6, emotion: 'neutral', talking: false },
@@ -152,6 +157,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'WIE LIGT WAAR?',
     camera: { x: 0, y: 10, zoom: 1.15 },
+    cameraPath: CAMERA_PRESETS.slowZoomOut(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
       { id: 'pharaoh', x: 1500, y: 480, scale: 1.6, emotion: 'happy', talking: false },
@@ -170,6 +176,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'CHOEFOE · 2550 V.CHR.',
     camera: { x: 0, y: -80, zoom: 1.4 },
+    cameraPath: CAMERA_PRESETS.dramaticZoom(360),
     characters: [
       { id: 'professorPint', x: 250, y: 520, scale: 1.6, emotion: 'neutral', talking: true },
     ],
@@ -183,6 +190,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: '147 METER HOOG',
     camera: { x: 0, y: -100, zoom: 1.6 },
+    cameraPath: CAMERA_PRESETS.tiltUp(360),
     characters: [
       { id: 'professorPint', x: 250, y: 540, scale: 1.4, emotion: 'shocked', talking: true },
     ],
@@ -196,6 +204,7 @@ const S: SceneData[] = [
     bg: 'desertConstruction',
     boardText: '2,3 MILJOEN BLOKKEN',
     camera: { x: 0, y: -40, zoom: 1.1 },
+    cameraPath: CAMERA_PRESETS.panLeftToRight(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'neutral', talking: false },
@@ -210,6 +219,7 @@ const S: SceneData[] = [
     bg: 'desertConstruction',
     boardText: 'GROOTSTE PIRAMIDE',
     camera: { x: 50, y: -20, zoom: 1.25 },
+    cameraPath: CAMERA_PRESETS.slowZoomIn(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
@@ -224,6 +234,7 @@ const S: SceneData[] = [
     bg: 'desertConstruction',
     boardText: 'NATIONAAL PROJECT',
     camera: { x: -30, y: 10, zoom: 1.15 },
+    cameraPath: CAMERA_PRESETS.panRightToLeft(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'thinking', talking: false },
@@ -242,6 +253,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'CHAFRE · 2520 V.CHR.',
     camera: { x: -120, y: -30, zoom: 1.3 },
+    cameraPath: CAMERA_PRESETS.revealDown(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
     ],
@@ -255,6 +267,7 @@ const S: SceneData[] = [
     bg: 'sphinxView',
     boardText: 'DE SFINX',
     camera: { x: -40, y: 0, zoom: 1.1 },
+    cameraPath: CAMERA_PRESETS.establishingShot(360),
     characters: [
       { id: 'professorPint', x: 1400, y: 500, scale: 1.8, emotion: 'shocked', talking: true },
     ],
@@ -268,6 +281,7 @@ const S: SceneData[] = [
     bg: 'sphinxView',
     boardText: '73M LANG · 20M HOOG',
     camera: { x: -80, y: -20, zoom: 1.25 },
+    cameraPath: CAMERA_PRESETS.panLeftToRight(360),
     characters: [
       { id: 'professorPint', x: 1400, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
     ],
@@ -281,6 +295,7 @@ const S: SceneData[] = [
     bg: 'sphinxView',
     boardText: 'MYSTERIE',
     camera: { x: -60, y: 20, zoom: 1.35 },
+    cameraPath: CAMERA_PRESETS.dramaticZoom(360),
     characters: [
       { id: 'professorPint', x: 1400, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
     ],
@@ -294,6 +309,7 @@ const S: SceneData[] = [
     bg: 'sphinxView',
     boardText: 'ICONISCH BEELD',
     camera: { x: -100, y: -10, zoom: 1.15 },
+    cameraPath: CAMERA_PRESETS.slowZoomOut(360),
     characters: [
       { id: 'professorPint', x: 1400, y: 500, scale: 1.8, emotion: 'happy', talking: true },
     ],
@@ -311,6 +327,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'MENKAOERE · 2490 V.CHR.',
     camera: { x: 120, y: -10, zoom: 1.3 },
+    cameraPath: CAMERA_PRESETS.panRightToLeft(360),
     characters: [
       { id: 'professorPint', x: 1500, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
     ],
@@ -324,6 +341,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: '65 METER HOOG',
     camera: { x: 100, y: 0, zoom: 1.4 },
+    cameraPath: CAMERA_PRESETS.slowZoomIn(360),
     characters: [
       { id: 'professorPint', x: 1500, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
     ],
@@ -337,6 +355,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'BINNENIN MENKAOERE',
     camera: { x: 0, y: -20, zoom: 1.15 },
+    cameraPath: CAMERA_PRESETS.revealDown(360),
     characters: [
       { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'shocked', talking: true },
     ],
@@ -350,6 +369,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'VERDWENEN SARCOFAAG',
     camera: { x: 20, y: 10, zoom: 1.3 },
+    cameraPath: CAMERA_PRESETS.dramaticZoom(360),
     characters: [
       { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'sad', talking: true },
     ],
@@ -409,6 +429,7 @@ const S: SceneData[] = [
     bg: 'workersVillage',
     boardText: 'ARBEIDERSSTEDEN',
     camera: { x: 0, y: -30, zoom: 1.1 },
+    cameraPath: CAMERA_PRESETS.establishingShot(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
@@ -423,6 +444,7 @@ const S: SceneData[] = [
     bg: 'workersVillage',
     boardText: 'GOED VERZORGD',
     camera: { x: 40, y: 0, zoom: 1.2 },
+    cameraPath: CAMERA_PRESETS.panLeftToRight(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
@@ -437,6 +459,7 @@ const S: SceneData[] = [
     bg: 'workersVillage',
     boardText: 'NATIONAAL PROJECT',
     camera: { x: -30, y: 20, zoom: 1.15 },
+    cameraPath: CAMERA_PRESETS.slowZoomOut(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'neutral', talking: false },
@@ -455,6 +478,7 @@ const S: SceneData[] = [
     bg: 'nileRiver',
     boardText: 'DE NIJL',
     camera: { x: 0, y: -20, zoom: 1.05 },
+    cameraPath: CAMERA_PRESETS.sweepingPan(360),
     characters: [
       { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'happy', talking: true },
     ],
@@ -468,6 +492,7 @@ const S: SceneData[] = [
     bg: 'nileRiver',
     boardText: 'STEENTRANSPORT',
     camera: { x: 40, y: 0, zoom: 1.2 },
+    cameraPath: CAMERA_PRESETS.panLeftToRight(360),
     characters: [
       { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'thinking', talking: true },
       { id: 'worker', x: 1500, y: 500, scale: 1.5, emotion: 'neutral', talking: false },
@@ -482,6 +507,7 @@ const S: SceneData[] = [
     bg: 'nileRiver',
     boardText: 'BOTEN & WATERWEGEN',
     camera: { x: -30, y: 10, zoom: 1.15 },
+    cameraPath: CAMERA_PRESETS.slowZoomIn(360),
     characters: [
       { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'neutral', talking: true },
       { id: 'worker', x: 1500, y: 500, scale: 1.5, emotion: 'happy', talking: false },
@@ -496,6 +522,7 @@ const S: SceneData[] = [
     bg: 'nileRiver',
     boardText: 'LOGISTIEK WONDER',
     camera: { x: 60, y: -10, zoom: 1.25 },
+    cameraPath: CAMERA_PRESETS.dramaticZoom(360),
     characters: [
       { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'shocked', talking: true },
     ],
@@ -509,6 +536,7 @@ const S: SceneData[] = [
     bg: 'nileRiver',
     boardText: 'HEEL EGYPTE WERKTE MEE',
     camera: { x: 0, y: 0, zoom: 1.1 },
+    cameraPath: CAMERA_PRESETS.slowZoomOut(360),
     characters: [
       { id: 'professorPint', x: 300, y: 480, scale: 1.8, emotion: 'happy', talking: true },
       { id: 'worker', x: 1500, y: 500, scale: 1.5, emotion: 'happy', talking: false },
@@ -527,6 +555,7 @@ const S: SceneData[] = [
     bg: 'desertConstruction',
     boardText: 'HOE BOUWDEN ZE?',
     camera: { x: 0, y: -50, zoom: 1.05 },
+    cameraPath: CAMERA_PRESETS.revealDown(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'neutral', talking: false },
@@ -541,6 +570,7 @@ const S: SceneData[] = [
     bg: 'desertConstruction',
     boardText: 'HELLINGEN / SCHANSEN',
     camera: { x: -40, y: -20, zoom: 1.2 },
+    cameraPath: CAMERA_PRESETS.tiltDown(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'neutral', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'thinking', talking: false },
@@ -555,6 +585,7 @@ const S: SceneData[] = [
     bg: 'desertConstruction',
     boardText: 'SLEDEN & TOUWEN',
     camera: { x: 50, y: 0, zoom: 1.3 },
+    cameraPath: CAMERA_PRESETS.panLeftToRight(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
@@ -570,6 +601,7 @@ const S: SceneData[] = [
     bg: 'desertConstruction',
     boardText: 'ZIGZAG OF SPIRAAL?',
     camera: { x: 0, y: -60, zoom: 1.15 },
+    cameraPath: CAMERA_PRESETS.sweepingPan(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'thinking', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'thinking', talking: false },
@@ -584,6 +616,7 @@ const S: SceneData[] = [
     bg: 'desertConstruction',
     boardText: 'INTERNE HELLINGEN?',
     camera: { x: -20, y: -30, zoom: 1.25 },
+    cameraPath: CAMERA_PRESETS.slowZoomIn(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'shocked', talking: true },
     ],
@@ -597,6 +630,7 @@ const S: SceneData[] = [
     bg: 'desertConstruction',
     boardText: 'PRECISIEWERK',
     camera: { x: 30, y: 10, zoom: 1.2 },
+    cameraPath: CAMERA_PRESETS.panRightToLeft(360),
     characters: [
       { id: 'professorPint', x: 300, y: 500, scale: 1.8, emotion: 'happy', talking: true },
       { id: 'worker', x: 1400, y: 520, scale: 1.6, emotion: 'happy', talking: false },
@@ -615,6 +649,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'BINNENIN',
     camera: { x: 0, y: 0, zoom: 1.05 },
+    cameraPath: CAMERA_PRESETS.revealDown(360),
     characters: [
       { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'neutral', talking: true },
     ],
@@ -628,6 +663,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'GRAFKAMERS',
     camera: { x: -30, y: -20, zoom: 1.2 },
+    cameraPath: CAMERA_PRESETS.slowZoomIn(360),
     characters: [
       { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'thinking', talking: true },
     ],
@@ -641,6 +677,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'HIËROGLIEFEN',
     camera: { x: 40, y: 10, zoom: 1.35 },
+    cameraPath: CAMERA_PRESETS.panLeftToRight(360),
     characters: [
       { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'happy', talking: true },
     ],
@@ -654,6 +691,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'GEWELFD PLAFOND',
     camera: { x: 0, y: -40, zoom: 1.25 },
+    cameraPath: CAMERA_PRESETS.tiltUp(360),
     characters: [
       { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'shocked', talking: true },
     ],
@@ -667,6 +705,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'GRAFROVERS',
     camera: { x: -20, y: 20, zoom: 1.15 },
+    cameraPath: CAMERA_PRESETS.dramaticZoom(360),
     characters: [
       { id: 'professorPint', x: 700, y: 480, scale: 1.8, emotion: 'angry', talking: true },
       { id: 'averageJoe', x: 1300, y: 500, scale: 1.6, emotion: 'shocked', talking: false },
@@ -681,6 +720,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'VALLEN & VALSE GANGEN',
     camera: { x: 30, y: -10, zoom: 1.3 },
+    cameraPath: CAMERA_PRESETS.panRightToLeft(360),
     characters: [
       { id: 'professorPint', x: 700, y: 480, scale: 1.8, emotion: 'thinking', talking: true },
       { id: 'averageJoe', x: 1300, y: 500, scale: 1.6, emotion: 'thinking', talking: false },
@@ -699,6 +739,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'ONOPGELOSTE MYSTERIES',
     camera: { x: 0, y: -50, zoom: 1.1 },
+    cameraPath: CAMERA_PRESETS.sweepingPan(360),
     characters: [
       { id: 'professorPint', x: 960, y: 500, scale: 2, emotion: 'thinking', talking: true },
     ],
@@ -712,6 +753,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'HOE PRECIES?',
     camera: { x: 30, y: -20, zoom: 1.25 },
+    cameraPath: CAMERA_PRESETS.slowZoomIn(360),
     characters: [
       { id: 'professorPint', x: 960, y: 500, scale: 2, emotion: 'thinking', talking: true },
     ],
@@ -725,6 +767,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'GEEN ZAGEN, GEEN WIELEN',
     camera: { x: -20, y: 0, zoom: 1.35 },
+    cameraPath: CAMERA_PRESETS.dramaticZoom(360),
     characters: [
       { id: 'professorPint', x: 960, y: 500, scale: 2, emotion: 'shocked', talking: true },
     ],
@@ -738,6 +781,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'NIEUWE TECHNOLOGIE',
     camera: { x: 0, y: -10, zoom: 1.2 },
+    cameraPath: CAMERA_PRESETS.slowZoomIn(360),
     characters: [
       { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'happy', talking: true },
     ],
@@ -751,6 +795,7 @@ const S: SceneData[] = [
     bg: 'insidePyramid',
     boardText: 'RESTAURATIE',
     camera: { x: 20, y: 10, zoom: 1.3 },
+    cameraPath: CAMERA_PRESETS.panRightToLeft(180),
     characters: [
       { id: 'professorPint', x: 960, y: 480, scale: 1.8, emotion: 'neutral', talking: true },
     ],
@@ -764,6 +809,7 @@ const S: SceneData[] = [
     bg: 'pyramids',
     boardText: 'WAT WETEN WE NOG NIET?',
     camera: { x: 0, y: -40, zoom: 1.15 },
+    cameraPath: CAMERA_PRESETS.slowZoomOut(360),
     characters: [
       { id: 'professorPint', x: 960, y: 500, scale: 2, emotion: 'thinking', talking: true },
     ],
