@@ -1,7 +1,8 @@
-# Professor Pint — Feedback & Learning System v1.0
+# Professor Pint — Feedback & Learning System v2.0
 
 > **"Tell me once, I remember forever."**
 > Every piece of feedback permanently improves all future videos.
+> Feedback is given through n8n approval buttons — no separate dashboard needed.
 
 ---
 
@@ -9,21 +10,20 @@
 
 1. [System Overview](#1-system-overview)
 2. [Feedback Categories](#2-feedback-categories)
-3. [How Feedback is Collected](#3-how-feedback-is-collected)
+3. [How Feedback is Collected (via n8n)](#3-how-feedback-is-collected)
 4. [How Feedback is Applied](#4-how-feedback-is-applied)
 5. [Feedback Storage Format](#5-feedback-storage-format)
-6. [Dashboard Specification](#6-dashboard-specification)
-7. [Feedback Lifecycle](#7-feedback-lifecycle)
-8. [Examples](#8-examples)
+6. [Feedback Lifecycle](#7-feedback-lifecycle)
+7. [Examples](#8-examples)
 
 ---
 
 ## 1. System Overview
 
-The feedback system is a self-learning layer that sits between the user and the LLM. Every time the user gives feedback on a video (or part of a video), that feedback becomes a permanent rule that applies to ALL future videos.
+The feedback system is a self-learning layer between the user and the LLM. Every piece of feedback becomes a permanent rule injected into ALL future LLM calls.
 
 ```
-USER FEEDBACK
+USER (via n8n) → gives feedback
      │
      ▼
 ┌─────────────┐     ┌─────────────────────────────┐
@@ -32,15 +32,16 @@ USER FEEDBACK
 └─────────────┘     └─────────────────────────────┘
      │
      ▼
-  Permanent, cumulative, always growing
+  Permanent, cumulative, always growing.
+  LLM output converges on user preferences over time.
 ```
 
 ### Key Principles
-1. **Tell once, remember forever** — user never has to repeat feedback.
-2. **Universal by default** — feedback applies to all future videos unless explicitly scoped.
-3. **Categorized** — feedback is organized by type for targeted injection.
-4. **Versioned** — every rule has a timestamp and can be deactivated (never deleted).
-5. **Transparent** — user can see all active rules at any time in the dashboard.
+1. **Tell once, remember forever** — user never repeats feedback.
+2. **Universal by default** — applies to all future videos unless scoped otherwise.
+3. **Categorized** — organized by type for targeted injection.
+4. **Never deleted** — rules can be deactivated but are preserved for history.
+5. **n8n native** — no separate dashboard. Feedback flows through n8n approval nodes.
 
 ---
 
@@ -49,17 +50,17 @@ USER FEEDBACK
 | Category | What It Covers | Example Rules |
 |----------|---------------|---------------|
 | `visual.backgrounds` | Background quality, detail, style | "More warm tones in outdoor scenes" |
-| `visual.characters` | Character design, proportions | "Characters should have more defined facial features" |
-| `visual.crowds` | Crowd density, variety, placement | "Crowds feel too sparse, increase minimum to 12 figures" |
-| `visual.composition` | Scene layout, depth, perspective | "Professor is too centered, use more rule-of-thirds" |
-| `visual.colors` | Color palette, saturation, contrast | "Scenes are too dark, increase overall brightness 15%" |
-| `camera.movement` | Camera speed, style, variety | "Camera movements are too fast, slow down pans by 30%" |
-| `camera.framing` | Zoom levels, character framing | "Too many close-ups, use more medium shots" |
+| `visual.characters` | Character design, proportions | "Characters need more defined facial features" |
+| `visual.crowds` | Crowd density, variety, placement | "Minimum 12 figures in crowd scenes" |
+| `visual.composition` | Scene layout, depth, perspective | "Use more rule-of-thirds, less centered" |
+| `visual.colors` | Color palette, saturation, contrast | "Scenes are too dark, increase brightness 15%" |
+| `camera.movement` | Camera speed, style, variety | "Slow down pan movements by 30%" |
+| `camera.framing` | Zoom levels, character framing | "Too many close-ups, more medium shots" |
 | `text.tone` | Voice, humor, personality | "More sarcastic humor, less dad jokes" |
-| `text.complexity` | Language level, explanation depth | "Explanations are too simple, audience is smart" |
+| `text.complexity` | Language level, explanation depth | "Audience is smart, don't over-simplify" |
 | `text.subtitles` | Subtitle style, length, timing | "Subtitles stay on screen too long" |
 | `text.hooks` | Opening hooks, engagement lines | "Opening hooks need to be more surprising" |
-| `timing.pacing` | Scene duration, video length | "Scenes change too fast, average should be 15s not 10s" |
+| `timing.pacing` | Scene duration, video length | "Average scene should be 15s not 10s" |
 | `timing.energy` | Energy curve, dramatic moments | "Build more tension before revelations" |
 | `audio.voice` | TTS voice, speed, intonation | "Voice is too monotone in dramatic sections" |
 | `audio.music` | Background music volume, style | "Music is too loud during explanations" |
@@ -72,67 +73,61 @@ USER FEEDBACK
 
 ## 3. How Feedback is Collected
 
-### 3.1 Dashboard (Primary Method)
+### 3.1 n8n Approval Flow (Primary Method)
 
-The dashboard shows the preview video with scene-by-scene controls:
+At Step 9 of the pipeline (Preview & Approval), n8n shows the user:
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  PROFESSOR PINT — Video Review Dashboard                      │
-│                                                                │
-│  ┌────────────────────────────────────────────┐               │
-│  │                                            │               │
-│  │           VIDEO PREVIEW PLAYER             │               │
-│  │                                            │               │
-│  └────────────────────────────────────────────┘               │
-│                                                                │
-│  Scene Timeline (clickable):                                   │
-│  [1][2][3][4][5][6][7][8][9][10]...[45]                       │
-│   ✅ ✅ ✅ ⚠️ ✅ ✅ ❌ ✅ ✅ ✅     ✅                       │
-│                                                                │
-│  Selected Scene: #7 (02:15 - 02:28)                           │
-│  ┌──────────────────────────────────────────┐                 │
-│  │ Background: desert_construction_03        │                 │
-│  │ Type: narrative                           │                 │
-│  │ Camera: panLeftToRight                    │                 │
-│  │ Characters: Professor, Worker x3          │                 │
-│  └──────────────────────────────────────────┘                 │
-│                                                                │
-│  FEEDBACK FOR THIS SCENE:                                      │
-│  Category: [dropdown: visual/camera/text/timing/audio/content] │
-│  Feedback: [text input]                                        │
-│  Apply to: ○ This scene only  ○ All scenes  ● All videos      │
-│                                                                │
-│  [Submit Feedback]   [Approve Scene]   [Reject Scene]         │
-│                                                                │
-│  ─────────────────────────────────────────────                │
-│  GLOBAL FEEDBACK (applies to whole video):                     │
-│  [text input]                                                  │
-│  [Submit]                                                      │
-│                                                                │
-│  ─────────────────────────────────────────────                │
-│  OVERALL: [✅ Approve Video] [🔄 Revise] [❌ Reject]          │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│  VIDEO PREVIEW READY                          │
+│                                                │
+│  Topic: "Pyramids of Giza"                    │
+│  Duration: 11:47                              │
+│  Scenes: 42                                   │
+│  Preview: [link to 480p preview video]        │
+│                                                │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │ APPROVE  │ │ FEEDBACK │ │  REJECT  │      │
+│  └──────────┘ └──────────┘ └──────────┘      │
+│                                                │
+│  (If FEEDBACK or REJECT:)                     │
+│  What should be improved?                      │
+│  [text area for feedback]                      │
+│                                                │
+│  Category: [dropdown]                          │
+│  ○ visual  ○ camera  ○ text  ○ timing         │
+│  ○ audio   ○ content ○ general                │
+│                                                │
+│  [Submit Feedback]                             │
+└──────────────────────────────────────────────┘
 ```
 
-### 3.2 Quick Feedback (Webhook/API)
+This is implemented using n8n's **Wait for Approval** node with a custom form.
 
-For fast feedback without the full dashboard:
+### 3.2 What Happens With Feedback
 
-```typescript
-// POST /api/feedback
-{
-  "videoId": "pyramids-2026-02-11",
-  "category": "visual.backgrounds",
-  "rule": "More warm tones in desert scenes",
-  "scope": "all_videos",        // or "this_video" or "this_theme"
-  "priority": "high"            // high, medium, low
-}
+```
+User submits feedback text + category
+     │
+     ▼
+n8n Code node parses feedback into a FeedbackRule:
+  - Extracts the core instruction
+  - Assigns category (from dropdown or auto-detected)
+  - Sets priority to HIGH (user feedback is always important)
+  - Sets scope to all_videos (default)
+  - Saves to data/feedback/rules.json
+     │
+     ▼
+Pipeline restarts from Step 2 (Script Generation)
+with the new rule now included in the LLM prompt
 ```
 
-### 3.3 Batch Feedback (After Review)
+### 3.3 Viewing Active Rules
 
-The dashboard allows submitting all scene feedback at once as a batch.
+Active rules can be viewed anytime by:
+1. Reading `data/feedback/rules.json` directly
+2. n8n workflow: a separate "View Feedback Rules" webhook that returns all active rules as JSON
+3. Future: simple web page that renders rules.json in a table
 
 ---
 
@@ -140,29 +135,24 @@ The dashboard allows submitting all scene feedback at once as a batch.
 
 ### 4.1 Injection into LLM Prompts
 
-Every time the LLM is called, active feedback rules are injected:
+Every LLM call includes all active feedback rules:
 
 ```
 === ACTIVE FEEDBACK RULES (MUST FOLLOW) ===
 
-These rules are based on user feedback and OVERRIDE any default behavior.
-Violating these rules is a quality gate failure.
+These rules come from user feedback and OVERRIDE default behavior.
+Violating HIGH priority rules is a quality gate failure.
 
 --- VISUAL RULES ---
 [HIGH] More warm tones in outdoor scenes (2026-02-01)
-[HIGH] Characters should have more defined facial features (2026-02-05)
-[MEDIUM] Crowds feel too sparse, increase minimum to 12 figures (2026-02-08)
+[HIGH] Characters need more defined facial features (2026-02-05)
+[MEDIUM] Minimum 12 figures in crowd scenes (2026-02-08)
 
 --- CAMERA RULES ---
-[HIGH] Camera movements are too fast, slow down pans by 30% (2026-02-03)
-[MEDIUM] Too many close-ups, use more medium shots (2026-02-07)
+[HIGH] Slow down pan movements by 30% (2026-02-03)
 
 --- TEXT RULES ---
-[HIGH] More sarcastic humor, less dad jokes (2026-02-02)
-[MEDIUM] Explanations are too simple for the target audience (2026-02-06)
-
---- TIMING RULES ---
-(none yet)
+[HIGH] More sarcastic humor, think John Oliver meets Brian Cox (2026-02-02)
 
 --- AUDIO RULES ---
 [LOW] More ambient crowd noise in market scenes (2026-02-09)
@@ -173,65 +163,52 @@ Violating these rules is a quality gate failure.
 === END FEEDBACK RULES ===
 ```
 
-### 4.2 Priority Handling
+### 4.2 Priority Levels
 
 | Priority | Effect |
 |----------|--------|
 | `high` | Included in EVERY prompt. Violation = automatic quality gate failure. |
-| `medium` | Included in every prompt. Violation = warning but not automatic failure. |
-| `low` | Included in prompts when the category is relevant (e.g., audio rules only in audio prompts). |
+| `medium` | Included in every prompt. Violation = warning (logged, doesn't block). |
+| `low` | Included only when the category is relevant (audio rules in audio prompts only). |
 
 ### 4.3 Quality Gate Integration
 
-The quality gates (VIDEO-SPEC.md Section 12) include a feedback compliance check:
+The quality gates (VIDEO-SPEC.md Section 13) include feedback compliance:
 
 ```
 CHECK: Feedback Compliance
   For each HIGH priority rule:
-    - Verify the output does not violate the rule
-    - If violation detected → FAIL with: "Violates feedback rule: [rule text]"
+    - Verify output doesn't violate the rule
+    - If violated → FAIL: "Violates feedback rule: [rule text]"
   For each MEDIUM priority rule:
-    - Check for compliance
-    - If violation → WARNING (logged, but doesn't block)
+    - Check compliance
+    - If violated → WARNING (logged, doesn't block)
 ```
 
 ---
 
 ## 5. Feedback Storage Format
 
-### 5.1 File: `data/feedback/rules.json`
+### File: `data/feedback/rules.json`
 
 ```typescript
 interface FeedbackRule {
-  /** Unique rule ID */
-  id: string;
-  /** When the rule was created */
-  createdAt: string;                // ISO 8601
-  /** Who created it */
-  createdBy: 'user' | 'system';
-  /** Feedback category */
-  category: string;                 // e.g., "visual.backgrounds"
-  /** The rule text (human-readable) */
-  rule: string;
-  /** Priority level */
+  id: string;                           // Unique ID (fb-001, fb-002, ...)
+  createdAt: string;                    // ISO 8601
+  createdBy: 'user' | 'system';        // User feedback or auto-generated
+  category: string;                     // e.g., "visual.backgrounds"
+  rule: string;                         // The actual rule text
   priority: 'high' | 'medium' | 'low';
-  /** Scope of the rule */
   scope: 'all_videos' | 'theme' | 'single_video';
-  /** If scope is 'theme', which theme */
-  theme?: string;
-  /** If scope is 'single_video', which video */
-  videoId?: string;
-  /** Is this rule currently active */
-  active: boolean;
-  /** How many times this rule has been applied */
-  appliedCount: number;
-  /** The video/scene that triggered this feedback */
-  sourceVideoId?: string;
-  sourceSceneId?: string;
+  theme?: string;                       // If scope is 'theme'
+  videoId?: string;                     // If scope is 'single_video'
+  active: boolean;                      // Can be deactivated
+  appliedCount: number;                 // How many videos this rule influenced
+  sourceVideoId?: string;              // Which video triggered this feedback
 }
 ```
 
-### 5.2 Example rules.json
+### Example rules.json
 
 ```json
 {
@@ -246,8 +223,7 @@ interface FeedbackRule {
       "scope": "all_videos",
       "active": true,
       "appliedCount": 0,
-      "sourceVideoId": "pyramids-2026-02-01",
-      "sourceSceneId": "giza-3"
+      "sourceVideoId": "pyramids-2026-02-01"
     },
     {
       "id": "fb-002",
@@ -272,148 +248,52 @@ interface FeedbackRule {
       "appliedCount": 0
     }
   ],
-  "version": 1,
+  "version": 2,
   "lastUpdated": "2026-02-05T16:00:00Z"
 }
 ```
 
 ---
 
-## 6. Dashboard Specification
-
-### 6.1 Technology Stack
-
-| Component | Technology |
-|-----------|-----------|
-| Frontend | React (shared with Remotion codebase) or Next.js |
-| Backend | Express.js / Fastify (same Node.js server as pipeline) |
-| Database | JSON files (FeedbackStore) initially, upgrade to SQLite/Postgres later |
-| Hosting | Same server as n8n |
-| Auth | Simple API key or basic auth (single user) |
-
-### 6.2 Dashboard Pages
-
-#### Page 1: Schedule
-```
-/dashboard/schedule
-
-Shows upcoming videos:
-┌────────┬──────────────────┬──────────┬───────────┐
-│ Date   │ Topic            │ Status   │ Actions   │
-├────────┼──────────────────┼──────────┼───────────┤
-│ Feb 15 │ Viking Economy   │ queued   │ [Edit]    │
-│ Feb 22 │ Roman Roads      │ queued   │ [Edit]    │
-│ Mar 1  │ Silk Road Trade  │ queued   │ [Edit]    │
-└────────┴──────────────────┴──────────┴───────────┘
-
-[+ Add Video to Schedule]
-```
-
-#### Page 2: Video Review
-```
-/dashboard/review/:videoId
-
-The full preview player + scene-by-scene feedback (see Section 3.1)
-```
-
-#### Page 3: Feedback Rules
-```
-/dashboard/feedback
-
-All active feedback rules, filterable by category:
-┌─────┬────────────────────┬──────────┬──────────┬────────┐
-│ ID  │ Rule               │ Category │ Priority │ Active │
-├─────┼────────────────────┼──────────┼──────────┼────────┤
-│ 001 │ Warmer desert tones│ visual   │ HIGH     │ ✅     │
-│ 002 │ Slower pan speed   │ camera   │ HIGH     │ ✅     │
-│ 003 │ More sarcasm       │ text     │ HIGH     │ ✅     │
-└─────┴────────────────────┴──────────┴──────────┴────────┘
-
-[+ Add Rule Manually]
-
-Each rule can be:
-- Edited (change text, priority, scope)
-- Deactivated (not deleted — preserved for history)
-- Viewed: which videos it was applied to
-```
-
-#### Page 4: Analytics (Future)
-```
-/dashboard/analytics
-
-Video performance metrics (from YouTube API):
-- Views, watch time, retention curves
-- Which scene types get the most engagement
-- Drop-off points → automatic feedback generation
-```
-
-### 6.3 Dashboard API Endpoints
+## 6. Feedback Lifecycle
 
 ```
-GET    /api/schedule              — List scheduled videos
-POST   /api/schedule              — Add video to schedule
-PUT    /api/schedule/:id          — Update scheduled video
-DELETE /api/schedule/:id          — Remove from schedule
+1. VIDEO PREVIEW GENERATED
+   └── User watches 480p preview via n8n link
 
-GET    /api/videos                — List all generated videos
-GET    /api/videos/:id            — Get video details + scenes
-GET    /api/videos/:id/preview    — Get preview URL
-
-POST   /api/feedback              — Submit feedback rule
-GET    /api/feedback              — List all feedback rules
-PUT    /api/feedback/:id          — Update feedback rule
-PATCH  /api/feedback/:id/toggle   — Activate/deactivate rule
-
-POST   /api/videos/:id/approve    — Approve video for full render
-POST   /api/videos/:id/reject     — Reject video with feedback
-POST   /api/videos/:id/publish    — Approve for YouTube publish
-
-GET    /api/pipeline/status       — Current pipeline status
-POST   /api/pipeline/trigger      — Manually trigger pipeline for a video
-```
-
----
-
-## 7. Feedback Lifecycle
-
-```
-1. VIDEO GENERATED
-   └── User watches preview in dashboard
-
-2. USER GIVES FEEDBACK
-   └── Per-scene or global
-   └── Categorized automatically (or manually)
-   └── Scope set: all_videos (default) / theme / single_video
+2. USER GIVES FEEDBACK (via n8n form)
+   └── Types feedback text
+   └── Selects category from dropdown
+   └── Submits
 
 3. FEEDBACK STORED
    └── Added to rules.json
-   └── Marked as active, high priority
-   └── Applied count: 0
+   └── priority: high, scope: all_videos (defaults)
+   └── active: true, appliedCount: 0
 
-4. NEXT VIDEO GENERATED
+4. VIDEO REGENERATED (or next video generated)
    └── All active rules injected into LLM prompt
-   └── LLM reads and follows rules
    └── Quality gates check compliance
-   └── Applied count incremented
+   └── appliedCount incremented
 
-5. FEEDBACK EFFECT VERIFIED
-   └── User reviews next video
-   └── If issue persists → priority escalated, rule text refined
-   └── If fixed → feedback confirmed as effective
+5. USER REVIEWS AGAIN
+   └── If issue fixed → feedback confirmed working
+   └── If issue persists → user gives more specific feedback → rule text refined
+   └── If feedback was wrong → user can deactivate rule
 
-6. RULE EVOLUTION
-   └── Over time, rules accumulate → LLM output converges on user preferences
-   └── Old rules that are always followed can be downgraded to 'low' priority
-   └── Contradictory rules are flagged for user resolution
+6. OVER TIME
+   └── Rules accumulate → LLM output converges on user preferences
+   └── Library grows → fewer quality issues
+   └── Contradictory rules are flagged for resolution
 ```
 
 ---
 
-## 8. Examples
+## 7. Examples
 
 ### Example 1: Visual Feedback
 
-**User says:** "The backgrounds are too dark, I can barely see the characters."
+**User types in n8n:** "The backgrounds are too dark, I can barely see the characters."
 
 **System creates rule:**
 ```json
@@ -425,14 +305,9 @@ POST   /api/pipeline/trigger      — Manually trigger pipeline for a video
 }
 ```
 
-**Injected in next prompt as:**
-> [HIGH] Backgrounds must have sufficient brightness for characters to be visible. Use lighter base colors and add a soft ambient light overlay. Characters should always contrast against their background.
-
----
-
 ### Example 2: Camera Feedback
 
-**User says:** "Too many zoom-ins, feels claustrophobic."
+**User types:** "Too many zoom-ins, feels claustrophobic."
 
 **System creates rule:**
 ```json
@@ -444,29 +319,9 @@ POST   /api/pipeline/trigger      — Manually trigger pipeline for a video
 }
 ```
 
----
+### Example 3: Tone Feedback
 
-### Example 3: Content Feedback
-
-**User says:** "The Aztec video didn't mention the floating gardens enough."
-
-**System creates rules:**
-```json
-[
-  {
-    "category": "content.depth",
-    "rule": "When a topic has a unique/surprising aspect (like Aztec floating gardens), dedicate at least 2-3 scenes to it with detail shots and overlays.",
-    "priority": "medium",
-    "scope": "all_videos"
-  }
-]
-```
-
----
-
-### Example 4: Tone Feedback
-
-**User says:** "Professor sounds too much like a textbook. Make him more like a pub storyteller."
+**User types:** "Professor sounds too much like a textbook."
 
 **System creates rule:**
 ```json
@@ -478,10 +333,27 @@ POST   /api/pipeline/trigger      — Manually trigger pipeline for a video
 }
 ```
 
+### Example 4: Asset Library Feedback
+
+**User types:** "The palm trees look too simple compared to the buildings."
+
+**System creates rule AND flags for library update:**
+```json
+{
+  "category": "visual.backgrounds",
+  "rule": "Palm tree assets need more detail — more fronds, trunk texture, color depth. Current palm_tree_tall and palm_tree_short need library update.",
+  "priority": "high",
+  "scope": "all_videos"
+}
+```
+
+The pipeline flags `palm_tree_tall` and `palm_tree_short` for manual improvement in the next asset library update session.
+
 ---
 
 ## Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0 | 2026-02-11 | Initial specification |
+| 1.0 | 2026-02-11 | Initial specification with dashboard |
+| 2.0 | 2026-02-11 | Removed dashboard — n8n approval flow only. Simplified collection. Added asset library feedback example. |

@@ -1,27 +1,28 @@
-# Professor Pint — Pipeline Architecture v1.0
+# Professor Pint — Pipeline Architecture v2.0
 
 > **End-to-end flow: Topic → YouTube-published video.**
-> This document describes every step, every service, and every decision point.
+> Built on the Asset Library system (see VIDEO-SPEC.md Section 4).
 
 ---
 
 ## Table of Contents
 
 1. [Pipeline Overview](#1-pipeline-overview)
-2. [Step 1: Input (Topic + Sources)](#2-step-1-input)
+2. [Step 1: Input](#2-step-1-input)
 3. [Step 2: Script Generation (LLM)](#3-step-2-script-generation)
-4. [Step 3: Asset Generation (SVG)](#4-step-3-asset-generation)
+4. [Step 3: Scene Composition (from Asset Library)](#4-step-3-scene-composition)
 5. [Step 4: Quality Gates](#5-step-4-quality-gates)
-6. [Step 5: Audio Generation (TTS + Music + SFX)](#6-step-5-audio-generation)
-7. [Step 6: Composition Assembly](#7-step-6-composition-assembly)
+6. [Step 5: Audio Generation](#6-step-5-audio-generation)
+7. [Step 6: Assembly](#7-step-6-assembly)
 8. [Step 7: Preview & Approval](#8-step-7-preview--approval)
 9. [Step 8: Full Render](#9-step-8-full-render)
-10. [Step 9: YouTube Metadata](#10-step-9-youtube-metadata)
+10. [Step 9: YouTube Metadata & Subtitles](#10-step-9-youtube-metadata--subtitles)
 11. [Step 10: Upload & Publish](#11-step-10-upload--publish)
 12. [n8n Orchestration](#12-n8n-orchestration)
-13. [Infrastructure](#13-infrastructure)
-14. [Error Handling](#14-error-handling)
-15. [File & Directory Structure](#15-file--directory-structure)
+13. [Asset Library Build Phase](#13-asset-library-build-phase)
+14. [Infrastructure & Costs](#14-infrastructure--costs)
+15. [Error Handling](#15-error-handling)
+16. [File & Directory Structure](#16-file--directory-structure)
 
 ---
 
@@ -29,53 +30,49 @@
 
 ```
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  1. INPUT    │───▶│ 2. SCRIPT    │───▶│ 3. ASSETS    │───▶│ 4. QUALITY   │
-│  Topic +     │    │ LLM generates│    │ SVG backgrounds│   │ Quality gates│
-│  Sources     │    │ full SceneData│   │ + characters  │    │ pass/fail    │
+│  1. INPUT    │───▶│ 2. SCRIPT    │───▶│ 3. COMPOSE   │───▶│ 4. QUALITY   │
+│  Topic +     │    │ LLM generates│    │ Select assets│    │ Automated    │
+│  Sources     │    │ SceneData[]  │    │ from library │    │ checks       │
 └──────────────┘    └──────────────┘    └──────────────┘    └──────┬───────┘
                                                                    │
                                                           ┌────────▼───────┐
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │ 5. AUDIO      │
 │ 10. PUBLISH  │◀───│ 9. METADATA  │◀───│ 8. RENDER    │◀─│ TTS + Music   │
-│ YouTube      │    │ Title, desc, │    │ Remotion      │  │ + SFX         │
-│ upload       │    │ tags, thumb  │    │ full render   │  └───────────────┘
+│ YouTube      │    │ + Subtitles  │    │ Remotion     │  │ + SFX         │
+│ (manual OK)  │    │ + Thumbnail  │    │ 1080p/30fps  │  └───────────────┘
 └──────────────┘    └──────────────┘    └──────┬───────┘
-                                               │
+                                               ▲
                                        ┌───────┴───────┐
                                        │ 7. PREVIEW    │
-                                       │ Low-res check │
-                                       │ Human approve │
-                                       └───────────────┘
-                                               │
+                                       │ 480p → n8n    │
+                                       │ → User OK?    │
+                                       └───────┬───────┘
+                                               ▲
                                        ┌───────┴───────┐
                                        │ 6. ASSEMBLY   │
-                                       │ Compose scenes│
-                                       │ + audio       │
+                                       │ Compose +     │
+                                       │ Audio bind    │
                                        └───────────────┘
 ```
+
+**Key difference from v1.0:** Step 3 is now "compose from library" instead of "generate SVG from scratch." This cuts cost by ~70% and guarantees visual quality.
 
 ---
 
 ## 2. Step 1: Input
 
-### Input Format (provided by user via n8n dashboard or schedule)
+### Input Format (provided via n8n schedule or manual trigger)
 
 ```typescript
 interface PipelineInput {
-  /** The video topic */
   topic: string;
-  /** Source material — the LLM can ONLY use facts from these sources */
   sources: Array<{
     title: string;
     url?: string;
-    /** Plain text content of the source */
-    content: string;
+    content: string;    // Full text of the source
   }>;
-  /** Target duration in minutes (default: 12) */
-  targetMinutes?: number;
-  /** Specific instructions for this video (optional) */
-  notes?: string;
-  /** Schedule metadata */
+  targetMinutes?: number;  // Default: 12
+  notes?: string;          // Special instructions for this video
   scheduledPublishDate?: string;  // ISO 8601
 }
 ```
@@ -90,18 +87,17 @@ interface PipelineInput {
 ## 3. Step 2: Script Generation
 
 ### LLM Provider
-- **Primary**: Claude (Anthropic) — better for structured output and long-form content.
-- **Fallback**: OpenAI GPT-4 — if Claude is unavailable.
+- **Primary**: Claude (Anthropic) — best for structured output and long-form content.
+- **Fallback**: OpenAI GPT-4.
 
-### Prompt Architecture
-
-The script generation uses a 3-layer prompt system:
+### Prompt Architecture (3-Layer System)
 
 ```
-LAYER 1: System Prompt (constant)
-├── VIDEO-SPEC.md (full spec, always included)
+LAYER 1: System Prompt (constant, included in every call)
+├── VIDEO-SPEC.md (full spec)
 ├── Active feedback rules (from FeedbackStore)
-└── Character library (available characters + their capabilities)
+├── Asset library manifest (list of all available assets with descriptions)
+└── Character library (available characters per theme)
 
 LAYER 2: Task Prompt (per-video)
 ├── Topic description
@@ -110,45 +106,38 @@ LAYER 2: Task Prompt (per-video)
 └── User notes (if any)
 
 LAYER 3: Output Format (constant)
-├── Required JSON schema (SceneData[])
-├── Example scene (from a known-good video)
+├── Required JSON schema (ScriptOutput)
+├── Example scene (from reference video)
 └── Quality gate checklist (LLM self-checks before output)
 ```
 
 ### LLM Output
-The LLM returns a complete `SceneData[]` JSON array as described in VIDEO-SPEC.md Section 15.
-
-Additionally, it returns:
 
 ```typescript
 interface ScriptOutput {
-  /** The complete scene array */
+  /** Complete scene array — each scene references library assets */
   scenes: SceneData[];
-  /** List of required backgrounds (to be generated) */
-  requiredBackgrounds: Array<{
-    id: string;
-    description: string;       // Detailed visual description for SVG generation
-    artStyle: string;          // Specific art direction
-    timeOfDay: string;         // dawn, day, dusk, night
-    weather: string;           // clear, cloudy, rain, sandstorm, fog
-    animationNotes: string;    // What should animate
-  }>;
-  /** List of required characters (to be generated) */
-  requiredCharacters: Array<{
-    id: string;
-    role: string;              // e.g., "pharaoh", "stone mason"
-    description: string;       // Detailed visual description
-    clothing: string;          // Period-accurate clothing details
-    accessories: string;       // Tools, weapons, jewelry
-    distinctiveFeature: string; // What makes them recognizable
-  }>;
-  /** List of required crowd configs */
-  requiredCrowds: Array<{
+
+  /** Composed backgrounds for each scene (library asset references) */
+  compositions: Array<{
     sceneId: string;
-    description: string;       // What the crowd is doing
-    figureTypes: string[];     // Types of figures needed
-    density: 'sparse' | 'medium' | 'dense';
+    composed: ComposedScene;  // See VIDEO-SPEC.md Section 5.1
   }>;
+
+  /** Any NEW assets needed that don't exist in the library */
+  missingAssets: Array<{
+    id: string;
+    category: string;          // "structures/roman", "vegetation", etc.
+    description: string;       // What it should look like
+    priority: 'required' | 'nice-to-have';
+  }>;
+
+  /** Crowd configurations per scene */
+  crowds: Array<{
+    sceneId: string;
+    config: CrowdConfig;
+  }>;
+
   /** Music direction */
   musicDirection: {
     genre: string;
@@ -156,169 +145,108 @@ interface ScriptOutput {
     instruments: string[];
     tempo: 'slow' | 'medium' | 'fast';
   };
+
   /** YouTube metadata */
   metadata: {
     title: string;
     description: string;
     tags: string[];
-    thumbnailConcept: string;  // Description of ideal thumbnail
+    thumbnailConcept: string;
   };
 }
 ```
 
+### Asset Manifest (Provided to LLM)
+
+The LLM receives a manifest of all available assets:
+
+```json
+{
+  "skies": ["sunset_warm", "sunset_cold", "day_clear", "day_cloudy", "night_stars", "night_moon", "dawn_golden", "storm_dark", "sandstorm"],
+  "terrain": ["sand_flat", "sand_dunes", "sand_riverbank", "grass_plain", "grass_hill", ...],
+  "water": ["river_calm", "river_rapid", "lake_still", "ocean_waves", ...],
+  "vegetation": ["palm_tree_tall", "palm_tree_short", "oak_tree", ...],
+  "structures": {
+    "egypt": ["pyramid_great", "pyramid_small", "sphinx", "obelisk", ...],
+    "aztec": ["templo_mayor", "pyramid_stepped", "chinampa", ...],
+    "roman": ["colosseum", "forum", "aqueduct_roman", ...],
+    ...
+  },
+  "characters": {
+    "permanent": ["professorPint"],
+    "egypt": ["pharaoh", "royal_guard", "scribe", "worker", ...],
+    ...
+  },
+  "crowd_figures": {
+    "egypt": ["worker_carrying", "worker_pulling", "guard_standing", ...],
+    ...
+  },
+  "atmosphere": ["dust_particles", "embers", "mist_low", ...],
+  "lighting": ["vignette_dark", "vignette_warm", "vignette_cold", ...],
+  "foreground": ["column_left", "arch_frame", "foliage_left", ...]
+}
+```
+
+The LLM can ONLY reference assets that exist in this manifest. If something is missing, it goes in `missingAssets`.
+
 ---
 
-## 4. Step 3: Asset Generation
+## 4. Step 3: Scene Composition
 
-### 4.1 Background Generation
+### From Library (Primary Path — ~95% of scenes)
 
-For each entry in `requiredBackgrounds`, the LLM generates a complete SVG React component.
+1. Parse each scene's `ComposedScene` definition
+2. Verify all referenced assets exist in the library
+3. Load the corresponding React components
+4. Generate the SceneComposer configuration
 
-**Prompt per background:**
-```
-Generate a React SVG background component for a Professor Pint video.
+### Missing Assets (Rare — ~5% of scenes)
 
-CONTEXT: [scene description from ScriptOutput]
-ART STYLE: Oil painting quality. Vermeer lighting. Rich palette (60+ colors).
-TIME OF DAY: [timeOfDay]
-WEATHER: [weather]
-ANIMATION NOTES: [animationNotes]
-
-REQUIREMENTS (from VIDEO-SPEC.md Section 4):
-- [All requirements listed]
-- Must have 6 layers: sky, mid-background, midground, foreground, atmosphere, lighting
-- Must animate at least 3 elements using the `frame` parameter
-- Minimum 200 lines of SVG, target 500+
-- Follow the exact component structure template
-
-ACTIVE FEEDBACK RULES:
-[Injected from FeedbackStore — e.g., "more warm tones", "darker shadows"]
-```
-
-**Generation Process:**
-1. LLM generates the SVG component
-2. Quality Gate (Section 12.2 of VIDEO-SPEC.md) validates it
-3. If FAIL → regenerate with specific feedback (max 3 attempts)
-4. If PASS → save to `src/backgrounds/generated/[id].tsx`
-
-### 4.2 Character Generation
-
-For each entry in `requiredCharacters`, the LLM generates a complete SVG React component.
-
-**Prompt per character:**
-```
-Generate a React SVG character component for a Professor Pint video.
-
-CHARACTER: [role] — [description]
-CLOTHING: [clothing]
-ACCESSORIES: [accessories]
-DISTINCTIVE FEATURE: [distinctiveFeature]
-
-REQUIREMENTS (from VIDEO-SPEC.md Section 5):
-- Must accept frame, emotion, talking, scale props
-- Minimum 150 lines SVG, 15+ colors
-- Period-accurate clothing and accessories
-- Idle animation (breathing, blinking)
-- Emotion support (6 states)
-- Must be recognizable by role from appearance alone
-
-ACTIVE FEEDBACK RULES:
-[Injected from FeedbackStore]
-```
-
-### 4.3 Crowd Generation
-
-For each entry in `requiredCrowds`, the LLM generates a CrowdLayer config.
-
-### 4.4 Asset Caching (SceneDatabase)
-
-Generated assets are stored in the SceneDatabase for reuse:
-- If a future video needs "Egyptian pyramid at dusk" and we have one rated 4+/5 → reuse it.
-- The system searches by tags: topic, era, setting, time-of-day.
-- Reused assets get a `reusedFrom` marker in the scene data.
+If `missingAssets` is not empty:
+1. For `required` assets: LLM generates SVG following the standard AssetProps interface
+2. Quality gate validates the new asset (VIDEO-SPEC.md Section 13.2)
+3. If PASS: asset is saved to the library for future reuse
+4. If FAIL after 3 attempts: substitute with closest existing asset + flag for manual creation later
+5. For `nice-to-have` assets: substitute with closest existing asset
 
 ---
 
 ## 5. Step 4: Quality Gates
 
-Every generated asset passes through automated quality gates as defined in VIDEO-SPEC.md Section 12.
+Automated validation as defined in VIDEO-SPEC.md Section 13.
 
 ```
-Pipeline Flow:
-  Generate → Validate → PASS? → Continue
-                      → FAIL? → Regenerate with feedback (max 3 attempts)
-                               → Still FAIL after 3? → Flag for human review
-```
+For each scene:
+  → Scene Composition Quality Gate (Section 13.3)
+  → Pass? Continue. Fail? Regenerate scene with feedback.
 
-### Validation Implementation
+For the full video:
+  → Full Video Quality Gate (Section 13.4)
+  → Pass? Continue. Fail? Regenerate specific failed sections.
 
-```typescript
-interface QualityResult {
-  passed: boolean;
-  checks: Array<{
-    name: string;
-    passed: boolean;
-    message?: string;   // Feedback for regeneration
-  }>;
-  score: number;         // 0-100 quality score
-}
-
-// Example: Background validation
-function validateBackground(svgCode: string): QualityResult {
-  const checks = [];
-
-  // Check 1: SVG validity
-  checks.push(checkSVGValidity(svgCode));
-
-  // Check 2: Complexity (element count, colors, gradients)
-  checks.push(checkComplexity(svgCode, {
-    minElements: 50,
-    minColors: 40,
-    minGradients: 3,
-    minLines: 200,
-  }));
-
-  // Check 3: Layer structure
-  checks.push(checkLayers(svgCode));
-
-  // Check 4: Animation (frame references)
-  checks.push(checkAnimation(svgCode, { minFrameRefs: 3 }));
-
-  // Check 5: Art style (gradients, opacity, vignette)
-  checks.push(checkArtStyle(svgCode));
-
-  // Check 6: Perspective
-  checks.push(checkPerspective(svgCode));
-
-  return {
-    passed: checks.every(c => c.passed),
-    checks,
-    score: (checks.filter(c => c.passed).length / checks.length) * 100,
-  };
-}
+Max 3 regeneration attempts per component. After 3 fails → flag for user review.
 ```
 
 ---
 
 ## 6. Step 5: Audio Generation
 
-### 6.1 TTS (Text-to-Speech)
+### 6.1 TTS (ElevenLabs)
 
-**Process:**
-1. Extract all `subtitle` texts from SceneData[] where `talking: true`
+1. Extract all `subtitle` texts from scenes where `talking: true`
 2. Send each subtitle to ElevenLabs API
 3. Receive audio files (.mp3) with timing data
 4. Map phonemes to mouth shapes for lip sync
-5. Store audio segments with frame-accurate timing
+5. Adjust scene durations to match actual audio length (audio is truth, scenes flex)
 
 ```typescript
 interface AudioPipelineOutput {
   segments: Array<{
     sceneId: string;
-    audioFile: string;      // path to .mp3
+    audioFile: string;
     startFrame: number;
     endFrame: number;
-    phonemes: Array<{       // for lip sync
+    phonemes: Array<{
       time: number;
       phoneme: string;
       mouthShape: 'closed' | 'open' | 'wide' | 'rounded';
@@ -328,37 +256,36 @@ interface AudioPipelineOutput {
 }
 ```
 
-### 6.2 Music Generation/Selection
+### 6.2 Music
 
-Based on the `musicDirection` from the script output:
-1. Search music library for matching tracks
-2. If no match: generate using AI music service or use royalty-free library
+Based on `musicDirection`:
+1. Select from music library (royalty-free / AI-generated)
+2. Source: [TO BE DETERMINED]
 3. Mix at -18dB relative to voice
-4. Crossfade between tracks at scene transitions (2-second crossfade)
+4. Crossfade between tracks at scene transitions (2-second fade)
 
 ### 6.3 SFX
 
-Based on `sfx` entries in each SceneData:
-1. Map SFX type to audio files from SFX library
-2. Place at correct frame positions
-3. Mix at -12dB relative to voice
-4. Loop ambient SFX (wind, crowd murmur) for scene duration
+Based on `sfx` entries in SceneData:
+1. Map SFX type to audio files from library
+2. Mix at -12dB relative to voice
+3. Loop ambient SFX (wind, crowd murmur) for scene duration
 
 ---
 
-## 7. Step 6: Composition Assembly
+## 7. Step 6: Assembly
 
-### 7.1 Dynamic Composition File
+### Dynamic Composition File
 
-The pipeline generates a Remotion composition file that:
-1. Imports ProfessorPint (permanent) and all generated characters
-2. Imports all generated backgrounds
-3. Imports crowd configs
-4. Passes the SceneData[] to SceneRenderer
-5. Binds audio segments to the timeline
+The pipeline generates a Remotion composition file:
+1. Imports ProfessorPint (permanent) + all referenced theme characters
+2. Imports all referenced library assets
+3. Configures SceneComposer for each scene
+4. Binds audio segments to the timeline
+5. Registers as new Composition in Root.tsx
 
 ```typescript
-// Auto-generated composition
+// Auto-generated: src/compositions/generated/ProfessorPint-[Topic]-[Date].tsx
 const VideoComposition: React.FC = () => {
   return (
     <SceneRenderer
@@ -371,371 +298,423 @@ const VideoComposition: React.FC = () => {
 };
 ```
 
-### 7.2 Registration in Root.tsx
-
-The pipeline automatically registers the new composition in Root.tsx with:
-- Unique ID: `ProfessorPint-[Topic]-[Date]`
-- Correct frame count (from total duration)
-- 30fps, 1920x1080
-
 ---
 
 ## 8. Step 7: Preview & Approval
 
-### 8.1 Low-Resolution Preview
+### Low-Resolution Preview
+- Render at **480p** (854x480) at **15fps** → ~1/8th the time of full render
+- Upload to cloud storage
+- n8n sends notification with preview link
 
-Before the full render:
-1. Render at **480p** (854×480) instead of 1080p
-2. Render at **10fps** instead of 30fps (3x faster)
-3. This produces a rough preview in ~1/18th the time
-
-### 8.2 Preview Delivery
-
-The preview is:
-1. Uploaded to a private preview URL (cloud storage)
-2. Notification sent to user (via n8n → email/Slack/dashboard)
-3. Dashboard shows the preview with approve/reject/feedback buttons
-
-### 8.3 Approval Flow
+### Approval Flow (via n8n)
 
 ```
-Preview Ready → User Reviews
-  → APPROVE → Proceed to Step 8 (Full Render)
-  → REJECT with feedback → Feedback stored → Return to Step 2 (Script Regen)
-  → PARTIAL approve → Fix specific scenes → Return to Step 4 (Quality Gates)
+n8n sends preview link → User watches preview
+  → Clicks "Approve" in n8n        → Proceed to full render
+  → Clicks "Feedback" in n8n       → Enters feedback text → stored in FeedbackStore → regenerate
+  → Clicks "Reject" in n8n         → Feedback stored → pipeline ends
 ```
+
+**No separate dashboard needed.** The n8n workflow has built-in approval buttons (Wait for Approval node) that the user clicks.
 
 ---
 
 ## 9. Step 8: Full Render
 
-### 9.1 Render Command
+### Render Command
 
 ```bash
 npx remotion render src/index.ts ProfessorPint-[Topic]-[Date] \
   --output out/[topic]-[date].mp4 \
   --codec h264 \
   --image-format jpeg \
-  --quality 90 \
-  --frames 0-[totalFrames]
+  --quality 90
 ```
 
-### 9.2 Render Settings
+### Render Settings
 
 | Setting | Value |
 |---------|-------|
-| Resolution | 1920×1080 |
+| Resolution | 1920x1080 |
 | FPS | 30 |
 | Codec | H.264 |
 | Quality | 90 |
-| Audio Codec | AAC |
-| Audio Bitrate | 192kbps |
-| Estimated render time | 30-90 minutes for 12-minute video |
-| Output format | .mp4 |
-
-### 9.3 Post-Render Checks
-- File size: expect 200-600MB for a 12-minute video
-- Audio sync: verify audio aligns with subtitles
-- No black frames or glitches (spot-check first/last/middle frames)
+| Audio | AAC 192kbps |
+| Est. render time | 20-60 min (faster with asset library — less complex SVG per frame) |
+| Output | .mp4 |
 
 ---
 
-## 10. Step 9: YouTube Metadata
+## 10. Step 9: YouTube Metadata & Subtitles
 
-Generated alongside the script (Step 2). See VIDEO-SPEC.md Section 13 for format.
+### Generated in Step 2, finalized here:
+- **Title**: Hook + "| Professor Pint" (see VIDEO-SPEC.md Section 14)
+- **Description**: With timestamps auto-generated from topicCard overlays
+- **Tags**: 15-20 relevant tags
+- **Thumbnail**: Composed from scene assets + Professor shocked face + bold text
 
-### 10.1 Thumbnail Generation
-
-1. Extract a key frame from the video (the most visually impressive `establishing` or `dramatic` scene)
-2. Composite: scene background (left 2/3) + Professor Pint shocked face (right 1/3) + bold text overlay
-3. Output: 1280×720 JPEG at 95% quality
-
-### 10.2 Timestamps
-
-Auto-generated from SceneData[]:
-- Identify every `topicCard` overlay → that's a timestamp marker
-- Format: `MM:SS - Topic Label`
-- Include in YouTube description
+### SRT Subtitles
+Auto-generated from SceneData subtitles:
+```
+1
+00:00:02,000 --> 00:00:07,000
+Grab a pint, because today we're going
+to Ancient Egypt.
+```
+Uploaded alongside video as YouTube closed captions.
 
 ---
 
 ## 11. Step 10: Upload & Publish
 
-### 11.1 Upload via YouTube API (through n8n)
+### Upload (via n8n YouTube node)
 
 ```typescript
-interface YouTubeUpload {
-  videoFile: string;         // path to .mp4
-  thumbnail: string;         // path to thumbnail .jpg
-  title: string;
-  description: string;
-  tags: string[];
-  categoryId: '27';         // Education category
-  privacyStatus: 'private'; // Always upload as PRIVATE first
-  publishAt?: string;        // Scheduled publish date (ISO 8601)
-  language: 'en';
-  defaultAudioLanguage: 'en';
+{
+  videoFile: "out/pyramids-2026-02-15.mp4",
+  thumbnail: "out/pyramids-2026-02-15-thumb.jpg",
+  subtitles: "out/pyramids-2026-02-15.srt",
+  title: "How 2.3 Million Stones Built a Wonder | Professor Pint",
+  description: "...",
+  tags: [...],
+  categoryId: "27",          // Education
+  privacyStatus: "private",  // ALWAYS private first
+  language: "en"
 }
 ```
 
-### 11.2 Publish Flow
+### Publish Flow
 
 ```
-Upload as PRIVATE → Notify user → User reviews on YouTube
-  → APPROVE → Change to PUBLIC (or schedule)
-  → REJECT → Keep private, regenerate if needed
+Upload as PRIVATE → n8n notifies user → User reviews on YouTube
+  → "Approve" in n8n → Set to PUBLIC or schedule publish date
+  → "Reject" in n8n  → Keep private
 ```
 
-**NEVER auto-publish as public.** Always require manual approval.
+**NEVER auto-publish as public.** Always manual approval.
 
 ---
 
 ## 12. n8n Orchestration
 
-### 12.1 n8n Workflow Overview
-
-n8n is the orchestration layer that connects all steps. The n8n server runs on a dedicated machine (or cloud) and manages the pipeline.
+### n8n Workflow
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        n8n WORKFLOW                              │
 │                                                                  │
-│  TRIGGER: Schedule (cron) or Manual (webhook/dashboard)          │
+│  TRIGGER: Schedule (cron) or Manual button                       │
 │     │                                                            │
 │     ▼                                                            │
-│  [1] Read topic + sources from schedule/database                 │
+│  [1] Read topic + sources from schedule database                 │
 │     │                                                            │
 │     ▼                                                            │
-│  [2] Call LLM API: Generate ScriptOutput                         │
-│     │  ├── System prompt: VIDEO-SPEC + feedback rules            │
-│     │  ├── User prompt: topic + sources                          │
-│     │  └── Output: SceneData[] + asset requirements              │
+│  [2] Call Claude API: Generate ScriptOutput                      │
+│     │  ├── System: VIDEO-SPEC + feedback rules + asset manifest  │
+│     │  ├── User: topic + sources                                 │
+│     │  └── Output: scenes + compositions + metadata              │
 │     │                                                            │
 │     ▼                                                            │
-│  [3] For each required background: Call LLM → Generate SVG       │
-│     │  └── Quality gate check → Retry if failed (max 3x)        │
+│  [3] Quality gates (automated Code node)                         │
+│     │  └── Fail? → Regenerate specific sections (max 3x)        │
 │     │                                                            │
 │     ▼                                                            │
-│  [4] For each required character: Call LLM → Generate SVG        │
-│     │  └── Quality gate check → Retry if failed (max 3x)        │
+│  [4] Missing assets? → Generate + validate (rare)                │
 │     │                                                            │
 │     ▼                                                            │
-│  [5] Generate crowd configs                                      │
+│  [5] Call ElevenLabs: TTS for all subtitles                      │
 │     │                                                            │
 │     ▼                                                            │
-│  [6] Call ElevenLabs: Generate TTS for all subtitles             │
+│  [6] Select music + SFX from library                             │
 │     │                                                            │
 │     ▼                                                            │
-│  [7] Select/generate music + SFX                                 │
+│  [7] Assemble Remotion composition                               │
 │     │                                                            │
 │     ▼                                                            │
-│  [8] Assemble Remotion composition                               │
+│  [8] Render preview (480p/15fps)                                 │
 │     │                                                            │
 │     ▼                                                            │
-│  [9] Render preview (480p/10fps)                                 │
-│     │                                                            │
-│     ▼                                                            │
-│ [10] Notify user → Wait for approval                             │
+│  [9] Wait for Approval (n8n built-in)                            │
 │     │  ├── APPROVE → Continue                                    │
-│     │  ├── FEEDBACK → Store feedback → Go to [2]                 │
-│     │  └── REJECT → Store feedback → End                         │
+│     │  ├── FEEDBACK → FeedbackStore → Go to [2]                  │
+│     │  └── REJECT → FeedbackStore → End                          │
 │     │                                                            │
 │     ▼                                                            │
-│ [11] Full render (1080p/30fps)                                   │
+│ [10] Full render (1080p/30fps)                                   │
 │     │                                                            │
 │     ▼                                                            │
-│ [12] Generate thumbnail                                          │
+│ [11] Generate thumbnail + SRT subtitles                          │
 │     │                                                            │
 │     ▼                                                            │
-│ [13] Upload to YouTube (PRIVATE)                                 │
+│ [12] Upload to YouTube (PRIVATE)                                 │
 │     │                                                            │
 │     ▼                                                            │
-│ [14] Notify user → Wait for publish approval                     │
-│     │  ├── APPROVE → Set to PUBLIC / schedule                    │
+│ [13] Wait for Publish Approval (n8n built-in)                    │
+│     │  ├── APPROVE → Set PUBLIC / schedule date                  │
 │     │  └── REJECT → Keep private                                 │
 │     │                                                            │
 │     ▼                                                            │
-│ [15] Log result → Update schedule → Done                         │
+│ [14] Log result → Update schedule → Done                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 12.2 n8n Node Types Used
+### n8n Nodes Used
 
 | Node | Purpose |
 |------|---------|
-| **Schedule Trigger** | Fires on schedule (e.g., every Monday 9:00) |
-| **Webhook** | Manual trigger from dashboard |
-| **HTTP Request** | Call LLM API (Claude/OpenAI) |
-| **HTTP Request** | Call ElevenLabs API |
-| **Code** | Quality gate validation logic |
-| **Code** | Composition assembly |
-| **Execute Command** | Run Remotion render CLI |
-| **Google Drive** | Upload preview for review |
-| **YouTube** | Upload final video |
-| **Slack/Email** | Notifications |
-| **Wait** | Wait for human approval |
-| **IF** | Quality gate pass/fail routing |
-| **Loop** | Iterate over backgrounds/characters for generation |
+| Schedule Trigger | Weekly cron |
+| Webhook | Manual trigger |
+| HTTP Request | Claude API, ElevenLabs API |
+| Code | Quality gates, composition assembly, asset manifest |
+| Execute Command | Remotion render CLI |
+| YouTube | Upload video |
+| Wait for Approval | User approve/reject/feedback buttons |
+| Slack/Email | Notifications |
+| IF | Quality gate routing |
 
-### 12.3 Schedule Database
+### Schedule Database
 
 ```typescript
 interface VideoSchedule {
   id: string;
   topic: string;
   sources: Source[];
-  scheduledDate: string;        // When to publish
-  status: 'queued' | 'generating' | 'preview_ready' | 'approved' | 'rendering' | 'rendered' | 'uploaded' | 'published' | 'rejected';
+  scheduledDate: string;
+  status: 'queued' | 'generating' | 'preview_ready' | 'approved' |
+          'rendering' | 'rendered' | 'uploaded' | 'published' | 'rejected';
   createdAt: string;
   updatedAt: string;
   notes?: string;
-  feedback?: FeedbackEntry[];   // Accumulated feedback
-  outputFile?: string;          // Path to rendered .mp4
-  youtubeId?: string;           // YouTube video ID after upload
-  previewUrl?: string;          // URL to preview video
+  feedback?: FeedbackEntry[];
+  outputFile?: string;
+  youtubeId?: string;
+  previewUrl?: string;
 }
 ```
 
 ---
 
-## 13. Infrastructure
+## 13. Asset Library Build Phase
 
-### 13.1 Required Services
+### Phase 1 — Universal Assets (~50 components)
 
-| Service | Purpose | Estimated Cost |
-|---------|---------|---------------|
-| **n8n** (self-hosted) | Pipeline orchestration | Free (self-hosted) |
-| **Claude API** (Anthropic) | Script + SVG generation | ~$5-15 per video |
-| **ElevenLabs** | TTS voice generation | ~$5-10 per video |
-| **Remotion** | Video rendering | Free (self-hosted) |
-| **Cloud storage** | Preview hosting, asset storage | ~$5/month |
-| **YouTube API** | Upload & publish | Free |
-| **Server** | Run n8n + render | VPS or local machine |
+These work for ANY video regardless of theme. Build first.
 
-### 13.2 Server Requirements
+| Category | Count | Priority |
+|----------|-------|----------|
+| Skies | 9 | HIGH — needed for every scene |
+| Terrain | 11 | HIGH — needed for every scene |
+| Water | 8 | MEDIUM — needed for many scenes |
+| Vegetation | 15 | MEDIUM — used frequently |
+| Atmosphere | 11 | HIGH — needed for every outdoor scene |
+| Lighting | 7 | HIGH — needed for every scene |
+| Foreground | 8 | MEDIUM — used for framing |
+| Generic structures | 7 | LOW — nice to have |
+| Props | 12 | LOW — detail elements |
+
+**Estimated effort:** Each universal asset is ~100-300 lines SVG. With fine-tuning in Remotion Studio: ~1-2 hours per asset. Total: ~50-100 hours for Phase 1.
+
+### Phase 2 — First Theme: Egypt (~25 components)
+
+| Category | Count |
+|----------|-------|
+| Structures (egypt/) | 12 |
+| Characters | 10-15 |
+| Crowd figures | 12 |
+
+**Estimated effort:** ~50-75 hours. After Phase 2, we can produce complete Egypt videos.
+
+### Phase 3+ — Additional Themes (~20-25 per theme)
+
+Each new theme adds structures + characters + crowd figures. Universal assets are reused.
+
+**Estimated effort per theme:** ~40-60 hours.
+
+### Build Strategy
+
+Assets can be built by:
+1. **LLM generation + manual fine-tuning** — LLM generates first draft, human tweaks in Remotion Studio
+2. **Manual creation** — for critical assets like pub_interior (home base)
+3. **Extraction from existing code** — the current backgrounds can be decomposed into reusable components
+
+The existing 16 backgrounds (~11,600 lines) contain excellent SVG elements that can be extracted into the asset library.
+
+---
+
+## 14. Infrastructure & Costs
+
+### Required Services
+
+| Service | Purpose | Cost |
+|---------|---------|------|
+| n8n (self-hosted) | Orchestration | Free |
+| Claude API | Script generation + rare SVG generation | ~$3-8 per video (down from $15-30 with library) |
+| ElevenLabs | TTS | ~$5-10 per video |
+| Remotion | Rendering | Free (self-hosted) |
+| Cloud storage | Previews | ~$5/month |
+| YouTube API | Upload | Free |
+| Server | n8n + render | VPS ~$20-40/month |
+
+### Cost Per Video (with Asset Library)
+
+| Step | Cost |
+|------|------|
+| Script generation (1 Claude call) | ~$2-5 |
+| Missing asset generation (0-3 calls) | ~$0-3 |
+| TTS (10 min audio) | ~$5-10 |
+| Render (server time) | ~$1-2 |
+| **Total per video** | **~$8-20** |
+
+**Monthly (4 videos):** ~$32-80 content + ~$25-45 infrastructure = **~$60-125/month**
+
+This is ~50% cheaper than v1.0 because the asset library eliminates most SVG generation calls.
+
+### Server Requirements
 
 | Resource | Minimum | Recommended |
 |----------|---------|-------------|
 | CPU | 4 cores | 8+ cores |
 | RAM | 8 GB | 16+ GB |
 | Storage | 50 GB | 200+ GB |
-| GPU | Not required | Nice for faster render |
-| OS | Linux (Ubuntu 22.04+) | — |
 | Node.js | 18+ | 20+ |
 
-### 13.3 Environment Variables
+### Environment Variables
 
 ```bash
-# LLM
 ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...              # Fallback
-
-# TTS
+OPENAI_API_KEY=sk-...
 ELEVENLABS_API_KEY=...
-ELEVENLABS_VOICE_ID=...            # To be selected
-
-# YouTube
+ELEVENLABS_VOICE_ID=...
 YOUTUBE_CLIENT_ID=...
 YOUTUBE_CLIENT_SECRET=...
 YOUTUBE_REFRESH_TOKEN=...
-
-# Storage
-CLOUD_STORAGE_BUCKET=...
-CLOUD_STORAGE_KEY=...
-
-# n8n
 N8N_WEBHOOK_URL=http://localhost:5678/webhook/professor-pint
-N8N_API_KEY=...
-
-# Pipeline
 RENDER_OUTPUT_DIR=/data/renders
 PREVIEW_OUTPUT_DIR=/data/previews
-ASSET_DIR=/data/assets
+ASSET_LIBRARY_DIR=src/assets
 ```
 
 ---
 
-## 14. Error Handling
-
-### 14.1 LLM Generation Failures
+## 15. Error Handling
 
 | Error | Action |
 |-------|--------|
-| LLM returns invalid JSON | Retry with explicit "return ONLY valid JSON" prompt (max 3x) |
-| LLM quality gate fails | Regenerate with specific feedback from quality gate |
+| LLM invalid JSON | Retry with "return ONLY valid JSON" (max 3x) |
+| LLM quality gate fail | Regenerate with feedback from quality gate |
 | LLM timeout | Retry with exponential backoff (2s, 4s, 8s) |
-| LLM rate limit | Wait and retry |
-| 3 consecutive failures on same asset | Flag for human review, skip to next asset |
-
-### 14.2 TTS Failures
-
-| Error | Action |
-|-------|--------|
+| Missing asset (library) | Substitute closest match, flag for later creation |
 | ElevenLabs timeout | Retry with exponential backoff |
-| Character limit exceeded | Split subtitle into chunks |
-| API quota exhausted | Queue for later, notify user |
+| ElevenLabs quota | Queue for later, notify user |
+| Render OOM | Render in chunks, concatenate |
+| Render crash (bad SVG) | Identify scene, flag for fix |
+| 3 consecutive failures | Pause pipeline, notify user via n8n |
 
-### 14.3 Render Failures
-
-| Error | Action |
-|-------|--------|
-| Out of memory | Render in chunks (scenes separately, then concatenate) |
-| Invalid SVG crashes renderer | Identify problematic scene, flag for regeneration |
-| Audio sync issues | Regenerate audio segments with adjusted timing |
-
-### 14.4 Alerting
-
-All errors are:
-1. Logged to pipeline log file
-2. If critical: notification sent to user via configured channel
-3. Pipeline pauses at the error point (doesn't skip ahead)
+All errors are logged. Critical errors trigger n8n notification.
 
 ---
 
-## 15. File & Directory Structure
+## 16. File & Directory Structure
 
 ```
 professor-pint/
 ├── src/
-│   ├── animations/          # Animation systems (PERMANENT)
-│   ├── backgrounds/
-│   │   ├── Pub.tsx          # Permanent backgrounds
-│   │   ├── Classroom.tsx
-│   │   └── generated/       # LLM-generated backgrounds (per video)
-│   │       ├── egypt/
-│   │       ├── aztec/
-│   │       └── [topic]/
-│   ├── characters/
-│   │   ├── ProfessorPint.tsx # Permanent character
-│   │   └── generated/       # LLM-generated characters (per video)
-│   │       ├── egypt/
-│   │       ├── aztec/
-│   │       └── [topic]/
-│   ├── crowds/
-│   │   └── generated/       # LLM-generated crowd configs
+│   ├── assets/                  # ASSET LIBRARY (see VIDEO-SPEC.md Section 4.2)
+│   │   ├── skies/
+│   │   ├── terrain/
+│   │   ├── water/
+│   │   ├── vegetation/
+│   │   ├── structures/
+│   │   │   ├── egypt/
+│   │   │   ├── aztec/
+│   │   │   ├── roman/
+│   │   │   ├── viking/
+│   │   │   ├── medieval/
+│   │   │   ├── modern/
+│   │   │   └── generic/
+│   │   ├── props/
+│   │   ├── atmosphere/
+│   │   ├── lighting/
+│   │   ├── foreground/
+│   │   └── manifest.json        # Auto-generated list of all assets
+│   │
+│   ├── animations/              # Animation systems (PERMANENT)
+│   │   ├── emotions.ts          # 12 emotion states
+│   │   ├── activities.ts        # 16 activity animations (NEW)
+│   │   ├── idle.ts
+│   │   ├── talking.ts
+│   │   ├── gestures.ts
+│   │   └── easing.ts
+│   │
+│   ├── characters/              # Character library
+│   │   ├── ProfessorPint.tsx    # PERMANENT
+│   │   ├── egypt/               # Theme characters
+│   │   ├── aztec/
+│   │   ├── roman/
+│   │   ├── viking/
+│   │   └── modern/
+│   │
+│   ├── crowds/                  # Crowd figure library
+│   │   ├── egypt/
+│   │   ├── aztec/
+│   │   └── roman/
+│   │
+│   ├── systems/                 # Core systems (PERMANENT)
+│   │   ├── SceneRenderer.tsx
+│   │   ├── SceneComposer.tsx    # NEW — renders ComposedScene from library assets
+│   │   ├── Camera.tsx
+│   │   ├── CameraPath.tsx
+│   │   ├── Subtitles.tsx
+│   │   ├── SrtExporter.ts       # NEW — generates .srt files
+│   │   ├── Transitions.tsx
+│   │   ├── AudioSync.tsx
+│   │   ├── MusicSFX.tsx
+│   │   └── Overlays.tsx
+│   │
+│   ├── pipeline/                # Pipeline logic (PERMANENT)
+│   │   ├── ScriptGenerator.ts
+│   │   ├── LLMClient.ts
+│   │   ├── ElevenLabsTTS.ts
+│   │   ├── VideoPipeline.ts
+│   │   ├── FeedbackStore.ts
+│   │   ├── SceneDatabase.ts
+│   │   ├── StyleGuide.ts
+│   │   ├── AssetManifest.ts     # NEW — generates manifest.json from library
+│   │   ├── QualityGates.ts      # NEW — automated quality validation
+│   │   └── N8nPipeline.ts
+│   │
 │   ├── compositions/
-│   │   └── generated/       # Auto-generated composition files
-│   ├── systems/             # Core rendering systems (PERMANENT)
-│   ├── pipeline/            # Pipeline logic (PERMANENT)
+│   │   ├── PyramidsOfGiza.tsx   # Reference only
+│   │   ├── AztekenVideo.tsx     # Reference only
+│   │   └── generated/           # Auto-generated by pipeline
+│   │
+│   ├── backgrounds/             # LEGACY — existing handmade backgrounds
+│   │   └── (existing files, kept as reference)
+│   │
 │   └── Root.tsx
+│
 ├── data/
-│   ├── renders/             # Output .mp4 files
-│   ├── previews/            # Low-res preview files
-│   ├── audio/               # Generated TTS audio files
-│   ├── music/               # Background music library
-│   ├── sfx/                 # Sound effects library
-│   ├── feedback/            # FeedbackStore JSON files
-│   ├── scenes/              # SceneDatabase cache
-│   └── schedule/            # Video schedule database
+│   ├── renders/
+│   ├── previews/
+│   ├── audio/
+│   ├── music/
+│   ├── sfx/
+│   ├── feedback/                # FeedbackStore rules.json
+│   ├── scenes/                  # SceneDatabase cache
+│   └── schedule/                # Video schedule
+│
 ├── scripts/
-│   ├── render.mjs           # Single video render
-│   ├── batch-render.mjs     # Batch render
-│   ├── generate-audio.mjs   # TTS generation
-│   └── pipeline.mjs         # Full pipeline runner
-├── VIDEO-SPEC.md            # Video specification (this is the bible)
-├── PIPELINE-ARCHITECTURE.md # Pipeline architecture (this document)
-├── FEEDBACK-SYSTEM.md       # Feedback system documentation
-└── CLAUDE.md                # Project instructions
+│   ├── render.mjs
+│   ├── batch-render.mjs
+│   ├── generate-audio.mjs
+│   ├── generate-manifest.mjs    # NEW — rebuilds asset manifest
+│   └── pipeline.mjs
+│
+├── VIDEO-SPEC.md
+├── PIPELINE-ARCHITECTURE.md
+├── FEEDBACK-SYSTEM.md
+└── CLAUDE.md
 ```
 
 ---
@@ -745,3 +724,4 @@ professor-pint/
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-02-11 | Initial architecture |
+| 2.0 | 2026-02-11 | Asset Library approach: compose from pre-built components. No dashboard — n8n approval buttons only. SRT export. Cost reduction ~50%. Phased library build plan. |

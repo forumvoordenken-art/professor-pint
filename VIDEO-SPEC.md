@@ -1,4 +1,4 @@
-# Professor Pint — Video Specification v1.0
+# Professor Pint — Video Specification v2.0
 
 > **This is the single source of truth for every video produced by the Professor Pint pipeline.**
 > Every rule in this document is a HARD constraint unless explicitly marked as [GUIDELINE].
@@ -11,18 +11,19 @@
 1. [Brand Identity](#1-brand-identity)
 2. [Video Structure](#2-video-structure)
 3. [Scene Specification](#3-scene-specification)
-4. [Background / SVG Generation](#4-background--svg-generation)
-5. [Character Specification](#5-character-specification)
-6. [Crowd System](#6-crowd-system)
-7. [Camera & Movement](#7-camera--movement)
-8. [Animation Requirements](#8-animation-requirements)
-9. [Audio & Music](#9-audio--music)
-10. [Subtitles & Text](#10-subtitles--text)
-11. [Overlays & Data Visualization](#11-overlays--data-visualization)
-12. [Quality Gates](#12-quality-gates)
-13. [YouTube Metadata](#13-youtube-metadata)
-14. [Content Guidelines](#14-content-guidelines)
-15. [Appendix: SceneData Schema](#appendix-scenedata-schema)
+4. [Asset Library System](#4-asset-library-system)
+5. [Scene Composition (How Scenes Are Built)](#5-scene-composition-how-scenes-are-built)
+6. [Character Specification](#6-character-specification)
+7. [Crowd System](#7-crowd-system)
+8. [Camera & Movement](#8-camera--movement)
+9. [Animation Library](#9-animation-library)
+10. [Audio & Music](#10-audio--music)
+11. [Subtitles & Text](#11-subtitles--text)
+12. [Overlays & Data Visualization](#12-overlays--data-visualization)
+13. [Quality Gates](#13-quality-gates)
+14. [YouTube Metadata](#14-youtube-metadata)
+15. [Content Guidelines](#15-content-guidelines)
+16. [Appendix: SceneData Schema](#appendix-scenedata-schema)
 
 ---
 
@@ -38,8 +39,8 @@ Professor Pint is an eccentric, Einstein-like professor who explains topics from
 - No jargon without immediate explanation via metaphor.
 
 ### 1.3 Visual Style
-- **Oil painting quality** — every background must look like a painting (Vermeer lighting, Caravaggio chiaroscuro, Renaissance composition).
-- Rich color palettes: minimum 60 distinct colors per background.
+- **Oil painting quality** — every scene must look like a painting (Vermeer lighting, Caravaggio chiaroscuro, Renaissance composition).
+- Rich color palettes: minimum 60 distinct colors per composed scene.
 - Nothing minimalist — scenes must feel alive, detailed, dense with visual information.
 - Every frame must be visually interesting enough to screenshot.
 
@@ -72,12 +73,13 @@ Professor Pint is an eccentric, Einstein-like professor who explains topics from
 │  INTRO — Pub (30-45 seconds, max 45s)                       │
 │  Professor greets viewer, introduces topic, teases the       │
 │  journey. "I'm taking you to [place/era]. Let's go."        │
+│  HOOK within first 10 seconds.                               │
 ├─────────────────────────────────────────────────────────────┤
 │  BODY — Theme Scenes (85-90% of video)                       │
-│  20-50+ unique scenes. Each scene = new background.          │
+│  20-50+ visually distinct scenes.                            │
 │  Professor is IN the scene, walking through history.         │
 │  Landscapes, close-ups, crowd scenes, detail shots.          │
-│  Every 10-20 seconds: NEW background.                        │
+│  [GUIDELINE] New visual every 10-20 seconds.                 │
 ├─────────────────────────────────────────────────────────────┤
 │  OUTRO — Return to Pub (30-45 seconds)                       │
 │  Conclusion, key takeaway, one-liner.                        │
@@ -90,13 +92,14 @@ Professor Pint is an eccentric, Einstein-like professor who explains topics from
 
 | Rule | Constraint |
 |------|-----------|
-| Scene duration | **10-20 seconds** per scene (300-600 frames). HARD limit. |
-| Same background | **Never** show the same background for more than 20 seconds continuously. |
-| Background reuse | A background MAY appear again later in the video (e.g., return to a location) but never twice in a row. |
-| Scene count | Minimum 35 scenes for a 10-minute video. [GUIDELINE] ~1 scene per 15 seconds average. |
+| Scene duration | **[GUIDELINE] 10-20 seconds** per scene (300-600 frames). May extend to 30s (900 frames) if camera movement + content justify it. |
+| Same visual | **[GUIDELINE]** Avoid showing the same composed background for more than 20 seconds. Variations of the same base (different camera angle, time of day, lighting) count as visually different. |
+| Background reuse | A background composition MAY reappear later (e.g., return to a location) but never twice in a row. |
+| Scene count | **[GUIDELINE]** Minimum 35 scenes for a 10-minute video. ~1 scene per 15 seconds average. |
 | Transition variety | Never use the same transition type more than 3 times in a row. |
 | Emotion variety | Professor must show at least 4 different emotions per 2-minute segment. |
 | Energy curve | Build tension: start medium → high → cooldown → higher → climax → resolution → outro. |
+| Price-quality | Always optimize for best visual result at lowest token/generation cost. Reuse library assets whenever possible. |
 
 ---
 
@@ -139,132 +142,414 @@ Every scene must follow classical composition rules:
 
 ---
 
-## 4. Background / SVG Generation
+## 4. Asset Library System
 
-### 4.1 Generation Method
-The LLM generates SVG code for every background. Each background is a unique React component that accepts a `frame: number` parameter for animations.
+### 4.1 Core Concept
 
-### 4.2 SVG Quality Requirements
-
-| Requirement | Minimum | Target |
-|-------------|---------|--------|
-| Distinct SVG elements | 50+ | 100+ |
-| Named colors in palette | 40+ | 80+ |
-| Lines of SVG code | 200+ | 500+ |
-| Gradient definitions | 3+ | 8+ |
-| Animated elements (using `frame`) | 3+ | 8+ |
-| Foreground/midground/background layers | All 3 required | — |
-| Shadow/lighting elements | 2+ | 5+ |
-
-### 4.3 Art Style Specification
-
-Every background MUST follow this art style:
+Instead of generating every SVG from scratch per video, we maintain a **pre-built, fine-tuned library of composable SVG components**. Each component is tested and approved in Remotion Studio before it enters the library. The LLM's job is to **compose scenes from library assets**, not to draw from scratch.
 
 ```
-STYLE: Oil painting / Old Masters quality
-LIGHTING: Vermeer-style soft directional light OR Caravaggio chiaroscuro for dramatic scenes.
-COLORS: Rich, warm palette. No flat colors. Use gradients to simulate paint texture.
-DETAIL: Every surface has texture — stone has grain, wood has knots, water has reflections.
-ATMOSPHERE: Dust particles, haze, mist, smoke — at least ONE atmospheric effect per outdoor scene.
-SKY: Never a flat color. Always gradient with at least subtle cloud shapes.
-GROUND: Never a single rectangle. Texture, debris, stones, grass patches, shadows.
+TRADITIONAL (expensive, unpredictable):
+  LLM → generates 500 lines SVG from scratch → hope it looks good
+
+ASSET LIBRARY (cheap, guaranteed quality):
+  LLM → selects components from library → composes into scene → guaranteed quality
 ```
 
-### 4.4 Background Component Structure
+### 4.2 Asset Categories
 
-Every generated background must follow this exact TypeScript structure:
+The library is organized into composable categories:
+
+```
+src/assets/
+├── skies/                    # Sky and horizon components
+│   ├── sunset_warm.tsx       # Warm orange/pink sunset
+│   ├── sunset_cold.tsx       # Purple/blue sunset
+│   ├── day_clear.tsx         # Clear blue sky
+│   ├── day_cloudy.tsx        # Overcast
+│   ├── night_stars.tsx       # Starry night
+│   ├── night_moon.tsx        # Moonlit night
+│   ├── dawn_golden.tsx       # Golden hour dawn
+│   ├── storm_dark.tsx        # Dark stormy sky
+│   └── sandstorm.tsx         # Desert sandstorm
+│
+├── terrain/                  # Ground and landscape base
+│   ├── sand_flat.tsx         # Desert sand
+│   ├── sand_dunes.tsx        # Rolling sand dunes
+│   ├── sand_riverbank.tsx    # Sandy riverbank
+│   ├── grass_plain.tsx       # Green grassland
+│   ├── grass_hill.tsx        # Rolling hills
+│   ├── snow_field.tsx        # Snowy ground
+│   ├── rocky_mountain.tsx    # Mountain terrain
+│   ├── jungle_floor.tsx      # Tropical ground
+│   ├── cobblestone.tsx       # City streets
+│   ├── marble_floor.tsx      # Indoor temple/palace
+│   └── dirt_path.tsx         # Rural pathway
+│
+├── water/                    # Water elements (all animated)
+│   ├── river_calm.tsx        # Calm flowing river
+│   ├── river_rapid.tsx       # Fast rapids
+│   ├── lake_still.tsx        # Still lake with reflections
+│   ├── ocean_waves.tsx       # Ocean with waves
+│   ├── waterfall.tsx         # Cascading waterfall
+│   ├── puddle.tsx            # Small puddle with ripples
+│   ├── canal.tsx             # Man-made canal (Aztec/Venice)
+│   └── swamp.tsx             # Murky swamp water
+│
+├── vegetation/               # Trees, plants, crops
+│   ├── palm_tree_tall.tsx    # Tall palm (animated sway)
+│   ├── palm_tree_short.tsx   # Short palm
+│   ├── oak_tree.tsx          # European oak
+│   ├── pine_tree.tsx         # Northern pine
+│   ├── dead_tree.tsx         # Bare/dead tree
+│   ├── jungle_tree.tsx       # Tropical canopy tree
+│   ├── bush_green.tsx        # Green bush
+│   ├── bush_flowering.tsx    # Flowering bush
+│   ├── reed_cluster.tsx      # River reeds
+│   ├── papyrus.tsx           # Egyptian papyrus plants
+│   ├── cactus.tsx            # Desert cactus
+│   ├── crop_wheat.tsx        # Wheat field
+│   ├── crop_corn.tsx         # Corn/maize stalks
+│   ├── vine_hanging.tsx      # Hanging vines
+│   └── flower_patch.tsx      # Ground flowers
+│
+├── structures/               # Buildings, monuments, objects
+│   ├── egypt/
+│   │   ├── pyramid_great.tsx       # Great Pyramid of Giza
+│   │   ├── pyramid_small.tsx       # Smaller pyramid
+│   │   ├── sphinx.tsx              # Great Sphinx
+│   │   ├── obelisk.tsx             # Stone obelisk
+│   │   ├── temple_entrance.tsx     # Temple front with columns
+│   │   ├── temple_interior.tsx     # Temple inside
+│   │   ├── mud_brick_house.tsx     # Worker housing
+│   │   ├── royal_palace.tsx        # Pharaoh's palace
+│   │   ├── reed_boat.tsx           # Nile reed boat
+│   │   ├── sarcophagus.tsx         # Decorated sarcophagus
+│   │   ├── hieroglyph_wall.tsx     # Wall of hieroglyphics
+│   │   └── construction_ramp.tsx   # Pyramid building ramp
+│   │
+│   ├── aztec/
+│   │   ├── templo_mayor.tsx        # Great temple pyramid
+│   │   ├── pyramid_stepped.tsx     # Stepped pyramid
+│   │   ├── chinampa.tsx            # Floating garden plot
+│   │   ├── market_stall.tsx        # Tlatelolco market stall
+│   │   ├── aqueduct.tsx            # Stone aqueduct
+│   │   ├── causeway.tsx            # Lake causeway
+│   │   ├── skull_rack.tsx          # Tzompantli
+│   │   ├── noble_house.tsx         # Aztec noble dwelling
+│   │   ├── canoe.tsx               # Aztec canoe
+│   │   └── altar_stone.tsx         # Sacrificial altar
+│   │
+│   ├── roman/
+│   │   ├── colosseum.tsx           # Roman Colosseum
+│   │   ├── forum.tsx               # Roman Forum
+│   │   ├── aqueduct_roman.tsx      # Roman aqueduct
+│   │   ├── villa.tsx               # Roman villa
+│   │   ├── road_roman.tsx          # Paved Roman road
+│   │   ├── triumphal_arch.tsx      # Victory arch
+│   │   ├── temple_roman.tsx        # Roman temple
+│   │   ├── bathhouse.tsx           # Public baths
+│   │   └── senate.tsx              # Senate building
+│   │
+│   ├── viking/
+│   │   ├── longship.tsx            # Viking longship
+│   │   ├── mead_hall.tsx           # Great hall
+│   │   ├── stave_church.tsx        # Wooden stave church
+│   │   ├── runestone.tsx           # Carved runestone
+│   │   ├── longhouse.tsx           # Viking longhouse
+│   │   ├── forge.tsx               # Blacksmith forge
+│   │   └── dock.tsx                # Harbour dock
+│   │
+│   ├── medieval/
+│   │   ├── castle.tsx              # Medieval castle
+│   │   ├── cathedral.tsx           # Gothic cathedral
+│   │   ├── market_medieval.tsx     # Medieval market square
+│   │   ├── windmill.tsx            # Windmill
+│   │   ├── tavern.tsx              # Medieval tavern
+│   │   └── city_wall.tsx           # Fortified city wall
+│   │
+│   ├── modern/
+│   │   ├── pub_interior.tsx        # Professor's pub (HOME BASE)
+│   │   ├── stock_exchange.tsx      # Trading floor
+│   │   ├── bank_interior.tsx       # Bank interior
+│   │   ├── office_tower.tsx        # Modern office building
+│   │   └── classroom.tsx           # University classroom
+│   │
+│   └── generic/
+│       ├── campfire.tsx            # Campfire (animated flames)
+│       ├── torch_wall.tsx          # Wall-mounted torch
+│       ├── wooden_fence.tsx        # Wooden fence
+│       ├── stone_wall.tsx          # Generic stone wall
+│       ├── wooden_bridge.tsx       # Small bridge
+│       ├── well.tsx                # Stone well
+│       └── cart.tsx                # Wooden cart
+│
+├── props/                    # Small objects and details
+│   ├── pint_glass.tsx        # Professor's beer (PERMANENT)
+│   ├── scroll.tsx            # Ancient scroll
+│   ├── treasure_chest.tsx    # Open chest with gold
+│   ├── sword.tsx             # Generic sword
+│   ├── shield_round.tsx      # Round shield
+│   ├── pottery.tsx           # Clay pots
+│   ├── basket.tsx            # Woven basket
+│   ├── coin_stack.tsx        # Stack of coins
+│   ├── book_open.tsx         # Open book
+│   ├── telescope.tsx         # Telescope
+│   ├── map_scroll.tsx        # Rolled map
+│   └── banner.tsx            # Hanging banner (animated)
+│
+├── atmosphere/               # Overlay effects
+│   ├── dust_particles.tsx    # Floating dust (animated)
+│   ├── embers.tsx            # Rising embers (animated)
+│   ├── mist_low.tsx          # Low-lying mist
+│   ├── fog_thick.tsx         # Dense fog
+│   ├── rain.tsx              # Rainfall (animated)
+│   ├── snow_falling.tsx      # Snowfall (animated)
+│   ├── light_rays_sun.tsx    # Sun beam rays
+│   ├── light_rays_torch.tsx  # Torch light glow
+│   ├── smoke_rising.tsx      # Smoke column
+│   ├── sandstorm_particles.tsx # Blowing sand
+│   └── fireflies.tsx         # Glowing fireflies (animated)
+│
+├── lighting/                 # Final layer overlays
+│   ├── vignette_dark.tsx     # Dark vignette
+│   ├── vignette_warm.tsx     # Warm golden vignette
+│   ├── vignette_cold.tsx     # Blue/cold vignette
+│   ├── color_grade_warm.tsx  # Warm color grading overlay
+│   ├── color_grade_cold.tsx  # Cold color grading overlay
+│   ├── color_grade_sepia.tsx # Sepia/antique overlay
+│   └── directional_light.tsx # Configurable directional light source
+│
+└── foreground/               # Foreground framing elements
+    ├── column_left.tsx       # Stone column on left edge
+    ├── column_right.tsx      # Stone column on right edge
+    ├── arch_frame.tsx        # Archway framing
+    ├── foliage_left.tsx      # Leaves/branches on left
+    ├── foliage_right.tsx     # Leaves/branches on right
+    ├── rocks_bottom.tsx      # Rocks at bottom of frame
+    ├── torch_frame.tsx       # Torches on edges (animated)
+    └── sand_foreground.tsx   # Sand dune in foreground
+```
+
+### 4.3 Asset Component Interface
+
+Every asset component follows a standard interface:
 
 ```tsx
-import React from 'react';
-
-interface [Name]Props {
-  frame: number;
-  width?: number;
-  height?: number;
+interface AssetProps {
+  frame: number;            // Current frame for animation
+  x?: number;               // Horizontal position (default 0)
+  y?: number;               // Vertical position (default 0)
+  scale?: number;           // Size multiplier (default 1.0)
+  opacity?: number;         // Transparency (default 1.0)
+  mirror?: boolean;         // Flip horizontally (default false)
+  colorShift?: string;      // Optional hue/tint adjustment
 }
-
-export const [Name]: React.FC<[Name]Props> = ({ frame, width = 1920, height = 1080 }) => {
-  // Animation calculations using frame
-  const sway = Math.sin(frame * 0.05) * 3;
-  const flicker = Math.sin(frame * 0.1) * 2;
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
-      {/* Layer 1: Sky / far background */}
-      {/* Layer 2: Mid-background (buildings, mountains) */}
-      {/* Layer 3: Midground (where characters stand) */}
-      {/* Layer 4: Foreground elements (debris, plants, frame edges) */}
-      {/* Layer 5: Atmospheric effects (dust, mist, light rays) */}
-      {/* Layer 6: Lighting overlay (vignette, color grading) */}
-    </svg>
-  );
-};
 ```
 
-### 4.5 Mandatory Layers
+### 4.4 Asset Quality Standards
 
-| Layer | Description | Required |
-|-------|-------------|----------|
-| Sky/Background | Furthest elements: sky, horizon, distant objects | YES |
-| Mid-Background | Architecture, mountains, large structures | YES (outdoor) |
-| Midground | Where characters stand. Ground plane, nearby objects. | YES |
-| Foreground | Elements closer to camera than characters. Frame the scene. | YES |
-| Atmosphere | Particles, haze, light rays, smoke | YES (outdoor), OPTIONAL (indoor) |
-| Lighting | Vignette, color grading, directional light overlay | YES |
+Every asset in the library MUST meet these standards BEFORE being added:
 
-### 4.6 Animation Requirements for Backgrounds
+| Standard | Requirement |
+|----------|-------------|
+| Tested in Remotion Studio | Visually verified at 1080p, animation smooth at 30fps |
+| Oil painting style | Gradients, texture, no flat colors |
+| Animated | At least 1 element uses `frame` for motion (vegetation sways, water flows, fire flickers) |
+| Perspective-correct | Component has a defined depth zone and scales correctly |
+| Compositionally clean | No overlap artifacts, clean edges, works alongside other assets |
+| Documented | Each asset has a comment header describing what it is, its default size, and intended depth zone |
 
-Every background must animate at least 3 elements using the `frame` parameter:
+### 4.5 How Assets Create "Unique" Scenes
 
-| Element Type | Animation | Example |
-|-------------|-----------|---------|
-| Water | Gentle wave motion via `Math.sin(frame * speed)` | River, lake, puddle reflections |
-| Fire/Torches | Flicker via randomized `Math.sin` combinations | Torch flames, campfires |
-| Vegetation | Sway in wind | Trees, grass, bushes, crops |
-| Fabric/Flags | Wave motion | Banners, clothing, sails |
-| Particles | Drift across scene | Dust, embers, snow, leaves |
-| Light rays | Subtle pulse/shift | Sunbeams, torch glow |
-| Clouds/Smoke | Slow horizontal drift | Sky clouds, chimney smoke, mist |
+A single set of library assets can produce dozens of visually distinct scenes through:
 
-### 4.7 Perspective Rules
+| Variation Method | Example |
+|-----------------|---------|
+| **Different combination** | Same pyramid, but with different sky + different foreground + different crowd |
+| **Camera angle** | Same scene assets, but camera pans left→right vs a slow zoom in |
+| **Time of day** | Same structures, but `sunset_warm` sky vs `night_stars` sky |
+| **Lighting** | Same scene, but `vignette_warm` vs `vignette_cold` changes the entire mood |
+| **Weather** | Same terrain, but add `rain` + `fog_thick` + `color_grade_cold` |
+| **Crowd activity** | Same location, but crowd figures are building vs celebrating vs marching |
+| **Foreground framing** | Same background, but framed through an `arch_frame` vs `foliage_left` |
+| **Color shift** | Same assets with a warm tint (golden hour) vs cool tint (dawn) |
 
-```
-VANISHING POINT: Every outdoor scene must have a clear vanishing point.
-GROUND PLANE: The ground must recede into the distance. Never a flat rectangle.
-SCALE: Objects further away are proportionally smaller.
-OVERLAP: Elements overlap naturally (tree in front of building, person in front of wall).
-DEPTH CUES: Use color (bluer/lighter in distance), size, overlap, and vertical position.
-```
+### 4.6 Building the Library (One-Time Investment)
+
+The library is built incrementally:
+
+1. **Phase 1 — Universal assets** (skies, terrain, water, vegetation, atmosphere, lighting, foreground). These work in ANY video regardless of theme. ~50 assets.
+2. **Phase 2 — Egypt theme** (structures/egypt/ + Egyptian characters + Egyptian crowd). Enough for full Egypt videos. ~25 assets.
+3. **Phase 3 — Additional themes** as needed (Roman, Viking, Aztec, Medieval, Modern). Each theme adds ~15-25 structures + 10-20 characters.
+
+Each asset is **fine-tuned once** in Remotion Studio, then reused forever. This is the opposite of "generate and pray" — it's "perfect once, use everywhere."
+
+### 4.7 When the LLM DOES Generate New SVG
+
+For rare cases where no library asset exists:
+1. LLM generates a new asset following the standard interface
+2. Asset passes quality gates (Section 13)
+3. If approved, asset is added to the library for future reuse
+4. Each new video potentially grows the library
+
+Over time, the library becomes so comprehensive that most videos need ZERO new SVG generation.
 
 ---
 
-## 5. Character Specification
+## 5. Scene Composition (How Scenes Are Built)
 
-### 5.1 Professor Pint (Permanent Character)
+### 5.1 Composition System
 
-Professor Pint is the only character that persists across ALL videos. He is never regenerated.
+The LLM composes a scene by selecting assets from the library and specifying their placement:
+
+```typescript
+interface ComposedScene {
+  /** Layer 1: Sky / far background */
+  sky: { asset: string; colorShift?: string };
+
+  /** Layer 2: Terrain / ground */
+  terrain: { asset: string; colorShift?: string };
+
+  /** Layer 3: Water (optional) */
+  water?: { asset: string; x: number; y: number; scale: number };
+
+  /** Layer 4: Structures (buildings, monuments) */
+  structures: Array<{
+    asset: string;
+    x: number;
+    y: number;
+    scale: number;
+    mirror?: boolean;
+  }>;
+
+  /** Layer 5: Vegetation */
+  vegetation: Array<{
+    asset: string;
+    x: number;
+    y: number;
+    scale: number;
+    mirror?: boolean;
+  }>;
+
+  /** Layer 6: Characters + Crowd (midground) */
+  characters: Array<{
+    asset: string;
+    x: number;
+    y: number;
+    scale: number;
+    emotion?: string;
+    talking?: boolean;
+    activity?: string;
+  }>;
+
+  /** Layer 7: Props (small objects) */
+  props?: Array<{
+    asset: string;
+    x: number;
+    y: number;
+    scale: number;
+  }>;
+
+  /** Layer 8: Foreground framing */
+  foreground?: Array<{
+    asset: string;
+    opacity?: number;
+  }>;
+
+  /** Layer 9: Atmosphere effects */
+  atmosphere?: Array<{
+    asset: string;
+    opacity?: number;
+  }>;
+
+  /** Layer 10: Lighting overlay */
+  lighting: {
+    asset: string;
+    intensity?: number;
+  };
+}
+```
+
+### 5.2 Scene Composer Component
+
+A new core system component renders composed scenes:
+
+```tsx
+// src/systems/SceneComposer.tsx
+// Takes a ComposedScene definition and renders all layers in order
+// Each layer is a positioned SVG asset from the library
+// The SceneRenderer calls SceneComposer instead of a hardcoded background
+```
+
+### 5.3 Remotion Studio Folder Structure
+
+In Remotion Studio, the asset library is browsable:
+
+```
+Remotion Studio Sidebar:
+├── 📁 Videos
+│   ├── 🎬 ProfessorPint-Pyramids
+│   ├── 🎬 ProfessorPint-Aztecs
+│   └── 🎬 ProfessorPint-Vikings
+├── 📁 Asset Library
+│   ├── 📁 Skies (9 previews)
+│   ├── 📁 Terrain (11 previews)
+│   ├── 📁 Water (8 previews)
+│   ├── 📁 Vegetation (15 previews)
+│   ├── 📁 Structures
+│   │   ├── 📁 Egypt (12 previews)
+│   │   ├── 📁 Aztec (10 previews)
+│   │   ├── 📁 Roman (9 previews)
+│   │   ├── 📁 Viking (7 previews)
+│   │   └── 📁 Modern (5 previews)
+│   ├── 📁 Props (12 previews)
+│   ├── 📁 Atmosphere (11 previews)
+│   ├── 📁 Lighting (7 previews)
+│   └── 📁 Foreground (8 previews)
+├── 📁 Characters
+│   ├── 👤 ProfessorPint (permanent)
+│   ├── 📁 Egypt (10-15 characters)
+│   ├── 📁 Aztec (10-15 characters)
+│   ├── 📁 Roman (10-15 characters)
+│   └── 📁 Modern (8 characters)
+└── 📁 Crowd Figures
+    ├── 📁 Egypt (12 figure types)
+    ├── 📁 Aztec (12 figure types)
+    └── 📁 Roman (12 figure types)
+```
+
+Each asset has its own Remotion Composition (small preview) so you can fine-tune it visually.
+
+---
+
+## 6. Character Specification
+
+### 6.1 Professor Pint (Permanent Character)
+
+Professor Pint is the only character that persists across ALL videos. He is never regenerated. He is pre-built and already in the codebase.
 
 | Attribute | Value |
 |-----------|-------|
 | Appearance | Wild Einstein-like white hair, round glasses, brown vest over white shirt, dark trousers, always holds a pint glass |
 | Height | ~200px at scale 1.0 (relative to 1080p canvas) |
 | Position | Midground. NEVER floating in front of the scene. Feet on the ground. Cast shadow matches scene lighting. |
-| Emotions | 6 states: neutral, happy, shocked, thinking, angry, sad |
-| Animations | Idle (breathing, blinking, sway), talking (mouth shapes, gestures), emotion transitions |
+| Emotions | See Section 9 (Animation Library) for full list |
+| Animations | Idle (breathing, blinking, sway), talking (mouth shapes, gestures), emotion transitions, activity animations |
 
-### 5.2 Theme Characters (Generated Per Video)
+### 6.2 Theme Characters (Pre-Built Library)
 
-For each video, the LLM generates **10-20 unique supporting characters** appropriate to the theme.
+Characters are **pre-built per theme** and stored in the asset library, just like backgrounds. They are fine-tuned once in Remotion Studio, then reused across videos.
 
-#### Character Types (examples per theme category):
+#### Character Library per Theme
 
-| Theme | Character Examples |
-|-------|-------------------|
-| Ancient Egypt | Pharaoh, royal guard, scribe, slave, priest, noble woman with fan, fisherman, stone mason, chariot driver, merchant |
-| Aztec Empire | Emperor, eagle warrior, jaguar warrior, priest, farmer, market vendor, slave, noble woman, feathered dancer, canoe paddler |
-| Roman Empire | Caesar, legionnaire, gladiator, senator, slave, merchant, chariot racer, vestal virgin, engineer, plebeian |
-| Vikings | Jarl, berserker, shield maiden, skald, farmer, blacksmith, navigator, thrall, rune carver, trader |
-| Finance/Modern | Banker, day trader, crypto bro, tax advisor, central banker, hedge fund manager, retail investor, debt collector |
+| Theme | Characters (10-20 per theme) |
+|-------|------------------------------|
+| Ancient Egypt | Pharaoh, royal guard, scribe, slave/worker, priest, noble woman with fan, fisherman, stone mason, chariot driver, merchant, embalmer, architect, farmer, servant, musician |
+| Aztec Empire | Emperor (Tlatoani), eagle warrior, jaguar warrior, priest, farmer, market vendor, noble woman, feathered dancer, canoe paddler, scribe, tribute collector, ball player |
+| Roman Empire | Caesar/Emperor, legionnaire, gladiator, senator, slave, merchant, chariot racer, vestal virgin, engineer, plebeian, centurion, patrician woman |
+| Vikings | Jarl, berserker, shield maiden, skald (poet), farmer, blacksmith, navigator, thrall, rune carver, trader, völva (seeress), shipbuilder |
+| Modern/Finance | Banker, day trader, crypto bro, tax advisor, central banker, hedge fund manager, retail investor, debt collector, economist, startup founder |
 
 #### Character SVG Requirements
 
@@ -273,63 +558,50 @@ For each video, the LLM generates **10-20 unique supporting characters** appropr
 | Minimum SVG lines | 150+ per character |
 | Distinct colors | 15+ per character |
 | Historical accuracy | Clothing, tools, accessories must be period-accurate |
-| Recognizability | Each character must be instantly recognizable by their role/class |
-| Animation support | Must accept `frame`, `emotion`, `talking` props |
+| Recognizability | Each character must be instantly recognizable by their role/class from appearance alone |
+| Animation support | Must accept `frame`, `emotion`, `talking`, `activity` props |
 | Perspective | Scale correctly when placed at different depths in a scene |
-| Variants | At least 3 of the characters must have a female variant |
+| Variants | At least 3 of the characters per theme must have a female variant |
+| Tested | Visually verified in Remotion Studio at multiple scales |
 
 #### Character Component Structure
 
 ```tsx
 import React from 'react';
 import type { Emotion } from '../animations/emotions';
+import type { Activity } from '../animations/activities';
 
-interface [CharName]Props {
+interface CharacterProps {
   frame: number;
   emotion?: Emotion;
   talking?: boolean;
   scale?: number;
+  activity?: Activity;         // NEW: what the character is doing
+  facing?: 'left' | 'right';  // NEW: direction character faces
 }
-
-export const [CharName]: React.FC<[CharName]Props> = ({
-  frame,
-  emotion = 'neutral',
-  talking = false,
-  scale = 1,
-}) => {
-  // Idle animations (breathing, blinking)
-  // Emotion-based face changes
-  // Talking mouth animation
-  return (
-    <g transform={`scale(${scale})`}>
-      {/* Body */}
-      {/* Clothing (period-accurate) */}
-      {/* Face with emotion support */}
-      {/* Accessories/tools */}
-    </g>
-  );
-};
 ```
 
 ---
 
-## 6. Crowd System
+## 7. Crowd System
 
-### 6.1 Purpose
+### 7.1 Purpose
 Crowds make scenes feel alive and populated. Every outdoor scene and large indoor scene MUST have crowd figures.
 
-### 6.2 Crowd Requirements
+### 7.2 Crowd Figures (Pre-Built)
+
+Crowd figures are simplified versions of theme characters, optimized for small scale rendering. They are part of the asset library.
 
 | Requirement | Value |
 |-------------|-------|
 | Minimum figures per crowd scene | 8 |
 | Maximum figures per crowd scene | 30 |
-| Unique figure types per video | 12+ |
+| Unique figure types per theme | 12+ |
 | Animation | Each figure has at least 1 animated element (arm movement, walking cycle, tool use) |
 | Perspective | Figures in background are SMALLER than figures in foreground. Correct vertical placement. |
 | Activities | Figures must be DOING something relevant to the scene (building, trading, farming, fighting) |
 
-### 6.3 Crowd Placement Rules
+### 7.3 Crowd Placement Rules
 
 ```
 DEPTH ZONES (Y-axis on 1080p canvas):
@@ -343,17 +615,17 @@ VARIETY: No two adjacent figures should be the same type or in the same pose.
 ANIMATION: Offset each figure's animation cycle by a different amount to avoid synchronized movement.
 ```
 
-### 6.4 CrowdLayer Component Structure
+### 7.4 CrowdLayer Component
 
 ```tsx
 interface CrowdConfig {
   figures: Array<{
-    type: string;       // figure type identifier
-    x: number;          // horizontal position
-    y: number;          // vertical position (determines depth)
-    scale: number;      // size (must match y-position depth zone)
-    animOffset: number; // animation cycle offset in frames
-    activity: string;   // what the figure is doing
+    type: string;       // figure type from library
+    x: number;
+    y: number;
+    scale: number;
+    animOffset: number;
+    activity: string;
     facing: 'left' | 'right';
   }>;
 }
@@ -363,41 +635,44 @@ export const CrowdLayer: React.FC<{ config: CrowdConfig; frame: number }> = ...
 
 ---
 
-## 7. Camera & Movement
+## 8. Camera & Movement
 
-### 7.1 Core Rule
-**Every scene has camera movement.** No fully static frames for the entire duration of a scene. Even "still" shots have subtle drift (0.5-2px per second).
+### 8.1 Core Rule
+**[GUIDELINE]** Every scene should have camera movement. Short static moments (2-5 seconds) are allowed if the composition quality benefits from it (e.g., a dramatic still close-up). Even "still" shots should have subtle drift (0.5-2px per second).
 
-### 7.2 Camera Presets
+### 8.2 Camera Presets
 
 | Preset | Description | Use Case |
 |--------|-------------|----------|
-| `slowZoomIn` | Gradually zoom from 1.0 to 1.2 over scene duration | Narrative scenes, building tension |
+| `slowZoomIn` | Gradually zoom from 1.0 to 1.2 | Narrative scenes, building tension |
 | `slowZoomOut` | Zoom from 1.2 to 1.0 | Establishing shots, revealing scope |
 | `panLeftToRight` | Horizontal pan across the scene | Detail shots (hieroglyphs, murals), wide scenes |
-| `panRightToLeft` | Horizontal pan, reverse direction | Variety from panLeftToRight |
+| `panRightToLeft` | Horizontal pan, reverse direction | Variety |
 | `tiltDown` | Vertical pan from top to bottom | Tall structures (pyramids, temples) |
-| `tiltUp` | Vertical pan from bottom to top | Revealing grandeur, looking up at monuments |
+| `tiltUp` | Vertical pan from bottom to top | Revealing grandeur |
 | `establishingShot` | Slow zoom out with slight tilt | Opening a new location |
 | `dramaticZoom` | Quick zoom to 1.5x on a focal point | Revelations, dramatic moments |
 | `characterTrack` | Camera follows character position | Dialogue, walking scenes |
 | `followAction` | Camera follows action in the scene | Battle scenes, construction work |
-| `dollyIn` | Smooth forward movement into the scene | Entering a new space (tomb, temple) |
+| `dollyIn` | Smooth forward movement into the scene | Entering a new space |
 | `subtle` | Very slight drift (x±3, y±2) | Close-ups, calm moments |
+| `orbitalPan` | Gentle circular movement around focal point | Showcasing a monument or scene |
+| `pushIn` | Slow dramatic push toward subject | Building to a reveal |
+| `pullBack` | Slow pull away from subject | After a reveal, showing context |
 
-### 7.3 Camera Rules
+### 8.3 Camera Rules
 
 | Rule | Constraint |
 |------|-----------|
 | Never use the same preset more than 2x in a row | Variety is essential |
 | Establishing shots use `establishingShot` or `slowZoomOut` | Setting new locations |
-| Dramatic moments use `dramaticZoom` | Revelations, surprises |
+| Dramatic moments use `dramaticZoom` or `pushIn` | Revelations, surprises |
 | Detail shots use `panLeftToRight` or `panRightToLeft` | Scanning across objects |
 | Professor must stay in frame during `narrative` scenes | Use `characterTrack` if needed |
 | Camera zoom range | Never below 0.8x, never above 2.5x |
 | Pan range | Never more than ±200px from center |
 
-### 7.4 CameraPath Keyframe Format
+### 8.4 CameraPath Keyframe Format
 
 ```typescript
 interface CameraPathData {
@@ -413,35 +688,78 @@ interface CameraPathData {
 
 ---
 
-## 8. Animation Requirements
+## 9. Animation Library
 
-### 8.1 Nothing Is Static
-Every visible element must have at least subtle animation:
+### 9.1 Emotion System (Expanded)
 
-| Element | Animation Type | Frame Expression |
-|---------|---------------|-----------------|
-| Professor (idle) | Breathing, blinking, sway | Built into character component |
-| Professor (talking) | Mouth shapes, hand gestures | Driven by `talking: true` |
-| Crowd figures | Activity cycles, breathing, movement | Driven by `frame + animOffset` |
-| Water | Wave motion | `Math.sin(frame * 0.03 + offset) * amplitude` |
-| Fire/Torches | Flicker | `Math.sin(frame * 0.15) * 3 + Math.sin(frame * 0.23) * 2` |
-| Trees/Plants | Sway | `Math.sin(frame * 0.02 + offset) * 5` |
-| Clouds | Drift | `(frame * 0.3) % width` for looping horizontal drift |
-| Flags/Fabric | Wave | `Math.sin(frame * 0.08 + x * 0.1) * 4` |
-| Dust/Particles | Float across scene | Position = initial + frame * speed |
-| Light rays | Subtle pulse | `opacity: 0.3 + Math.sin(frame * 0.02) * 0.1` |
+Beyond the original 6 emotions, the animation library supports:
 
-### 8.2 Emotion Transitions
+| Emotion | Description | Use Case |
+|---------|-------------|----------|
+| `neutral` | Resting, listening | Default state |
+| `happy` | Smiling, bright eyes | Positive facts, greetings |
+| `shocked` | Wide eyes, open mouth | Surprising revelations |
+| `thinking` | Furrowed brow, hand on chin | Explaining complex ideas |
+| `angry` | Frown, tensed | Injustice, conflict |
+| `sad` | Drooped features | Tragedy, loss |
+| `excited` | Big grin, raised arms | "Mind blown" moments |
+| `confused` | Tilted head, raised eyebrow | Setting up a question |
+| `proud` | Chest out, confident smile | After explaining something well |
+| `whisper` | Leaning forward, hand to mouth | Sharing a secret/fun fact |
+| `dramatic` | Wide gesture, theatrical | Over-the-top professor moments |
+| `skeptical` | One eyebrow up, slight smirk | "But wait..." moments |
+
+### 9.2 Activity Animations
+
+Characters (including Professor) can perform activities:
+
+| Activity | Description | Characters |
+|----------|-------------|------------|
+| `idle` | Breathing, blinking, subtle sway | All |
+| `talking` | Mouth shapes, hand gestures | All |
+| `walking` | Walking cycle animation | All |
+| `pointing` | Pointing at something in the scene | Professor, guides |
+| `carrying` | Carrying object (stone, basket, goods) | Workers, slaves |
+| `building` | Hammering, lifting, placing | Construction workers |
+| `farming` | Hoeing, planting, harvesting | Farmers |
+| `fighting` | Sword/weapon motion | Warriors, soldiers |
+| `praying` | Kneeling or standing prayer pose | Priests |
+| `trading` | Exchanging goods, gesturing | Merchants, vendors |
+| `rowing` | Rowing motion | Boatmen |
+| `dancing` | Rhythmic movement | Dancers, celebrants |
+| `writing` | Scribbling/carving motion | Scribes |
+| `presenting` | Showing/displaying something | Professor, nobles |
+| `drinking` | Lifting cup/pint to mouth | Professor (signature) |
+| `cheering` | Arms raised, celebrating | Crowds |
+
+### 9.3 Environmental Animations (Built Into Assets)
+
+These are pre-built into the library assets:
+
+| Element | Animation | Built Into |
+|---------|-----------|-----------|
+| Water flow | Sine wave motion | water/*.tsx |
+| Fire flicker | Multi-frequency sine | structures/*/campfire.tsx, torch_wall.tsx |
+| Tree sway | Wind-driven sine | vegetation/*.tsx |
+| Cloud drift | Linear horizontal scroll | skies/*.tsx |
+| Flag wave | Sine wave along fabric | props/banner.tsx |
+| Dust float | Particle drift | atmosphere/dust_particles.tsx |
+| Ember rise | Upward particle motion | atmosphere/embers.tsx |
+| Rain fall | Downward particle motion | atmosphere/rain.tsx |
+| Torch glow | Pulsing light radius | atmosphere/light_rays_torch.tsx |
+| Smoke rise | Upward drift with spread | atmosphere/smoke_rising.tsx |
+
+### 9.4 Emotion Transitions
 When Professor's emotion changes between scenes, use a smooth 10-frame transition. Never snap from one emotion to another.
 
-### 8.3 Talking Animation
+### 9.5 Talking Animation
 When Professor is talking (`talking: true`), the mouth must cycle through shapes. Minimum 4 mouth shapes per second of speech.
 
 ---
 
-## 9. Audio & Music
+## 10. Audio & Music
 
-### 9.1 Voice (TTS)
+### 10.1 Voice (TTS)
 - **Provider**: ElevenLabs
 - **Language**: English
 - **Voice**: [TO BE SELECTED — must sound like an educated but casual British/American male, 40-55 years old]
@@ -449,7 +767,7 @@ When Professor is talking (`talking: true`), the mouth must cycle through shapes
 - Every `narrative` and `dialogue` scene with `talking: true` MUST have corresponding audio.
 - `establishing` and `detail` scenes may have voiceover OR be music-only.
 
-### 9.2 Background Music
+### 10.2 Background Music
 
 | Rule | Specification |
 |------|---------------|
@@ -458,6 +776,7 @@ When Professor is talking (`talking: true`), the mouth must cycle through shapes
 | Style per theme | Must match the theme (see table below) |
 | Transitions | Crossfade between music tracks over 2 seconds |
 | Loopable | Music tracks must loop seamlessly |
+| Source | [TO BE DETERMINED — options: Epidemic Sound, Artlist, Suno AI, royalty-free library] |
 
 #### Music Style per Theme Category
 
@@ -471,7 +790,7 @@ When Professor is talking (`talking: true`), the mouth must cycle through shapes
 | Modern/Finance | Lo-fi chill beats, subtle electronic, jazz piano |
 | War/Battle | Intense drums, brass stabs, tension strings |
 
-### 9.3 Sound Effects
+### 10.3 Sound Effects
 
 | Scene Element | SFX |
 |---------------|-----|
@@ -489,13 +808,14 @@ SFX are determined by the LLM based on the scene content. Volume: -12dB relative
 
 ---
 
-## 10. Subtitles & Text
+## 11. Subtitles & Text
 
-### 10.1 Subtitle Rules
+### 11.1 Subtitle Rules
 
 | Rule | Specification |
 |------|---------------|
 | Always visible when Professor is talking | Every `talking: true` scene has subtitles |
+| YouTube subtitles | Also export as .srt file for YouTube closed captions |
 | Position | Bottom 15% of screen, centered |
 | Max characters per line | 60 |
 | Max lines visible | 2 |
@@ -504,7 +824,7 @@ SFX are determined by the LLM based on the scene content. Volume: -12dB relative
 | Animation | Fade in (8 frames), stay, fade out (8 frames) |
 | Language | English |
 
-### 10.2 Board Text (Chalkboard/Overlay)
+### 11.2 Board Text (Chalkboard/Overlay)
 In pub scenes, the chalkboard displays key terms. In theme scenes, `boardText` is shown as an integrated overlay.
 
 | Rule | Specification |
@@ -514,11 +834,27 @@ In pub scenes, the chalkboard displays key terms. In theme scenes, `boardText` i
 | Must be factual | No creative embellishment in boardText |
 | Visibility | Must be readable in <0.5 seconds |
 
+### 11.3 SRT Export
+
+The pipeline automatically generates a `.srt` subtitle file alongside the video for YouTube upload:
+
+```
+1
+00:00:02,000 --> 00:00:07,000
+Grab a pint, because today we're going
+to Ancient Egypt.
+
+2
+00:00:07,500 --> 00:00:14,000
+How did they build something 147 meters tall
+without cranes, without wheels, without machines?
+```
+
 ---
 
-## 11. Overlays & Data Visualization
+## 12. Overlays & Data Visualization
 
-### 11.1 Overlay Types
+### 12.1 Overlay Types
 
 | Type | Use Case | Frequency |
 |------|----------|-----------|
@@ -527,7 +863,7 @@ In pub scenes, the chalkboard displays key terms. In theme scenes, `boardText` i
 | `barChart` | Compare quantities visually | 1-2 per video |
 | `topicCard` | Introduce a new sub-topic | At each major topic shift |
 
-### 11.2 Overlay Rules
+### 12.2 Overlay Rules
 - Overlays appear WITH a scene, not replacing it.
 - Overlay animates in (slide + fade), stays for readable duration, animates out.
 - Never more than 1 overlay visible at a time.
@@ -536,160 +872,119 @@ In pub scenes, the chalkboard displays key terms. In theme scenes, `boardText` i
 
 ---
 
-## 12. Quality Gates
+## 13. Quality Gates
 
-### 12.1 Overview
-Every generated component passes through quality gates before being accepted. If a gate fails, the component is regenerated with specific feedback.
+### 13.1 Overview
+Quality gates validate composed scenes and the overall video. Since assets are pre-tested in the library, the focus shifts from "is the SVG good?" to "is the composition good?"
 
-### 12.2 Background Quality Gate
+### 13.2 Asset Library Quality Gate (One-Time, Per Asset)
 
-```
-CHECK 1: SVG Validity
-  - Valid SVG XML (parseable)
-  - No missing closing tags
-  - viewBox set to "0 0 1920 1080"
-  → FAIL: Regenerate entirely
-
-CHECK 2: Complexity
-  - Count distinct SVG elements: must be ≥ 50
-  - Count gradient definitions: must be ≥ 3
-  - Count distinct colors: must be ≥ 40
-  - Lines of code: must be ≥ 200
-  → FAIL: "Background is too simple. Add more detail: [specific missing elements]."
-
-CHECK 3: Layers
-  - Must contain elements at y < 300 (sky/far background)
-  - Must contain elements at y 300-600 (mid-background)
-  - Must contain elements at y 600-800 (midground)
-  - Must contain elements at y > 800 (foreground)
-  → FAIL: "Missing [layer name] layer. Add elements in the y range [range]."
-
-CHECK 4: Animation
-  - Must reference `frame` parameter at least 3 times in calculations
-  - Must contain at least 1 `Math.sin(frame` expression
-  → FAIL: "Background is static. Add animation using the frame parameter for: [suggestions]."
-
-CHECK 5: Art Style
-  - Must contain at least 1 <linearGradient> or <radialGradient> for lighting effect
-  - Must contain opacity variations (not everything at opacity 1.0)
-  - Must have a vignette or lighting overlay as final layer
-  → FAIL: "Missing oil-painting quality. Add gradient lighting, opacity variations, and vignette."
-
-CHECK 6: Perspective
-  - Elements higher on canvas (lower y) must generally be smaller (further away)
-  - Ground plane must show recession (not a flat rectangle)
-  → FAIL: "Perspective is incorrect. Ensure distant objects are smaller and the ground recedes."
-```
-
-### 12.3 Character Quality Gate
+Before any asset enters the library:
 
 ```
-CHECK 1: SVG Validity (same as background)
-
-CHECK 2: Complexity
-  - Distinct SVG elements: ≥ 30
-  - Distinct colors: ≥ 15
-  - Lines of code: ≥ 150
-  → FAIL: Regenerate with more detail.
-
-CHECK 3: Historical Accuracy
-  - Character description includes period-appropriate clothing
-  - No anachronistic elements (no modern items in ancient scenes)
-  → FAIL: "Character has anachronistic elements: [list]. Fix: [suggestions]."
-
-CHECK 4: Animation Support
-  - Component must accept `frame`, `emotion`, `talking` props
-  - Must contain idle animation (breathing/sway)
-  → FAIL: "Character is static. Add animation props and idle movement."
-
-CHECK 5: Recognizability
-  - Character role must be identifiable from visual appearance alone
-  - Must have at least 1 distinctive accessory/feature
-  → FAIL: "Character is too generic. Add distinctive features for a [role]."
+CHECK 1: SVG Validity — parseable, no broken tags, correct viewBox
+CHECK 2: Visual quality — tested in Remotion Studio at 1080p, looks "oil painting" quality
+CHECK 3: Animation — uses `frame` parameter, motion is smooth at 30fps
+CHECK 4: Interface — follows standard AssetProps interface
+CHECK 5: Composability — works alongside other assets without artifacts
+CHECK 6: Performance — renders in <50ms per frame (doesn't slow down the pipeline)
+→ PASS: Added to library. FAIL: Fix and retest.
 ```
 
-### 12.4 Scene Composition Quality Gate
+### 13.3 Scene Composition Quality Gate (Per Scene, Automated)
 
 ```
 CHECK 1: Duration
-  - Scene duration must be 300-600 frames (10-20 seconds)
+  - Scene duration is 300-900 frames (10-30 seconds)
+  - [GUIDELINE] Prefer 300-600 frames (10-20 seconds)
   → FAIL: Adjust timing.
 
-CHECK 2: Camera Movement
-  - Scene must have cameraPath OR camera coordinates that differ from previous scene
-  → FAIL: "Scene has no camera movement. Add a cameraPath."
+CHECK 2: Layer Completeness
+  - Scene has sky + terrain + lighting (minimum)
+  - Outdoor scenes have atmosphere effect
+  → FAIL: "Missing required layers: [list]."
 
-CHECK 3: Variety
+CHECK 3: Character Placement
+  - If Professor is in scene: x between 400-1500 (not at extreme edges)
+  - If Professor is in scene: y places him in midground (500-800)
+  - Character scale matches y-position depth zone
+  → FAIL: "Professor placement incorrect."
+
+CHECK 4: Depth & Perspective
+  - Elements further up (lower y) have smaller scale values
+  - At least 2 depth zones are populated
+  → FAIL: "Perspective issue: [specific]."
+
+CHECK 5: Camera Movement
+  - Scene has cameraPath or camera differs from previous scene
+  → FAIL: "Scene has no camera movement."
+
+CHECK 6: Variety
   - Scene type differs from at least 1 of the 2 preceding scenes
-  → FAIL: "Too many [type] scenes in a row. Change this to [suggested type]."
+  → FAIL: "Too many [type] scenes in a row."
 
-CHECK 4: Character Placement
-  - If Professor is in scene: x position is between 400-1500 (not at extreme edges)
-  - If Professor is in scene: y position places him in midground (500-800)
-  - Character scale matches the y-position depth zone
-  → FAIL: "Professor placement is wrong. He should be at [corrected position]."
+CHECK 7: Subtitle Length
+  - Subtitle ≤ 180 characters per scene
+  - Readable within scene duration at 150 wpm
+  → FAIL: "Subtitle too long."
 
-CHECK 5: Subtitle Length
-  - Subtitle text ≤ 180 characters per scene
-  - At normal reading speed (150 words/min), text must be readable within scene duration
-  → FAIL: "Subtitle too long for scene duration. Shorten to [max] characters."
+CHECK 8: Transition
+  - Transition type differs from previous 2 scenes
+  → FAIL: "Use different transition."
 
-CHECK 6: Transition
-  - Scene has a transition defined
-  - Transition type is not the same as the previous 2 scenes
-  → FAIL: "Transition variety needed. Use [suggested type] instead of [current]."
+CHECK 9: Feedback Compliance
+  - For each HIGH priority feedback rule: verify no violation
+  → FAIL: "Violates feedback rule: [rule text]."
 ```
 
-### 12.5 Full Video Quality Gate
+### 13.4 Full Video Quality Gate
 
 ```
 CHECK 1: Structure
-  - Starts with pub scene(s)
+  - Starts with pub scene(s), max 45 seconds
   - Ends with pub scene(s) including call-to-action
   - Total scenes ≥ 35
-  → FAIL: "Video structure incomplete. [specific issue]."
+  → FAIL: "Video structure incomplete."
 
 CHECK 2: Scene Type Distribution
-  - At least 3 establishing shots
-  - At least 4 detail shots
-  - At least 2 dialogue scenes
-  - At least 2 overlay scenes
+  - At least 3 establishing, 4 detail, 2 dialogue, 2 overlay
   → FAIL: "Missing scene types: [list]."
 
 CHECK 3: Pacing
-  - No scene exceeds 600 frames (20 seconds)
-  - No identical background used in consecutive scenes
-  - Average scene duration is 10-18 seconds
-  → FAIL: "[specific pacing issue]."
+  - No identical composed background in consecutive scenes
+  - Average scene duration 10-18 seconds
+  → FAIL: "[pacing issue]."
 
 CHECK 4: Content
-  - All factual claims are traceable to provided sources
-  - No fabricated statistics or dates
-  - Topic is fully covered (all source material addressed)
-  → FAIL: "Missing content from sources: [specific topics]."
+  - All factual claims traceable to provided sources
+  - Topic fully covered
+  → FAIL: "Missing content from sources."
 
 CHECK 5: Energy Curve
-  - Video doesn't start with the most dramatic content
-  - Climax/most dramatic scene is in the 60-80% mark
-  - Outro is calmer than the body
-  → FAIL: "Energy curve is flat. [specific suggestion]."
+  - Climax in 60-80% mark
+  - Outro calmer than body
+  → FAIL: "Energy curve issue."
+
+CHECK 6: Asset Coverage
+  - All referenced assets exist in library
+  - No undefined component references
+  → FAIL: "Missing asset: [id]. Generate or select alternative."
 ```
 
 ---
 
-## 13. YouTube Metadata
+## 14. YouTube Metadata
 
-### 13.1 Title
+### 14.1 Title
 - Format: `[Hook/Question] | Professor Pint`
 - Max 60 characters
-- Must contain the core topic
 - Must be intriguing — a question or surprising statement
 - Examples:
   - "How 2.3 Million Stones Built a Wonder | Professor Pint"
   - "The Aztec City Bigger Than London | Professor Pint"
   - "Why Vikings Were Actually Traders | Professor Pint"
 
-### 13.2 Description
+### 14.2 Description
 ```
 [Opening hook — 1 sentence that makes you click]
 
@@ -705,7 +1000,7 @@ In this episode, Professor Pint takes you to [place/era] to explore [topic].
 [List all sources provided by the user]
 
 ⏱️ Timestamps:
-[Auto-generated from scene data — every major topic shift gets a timestamp]
+[Auto-generated from scene data — every topicCard overlay = timestamp]
 00:00 - Intro
 [MM:SS] - [Topic label]
 ...
@@ -715,11 +1010,11 @@ In this episode, Professor Pint takes you to [place/era] to explore [topic].
 #ProfessorPint #[Topic] #[Era] #History #Education
 ```
 
-### 13.3 Tags
+### 14.3 Tags
 - Always include: `Professor Pint`, `education`, `history`, `explained`
 - Plus 10-15 topic-specific tags generated from the content
 
-### 13.4 Thumbnail Specification
+### 14.4 Thumbnail Specification
 - **1280×720** resolution
 - Professor Pint on the right 1/3 with a `shocked` expression
 - Key visual from the video on the left 2/3 (pyramid, temple, etc.)
@@ -727,35 +1022,40 @@ In this episode, Professor Pint takes you to [place/era] to explore [topic].
 - High contrast, saturated colors
 - YouTube-friendly face + text + bright background formula
 
+### 14.5 Subtitles File
+- Export `.srt` file alongside the rendered `.mp4`
+- Upload to YouTube as closed captions
+- Language: English
+
 ---
 
-## 14. Content Guidelines
+## 15. Content Guidelines
 
-### 14.1 Research & Sources
+### 15.1 Research & Sources
 - The user provides: **topic + source material** (articles, links, documents).
 - The LLM uses ONLY the provided sources for factual claims.
 - No invented statistics, dates, or facts.
 - If a fact is uncertain, Professor says "historians believe" or "evidence suggests."
 
-### 14.2 Sensitivity
+### 15.2 Sensitivity
 - Historical violence/slavery: acknowledge respectfully, never glorify.
 - Human sacrifice (Aztec, etc.): present as cultural context, not sensationalism.
 - No graphic depictions — suggest through composition, not explicit imagery.
 - Respect all cultures — Professor is curious and respectful, never mocking.
 
-### 14.3 Educational Value
+### 15.3 Educational Value
 - Every video must teach the viewer at least 5 distinct facts they likely didn't know.
 - Complex concepts are ALWAYS explained with a relatable metaphor.
 - At least 1 "mind-blown" moment per video where a surprising fact is revealed dramatically.
 
-### 14.4 Engagement Hooks
+### 15.4 Engagement Hooks
 - First 10 seconds must contain a hook (surprising fact, question, or bold statement).
 - Every 2-3 minutes, re-engage with a question or surprising connection.
 - End with a memorable one-liner that encapsulates the episode.
 
 ---
 
-## 15. Appendix: SceneData Schema
+## Appendix: SceneData Schema
 
 ```typescript
 interface SceneData {
@@ -765,8 +1065,8 @@ interface SceneData {
   start: number;
   /** End frame (exclusive) */
   end: number;
-  /** Background component identifier */
-  bg: string;
+  /** Composed background (references library assets) */
+  bg: string | ComposedScene;
   /** Text for chalkboard/overlay label */
   boardText?: string;
   /** Static camera position */
@@ -776,31 +1076,25 @@ interface SceneData {
     zoom: number; // 0.8 to 2.5
   };
   /** Dynamic camera movement (overrides camera if present) */
-  cameraPath?: {
-    keyframes: Array<{
-      frame: number;
-      x: number;
-      y: number;
-      zoom: number;
-    }>;
-    easing: 'linear' | 'easeInOut' | 'easeOut' | 'easeIn';
-  };
+  cameraPath?: CameraPathData;
   /** Characters in the scene */
   characters: Array<{
-    id: string;           // character component identifier
-    x: number;            // horizontal position (0-1920)
-    y: number;            // vertical position (0-1080)
-    scale?: number;       // size multiplier (default 1.0)
-    emotion: 'neutral' | 'happy' | 'shocked' | 'thinking' | 'angry' | 'sad';
+    id: string;
+    x: number;
+    y: number;
+    scale?: number;
+    emotion: Emotion;
     talking: boolean;
+    activity?: Activity;
     gesture?: string;
+    facing?: 'left' | 'right';
   }>;
   /** Subtitle text (spoken by Professor) */
   subtitle: string;
   /** Scene transition effect */
   transition?: {
     type: 'crossfade' | 'wipe' | 'zoomIn' | 'slide' | 'iris' | 'dissolve';
-    duration: number; // frames
+    duration: number;
   };
   /** Data overlays */
   overlays?: Array<{
@@ -811,10 +1105,10 @@ interface SceneData {
   }>;
   /** Scene type for quality gate validation */
   sceneType: 'establishing' | 'narrative' | 'detail' | 'crowd' | 'dialogue' | 'dramatic' | 'transition' | 'overlay';
-  /** Sound effects for this scene */
+  /** Sound effects */
   sfx?: Array<{
     type: string;
-    volume: number;    // 0.0 to 1.0
+    volume: number;
     startFrame?: number;
     loop?: boolean;
   }>;
@@ -822,11 +1116,17 @@ interface SceneData {
   music?: {
     track: string;
     volume: number;
-    fadeIn?: number;   // frames
-    fadeOut?: number;   // frames
+    fadeIn?: number;
+    fadeOut?: number;
   };
 }
 ```
+
+---
+
+## Existing Videos (Reference Only)
+
+The existing PyramidsOfGiza and AztekenVideo compositions are **reference implementations only**. They demonstrate the scene structure and pacing but are NOT YouTube-ready. They serve as templates for the pipeline to learn from.
 
 ---
 
@@ -835,3 +1135,4 @@ interface SceneData {
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-02-11 | Initial specification |
+| 2.0 | 2026-02-11 | Major rewrite: Asset Library system replaces from-scratch SVG generation. Expanded animation library (12 emotions, 16 activities). Scene composition system. Guidelines vs hard rules. SRT subtitle export. Existing videos marked as reference only. |
