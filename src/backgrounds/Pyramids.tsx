@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { sineWave } from '../animations/easing';
+import { CrowdLayer, CROWD_CONFIGS } from '../crowds/CrowdWorkers';
 
 interface PyramidsProps {
   boardText?: string;
@@ -111,6 +112,9 @@ export const Pyramids: React.FC<PyramidsProps> = ({
       {/* Palm trees */}
       <PalmTree x={width * 0.12} y={height * 0.58} h={120} lean={-5 + heatShimmer * 0.5} />
       <PalmTree x={width * 0.88} y={height * 0.56} h={140} lean={3 + heatShimmer * 0.3} />
+
+      {/* Animated crowd workers */}
+      <CrowdLayer config={CROWD_CONFIGS.pyramids} />
 
       {/* Stone tablet (instead of chalkboard) */}
       <g transform={`translate(${width / 2 - 200}, ${height * 0.68})`}>

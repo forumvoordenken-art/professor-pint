@@ -1,6 +1,8 @@
 import React from 'react';
 import { AbsoluteFill, Sequence, useCurrentFrame } from 'remotion';
 import { Camera } from './Camera';
+import { CameraPath } from './CameraPath';
+import type { CameraPathData } from './CameraPath';
 import { Subtitles } from './Subtitles';
 import { Transition, getTransitionProgress } from './Transitions';
 import type { TransitionType } from './Transitions';
@@ -54,6 +56,8 @@ export interface SceneData {
   bg: string;
   boardText?: string;
   camera?: SceneCamera;
+  /** Camera path with keyframes for dynamic movement within scene */
+  cameraPath?: CameraPathData;
   characters: SceneCharacter[];
   subtitle: string;
   transition?: SceneTransition;
@@ -294,8 +298,48 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
     return char.talking;
   };
 
-  // Build scene content
-  const sceneContent = (
+  // Character positions for camera tracking
+  const characterPositions = currentScene.characters.map(c => ({
+    id: c.id, x: c.x, y: c.y,
+  }));
+
+  // Scene content (background + characters)
+  const sceneInner = (
+    <>
+      {/* Background */}
+      <AbsoluteFill>
+        {renderBackground(currentScene.bg, currentScene.boardText ?? '')}
+      </AbsoluteFill>
+
+      {/* Characters */}
+      {currentScene.characters.map((char) => {
+        const prevChar = previousScene?.characters.find((c) => c.id === char.id);
+        const prevEmotion: Emotion = prevChar?.emotion ?? char.emotion;
+        const talkingChar = { ...char, talking: resolveCharacterTalking(char) };
+        return renderCharacter(talkingChar, prevEmotion, emotionProgress);
+      })}
+    </>
+  );
+
+  // Build scene content: use CameraPath if available, otherwise fallback to Camera
+  const sceneContent = currentScene.cameraPath ? (
+    <CameraPath
+      path={currentScene.cameraPath}
+      x={cam.x}
+      y={cam.y}
+      zoom={cam.zoom}
+      sceneStart={currentScene.start}
+      sceneEnd={currentScene.end}
+      previousX={prevCam.x}
+      previousY={prevCam.y}
+      previousZoom={prevCam.zoom}
+      characterPositions={characterPositions}
+      width={1920}
+      height={1080}
+    >
+      {sceneInner}
+    </CameraPath>
+  ) : (
     <Camera
       x={cam.x}
       y={cam.y}
@@ -308,20 +352,7 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
       width={1920}
       height={1080}
     >
-      {/* Background */}
-      <AbsoluteFill>
-        {renderBackground(currentScene.bg, currentScene.boardText ?? '')}
-      </AbsoluteFill>
-
-      {/* Characters */}
-      {currentScene.characters.map((char) => {
-        const prevChar = previousScene?.characters.find((c) => c.id === char.id);
-        const prevEmotion: Emotion = prevChar?.emotion ?? char.emotion;
-        // Use audio-driven talking if available
-        const talkingChar = { ...char, talking: resolveCharacterTalking(char) };
-
-        return renderCharacter(talkingChar, prevEmotion, emotionProgress);
-      })}
+      {sceneInner}
     </Camera>
   );
 

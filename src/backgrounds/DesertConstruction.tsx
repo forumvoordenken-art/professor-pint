@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { sineWave } from '../animations/easing';
+import { CrowdLayer, CROWD_CONFIGS } from '../crowds/CrowdWorkers';
 
 interface DesertConstructionProps {
   boardText?: string;
@@ -314,6 +315,9 @@ export const DesertConstruction: React.FC<DesertConstructionProps> = ({
       <PalmTree x={width * 0.06} y={height * 0.6} h={130} lean={-4 + heatShimmer * 0.5} />
       <PalmTree x={width * 0.93} y={height * 0.58} h={140} lean={3 + heatShimmer * 0.3} />
       <PalmTree x={width * 0.1} y={height * 0.63} h={100} lean={-6 + heatShimmer * 0.4} />
+
+      {/* Animated crowd workers */}
+      <CrowdLayer config={CROWD_CONFIGS.desertConstruction} />
 
       {/* Stone tablet board for text */}
       <g transform={`translate(${width / 2 - 200}, ${height * 0.72})`}>

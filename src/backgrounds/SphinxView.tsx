@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { sineWave } from '../animations/easing';
+import { CrowdLayer, CROWD_CONFIGS } from '../crowds/CrowdWorkers';
 
 interface SphinxViewProps {
   boardText?: string;
@@ -389,6 +390,9 @@ export const SphinxView: React.FC<SphinxViewProps> = ({
       <rect x={width * 0.48} y={height * 0.67} width={22} height={15} rx={2}
         fill={C.stone} stroke={C.outline} strokeWidth={1} opacity={0.45}
         transform={`rotate(-7, ${width * 0.48}, ${height * 0.67})`} />
+
+      {/* Animated crowd figures near sphinx */}
+      <CrowdLayer config={CROWD_CONFIGS.sphinxView} />
 
       {/* ========== HEAT SHIMMER EFFECT ========== */}
       <rect x={0} y={height * 0.5} width={width} height={height * 0.12}

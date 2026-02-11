@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { sineWave } from '../animations/easing';
+import { CrowdLayer, CROWD_CONFIGS } from '../crowds/CrowdWorkers';
 
 interface NileRiverProps {
   boardText?: string;
@@ -329,6 +330,9 @@ export const NileRiver: React.FC<NileRiverProps> = ({
       ].map((p, i) => (
         <PapyrusReed key={`pr-bot-${i}`} x={p.x} y={riverBottom - 5} sway={p.sway} flip={true} />
       ))}
+
+      {/* Animated crowd figures (bank workers, etc) */}
+      <CrowdLayer config={CROWD_CONFIGS.nileRiver} />
 
       {/* ===== STONE TABLET BOARD ===== */}
       <g transform={`translate(${width / 2 - 200}, ${height * 0.72})`}>

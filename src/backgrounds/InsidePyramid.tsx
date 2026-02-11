@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { sineWave } from '../animations/easing';
+import { CrowdLayer, CROWD_CONFIGS } from '../crowds/CrowdWorkers';
 
 interface InsidePyramidProps {
   boardText?: string;
@@ -465,6 +466,9 @@ export const InsidePyramid: React.FC<InsidePyramidProps> = ({
           opacity={0.3}
         />
       </g>
+
+      {/* Animated crowd figures (attendants, fan bearers) */}
+      <CrowdLayer config={CROWD_CONFIGS.insidePyramid} />
 
       {/* === TORCH GLOW OVERLAYS === */}
       <rect

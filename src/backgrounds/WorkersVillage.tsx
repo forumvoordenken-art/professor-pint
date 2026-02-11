@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { sineWave } from '../animations/easing';
+import { CrowdLayer, CROWD_CONFIGS } from '../crowds/CrowdWorkers';
 
 interface WorkersVillageProps {
   boardText?: string;
@@ -263,6 +264,9 @@ export const WorkersVillage: React.FC<WorkersVillageProps> = ({
         <line x1={0} y1={-55} x2={0} y2={-25} stroke={C.outline} strokeWidth={1.5} opacity={0.6} />
         <path d="M-6,-25 L-6,-18 L6,-18 L6,-25 Z" fill={C.pot} stroke={C.outline} strokeWidth={1} />
       </g>
+
+      {/* Animated crowd workers (village life) */}
+      <CrowdLayer config={CROWD_CONFIGS.workersVillage} />
 
       {/* === STONE TABLET BOARD === */}
       <g transform={`translate(${width / 2 - 200}, ${height * 0.82})`}>
