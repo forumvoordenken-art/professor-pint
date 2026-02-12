@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
+import { resolvePosition } from './PositionPresets';
 
 // ---- Asset component interface (VIDEO-SPEC.md §4.3) ----
 
@@ -38,27 +39,30 @@ export interface ComposedScene {
   /** Layer 4: Structures (buildings, monuments) */
   structures: Array<{
     asset: string;
-    x: number;
-    y: number;
-    scale: number;
+    position?: string;
+    x?: number;
+    y?: number;
+    scale?: number;
     mirror?: boolean;
   }>;
 
   /** Layer 5: Vegetation */
   vegetation: Array<{
     asset: string;
-    x: number;
-    y: number;
-    scale: number;
+    position?: string;
+    x?: number;
+    y?: number;
+    scale?: number;
     mirror?: boolean;
   }>;
 
   /** Layer 6: Characters (midground) */
   characters: Array<{
     asset: string;
-    x: number;
-    y: number;
-    scale: number;
+    position?: string;
+    x?: number;
+    y?: number;
+    scale?: number;
     emotion?: string;
     talking?: boolean;
     activity?: string;
@@ -67,9 +71,10 @@ export interface ComposedScene {
   /** Layer 7: Props (small objects) */
   props?: Array<{
     asset: string;
-    x: number;
-    y: number;
-    scale: number;
+    position?: string;
+    x?: number;
+    y?: number;
+    scale?: number;
   }>;
 
   /** Layer 8: Foreground framing */
@@ -107,6 +112,21 @@ export function registerAsset(name: string, component: AssetComponent): void {
 export function getAsset(name: string): AssetComponent | undefined {
   return assetRegistry.get(name);
 }
+
+// ---- Position resolver ----
+// If an entry has `position`, resolve it to x/y/scale via presets.
+// If it has explicit x/y/scale, use those directly.
+// Jitter is enabled by default with the array index as seed.
+
+const resolveEntryPosition = (
+  entry: { position?: string; x?: number; y?: number; scale?: number },
+  index: number,
+) => {
+  if (entry.position) {
+    return resolvePosition(entry.position, true, index);
+  }
+  return { x: entry.x ?? 0, y: entry.y ?? 0, scale: entry.scale ?? 1 };
+};
 
 // ---- Layer renderers ----
 
@@ -201,7 +221,8 @@ export const SceneComposer: React.FC<SceneComposerProps> = ({ scene }) => {
           {scene.structures.map((entry, i) => {
             const Asset = resolveAsset(entry.asset);
             if (!Asset) return null;
-            return renderPositionedAsset(Asset, frame, entry, `structure-${i}`);
+            const pos = resolveEntryPosition(entry, i);
+            return renderPositionedAsset(Asset, frame, { ...pos, mirror: entry.mirror }, `structure-${i}`);
           })}
         </AbsoluteFill>
       )}
@@ -212,7 +233,8 @@ export const SceneComposer: React.FC<SceneComposerProps> = ({ scene }) => {
           {scene.vegetation.map((entry, i) => {
             const Asset = resolveAsset(entry.asset);
             if (!Asset) return null;
-            return renderPositionedAsset(Asset, frame, entry, `vegetation-${i}`);
+            const pos = resolveEntryPosition(entry, i + 100);
+            return renderPositionedAsset(Asset, frame, { ...pos, mirror: entry.mirror }, `vegetation-${i}`);
           })}
         </AbsoluteFill>
       )}
@@ -223,12 +245,8 @@ export const SceneComposer: React.FC<SceneComposerProps> = ({ scene }) => {
           {scene.characters.map((entry, i) => {
             const Asset = resolveAsset(entry.asset);
             if (!Asset) return null;
-            return renderPositionedAsset(
-              Asset,
-              frame,
-              { x: entry.x, y: entry.y, scale: entry.scale },
-              `character-${i}`,
-            );
+            const pos = resolveEntryPosition(entry, i + 200);
+            return renderPositionedAsset(Asset, frame, pos, `character-${i}`);
           })}
         </AbsoluteFill>
       )}
@@ -240,7 +258,8 @@ export const SceneComposer: React.FC<SceneComposerProps> = ({ scene }) => {
             {scene.props.map((entry, i) => {
               const Asset = resolveAsset(entry.asset);
               if (!Asset) return null;
-              return renderPositionedAsset(Asset, frame, entry, `prop-${i}`);
+              const pos = resolveEntryPosition(entry, i + 300);
+              return renderPositionedAsset(Asset, frame, pos, `prop-${i}`);
             })}
           </AbsoluteFill>
         )}
