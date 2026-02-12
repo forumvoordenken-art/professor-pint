@@ -3,7 +3,9 @@
 
 import { lerp, cubicEaseOut } from './easing';
 
-export type Emotion = 'neutral' | 'happy' | 'shocked' | 'thinking' | 'angry' | 'sad';
+export type Emotion =
+  | 'neutral' | 'happy' | 'shocked' | 'thinking' | 'angry' | 'sad'
+  | 'excited' | 'confused' | 'proud' | 'whisper' | 'dramatic' | 'skeptical';
 
 /**
  * Facial feature offsets per emotion
@@ -60,6 +62,42 @@ const EMOTION_PARAMS: Record<Emotion, EmotionParams> = {
     browLeftY: -2, browRightY: -2, browLeftRotation: -8, browRightRotation: 8,
     mouthCurve: -6, mouthWidth: 0.9, mouthOpen: 0,
     blushOpacity: 0, headTilt: 3,
+  },
+  excited: {
+    eyeScaleY: 1.3, eyeOffsetY: -0.5, pupilScale: 1.15,
+    browLeftY: -5, browRightY: -5, browLeftRotation: -4, browRightRotation: 4,
+    mouthCurve: 10, mouthWidth: 1.25, mouthOpen: 0.5,
+    blushOpacity: 0.4, headTilt: 3,
+  },
+  confused: {
+    eyeScaleY: 1.1, eyeOffsetY: 0, pupilScale: 0.9,
+    browLeftY: 2, browRightY: -5, browLeftRotation: -5, browRightRotation: 10,
+    mouthCurve: -2, mouthWidth: 0.8, mouthOpen: 0.1,
+    blushOpacity: 0, headTilt: -7,
+  },
+  proud: {
+    eyeScaleY: 0.85, eyeOffsetY: 0.5, pupilScale: 1.05,
+    browLeftY: -1, browRightY: -1, browLeftRotation: -2, browRightRotation: 2,
+    mouthCurve: 5, mouthWidth: 1.05, mouthOpen: 0.1,
+    blushOpacity: 0.15, headTilt: -4,
+  },
+  whisper: {
+    eyeScaleY: 1.1, eyeOffsetY: 0, pupilScale: 1,
+    browLeftY: -2, browRightY: -2, browLeftRotation: 0, browRightRotation: 0,
+    mouthCurve: 0, mouthWidth: 0.7, mouthOpen: 0.15,
+    blushOpacity: 0, headTilt: 6,
+  },
+  dramatic: {
+    eyeScaleY: 1.4, eyeOffsetY: -1, pupilScale: 1.2,
+    browLeftY: -6, browRightY: -6, browLeftRotation: -6, browRightRotation: 6,
+    mouthCurve: 3, mouthWidth: 1.2, mouthOpen: 0.6,
+    blushOpacity: 0.1, headTilt: 0,
+  },
+  skeptical: {
+    eyeScaleY: 0.85, eyeOffsetY: 0.5, pupilScale: 0.95,
+    browLeftY: 2, browRightY: -4, browLeftRotation: 5, browRightRotation: 8,
+    mouthCurve: -2, mouthWidth: 0.85, mouthOpen: 0,
+    blushOpacity: 0, headTilt: -3,
   },
 };
 
