@@ -7,13 +7,14 @@
 
 ---
 
-## Current State: Phase 0 afgerond — klaar voor Phase 1
+## Current State: Phase 1 gestart — Professor Pint v2 klaar
 
 - Specs zijn geschreven (v2.0)
 - Repository is opgeschoond en herstructureerd met Nederlandse mapnamen
 - SceneComposer prototype en test assets zijn gebouwd (stap 0.1 + 0.2)
 - Phase 0 is volledig afgerond (prototype gevalideerd, performance getest, presets gebouwd)
-- Volgende stap: **Phase 1 — Minimum Viable Library (universele assets)**
+- **Professor Pint v2.2 is af** — 12 emoties, vest met mouwen, pelvis/hip-connectie, idle+talking animaties
+- Volgende stap: **Phase 1 assets bouwen (skies, terrains, vegetation, etc.)**
 
 ---
 
@@ -102,7 +103,7 @@ professor-pint/
 | 1.3 | **Vegetation assets (8-10)** | ⬜ Not started | Trees (oak, palm, pine), bushes, flowers, grass patches, vines. Each with idle animation. |
 | 1.4 | **Atmosphere overlays (4-6)** | ⬜ Not started | Dust particles, fog, rain, snow, fireflies, heat shimmer. |
 | 1.5 | **Lighting overlays (4-6)** | ⬜ Not started | Golden hour, moonlight, indoor warm, dramatic spotlight, candlelight. |
-| 1.6 | **Professor Pint v2** | ⬜ Not started | Rebuild main character with all 12 emotions + 16 activities. Must work at any position preset. |
+| 1.6 | **Professor Pint v2** | ✅ Done | v2.2: 12 emoties, vest met mouwen/schouders, pelvis/hip-connectie, simpele handen, geïntegreerd bierglas, idle+talking animaties. EmotionCarousel compositie voor preview. |
 | 1.7 | **Generic crowd figures (10-12)** | ⬜ Not started | Universal crowd members that work in any era/setting with costume variations. |
 | 1.8 | **Common props (8-10)** | ⬜ Not started | Table, chair, book, torch, sign, barrel, cart, etc. |
 | 1.9 | **Asset Manifest system** | ⬜ Not started | Build `AssetManifest.ts` — JSON catalog of all available assets with metadata (tags, compatible-themes, size, animation-type). LLM receives this to know what's available. |
