@@ -80,11 +80,12 @@ De gebruiker wil kritisch meedenken. Geef hem de informatie om dat te kunnen doe
 Bij het opleveren van werk, geef ALTIJD deze instructies:
 
 1. **Op welke branch het werk staat** — noem de exacte branch naam
-2. **Hoe te mergen naar main** — exacte commando's die de gebruiker in zijn Codespace terminal moet draaien:
+2. **Hoe te mergen naar main** — exacte commando's die de gebruiker in zijn Codespace terminal moet draaien.
+   Voeg ALTIJD een merge-bericht toe van max 4 woorden in het Nederlands:
    ```bash
    git fetch origin [branch-naam]
    git stash
-   git merge origin/[branch-naam]
+   git merge origin/[branch-naam] -m "[max 4 woorden NL]"
    git stash pop
    git push origin main
    ```

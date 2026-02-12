@@ -7,13 +7,13 @@
 
 ---
 
-## Current State: Phase 0 — Prototype gestart, repo opgeschoond
+## Current State: Phase 0 afgerond — klaar voor Phase 1
 
 - Specs zijn geschreven (v2.0)
 - Repository is opgeschoond en herstructureerd met Nederlandse mapnamen
 - SceneComposer prototype en test assets zijn gebouwd (stap 0.1 + 0.2)
-- Stap 0.3/0.4 wachten op handmatige test in Remotion Studio
-- Volgende bouwstap: **0.5 Position Presets**
+- Phase 0 is volledig afgerond (prototype gevalideerd, performance getest, presets gebouwd)
+- Volgende stap: **Phase 1 — Minimum Viable Library (universele assets)**
 
 ---
 
@@ -88,9 +88,9 @@ professor-pint/
 |------|------|--------|---------|
 | 0.1 | **Build SceneComposer prototype** | ✅ Done | `src/motor/SceneComposer.tsx` — accepts ComposedScene, renders 10 layers. Asset registry met `registerAsset()`. |
 | 0.2 | **Create 5 dummy test assets** | ✅ Done | `src/assets/test/placeholders.tsx` — 10 placeholder assets (sky, terrain, water, structure, vegetation, character, prop, foreground, atmosphere, lighting). Test composition in `src/videos/TestVideo.tsx`. |
-| 0.3 | **Test render performance** | ⬜ Not started | Render a 30s test scene at 1080p/30fps. Measure: render time, frame drops, memory usage. **Moet handmatig in Remotion Studio.** |
-| 0.4 | **Evaluate visual cohesion** | ⬜ Not started | Does the layered output look like one unified scene or a collage? If collage → adjust approach before continuing. **Handmatige visuele beoordeling.** |
-| 0.5 | **Build position presets system** | ⬜ Not started | Define position presets (far_left_bg, center_mid, right_front, etc.) with x/y/scale/zIndex values. Bestand: `src/motor/PositionPresets.ts` |
+| 0.3 | **Test render performance** | ✅ Done | 900 frames in ~126s (~7 fps render). 6.3 MB output. Geen errors. Performance is prima voor Remotion headless rendering. |
+| 0.4 | **Evaluate visual cohesion** | ✅ Done | Placeholder assets zien er basic uit (zoals verwacht). Lagensysteem werkt correct: z-ordering, positionering, scaling allemaal goed. Visuele kwaliteit wordt opgelost met echte oil-painting assets in Phase 1. |
+| 0.5 | **Build position presets system** | ✅ Done | `src/motor/PositionPresets.ts` — 18 presets (5x back, 5x mid, 5x front, + podium, duo_left, duo_right). SceneComposer ondersteunt nu `position: "center_front"` als alternatief voor x/y/scale. Jitter-optie voor natuurlijke variatie. `getPresetManifest()` voor LLM prompt. |
 
 ### Phase 1: Minimum Viable Library (Universal Assets)
 > Goal: Build ~50 universal assets that work across any video theme.
