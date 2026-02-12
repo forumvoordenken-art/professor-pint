@@ -1,16 +1,42 @@
 # Professor Pint — Project State & Step Plan
 
 > **Lees dit bestand aan het begin van elke nieuwe chatsessie.**
-> Zeg: "Check PROJECT-STATE.md — waar staan we en wat moeten we doen?"
+> Zeg: "Check docs/PROJECT-STATE.md — waar staan we en wat moeten we doen?"
 
-**Laatste update:** 2026-02-11
-**Branch:** `claude/plan-video-pipeline-So6YH`
+**Laatste update:** 2026-02-12
 
 ---
 
-## Current State: Planning Complete, Implementation Not Started
+## Current State: Phase 0 — Prototype gestart, repo opgeschoond
 
-We have completed a thorough planning phase. Three specification documents are written, reviewed, and committed (v2.0). No code has been written yet — the existing codebase serves as reference only.
+- Specs zijn geschreven (v2.0)
+- Repository is opgeschoond en herstructureerd met Nederlandse mapnamen
+- SceneComposer prototype en test assets zijn gebouwd (stap 0.1 + 0.2)
+- Stap 0.3/0.4 wachten op handmatige test in Remotion Studio
+- Volgende bouwstap: **0.5 Position Presets**
+
+---
+
+## Mappenstructuur
+
+```
+professor-pint/
+├── docs/                    ← Spec-documenten
+│   ├── PROJECT-STATE.md     ← Dit bestand
+│   ├── VIDEO-SPEC.md        ← Video output regels
+│   ├── PIPELINE-ARCHITECTURE.md  ← Pipeline spec
+│   └── FEEDBACK-SYSTEM.md   ← Feedback spec
+│
+├── src/
+│   ├── personages/          ← Character SVG-componenten
+│   ├── videos/              ← Video compositions
+│   ├── motor/               ← Render engine (SceneComposer, Camera, etc.)
+│   ├── animaties/           ← Animatie helpers (emotions, idle, talking)
+│   └── assets/              ← Statische bestanden + test placeholders
+│
+├── CLAUDE.md                ← AI instructies
+└── [config in root]         ← package.json, tsconfig.json, etc.
+```
 
 ---
 
@@ -18,9 +44,9 @@ We have completed a thorough planning phase. Three specification documents are w
 
 | Document | Status | Description |
 |----------|--------|-------------|
-| `VIDEO-SPEC.md` | v2.0 ✅ | The "bible" — brand identity, asset library structure, 10-layer scene composition, characters, cameras, animations, audio, subtitles, overlays, quality gates, YouTube metadata |
-| `PIPELINE-ARCHITECTURE.md` | v2.0 ✅ | End-to-end pipeline: Input → Script → Compose → Quality → Audio → Assembly → Preview → Render → Upload. n8n workflow, cost estimates, phased library build |
-| `FEEDBACK-SYSTEM.md` | v2.0 ✅ | Self-learning feedback via n8n approval buttons. 19 categories, 3 priority levels, rules.json injected into every LLM prompt |
+| `docs/VIDEO-SPEC.md` | v2.0 ✅ | The "bible" — brand identity, asset library structure, 10-layer scene composition, characters, cameras, animations, audio, subtitles, overlays, quality gates, YouTube metadata |
+| `docs/PIPELINE-ARCHITECTURE.md` | v2.0 ✅ | End-to-end pipeline: Input → Script → Compose → Quality → Audio → Assembly → Preview → Render → Upload. n8n workflow, cost estimates, phased library build |
+| `docs/FEEDBACK-SYSTEM.md` | v2.0 ✅ | Self-learning feedback via n8n approval buttons. 19 categories, 3 priority levels, rules.json injected into every LLM prompt |
 
 ---
 
@@ -33,7 +59,7 @@ We have completed a thorough planning phase. Three specification documents are w
 5. **English only** — All content in English
 6. **Scene duration = guideline** — Target 10-20s per scene, max 30s, not a hard rule
 7. **"Unique" = visually different** — Variations of the same base (e.g. different lighting, angle) count
-8. **Existing code = reference only** — Current backgrounds, characters, compositions are examples, not YouTube-ready
+8. **Existing code = reference only** — Current code serves as pattern examples, not production-ready
 9. **Costs acceptable** — ~$8-20 per video, ~$130-230/month for regular production
 10. **Music source TBD** — Still needs to be decided (royalty-free library, AI-generated, etc.)
 
@@ -44,13 +70,12 @@ We have completed a thorough planning phase. Three specification documents are w
 | # | Risk | Severity | Mitigation |
 |---|------|----------|------------|
 | 1 | **Collage look** — Composing separate SVG layers may look like cutouts pasted together instead of a cohesive painting | HIGH | Test early with 5 dummy assets. Use shared color palettes, consistent lighting layers, atmosphere overlays to unify |
-| 2 | **SVG performance** — 10 layers x multiple animated elements may be too heavy for Remotion at 30fps | HIGH | Benchmark in Step 1. Set max element counts per layer if needed |
+| 2 | **SVG performance** — 10 layers x multiple animated elements may be too heavy for Remotion at 30fps | HIGH | Benchmark in Step 0.3. Set max element counts per layer if needed |
 | 3 | **LLM spatial composition** — LLM cannot "see" what it's composing, may create nonsensical layouts | MEDIUM | Position presets eliminate guesswork. LLM picks from predefined slots, not raw coordinates |
 | 4 | **TTS timing cascade** — Audio duration determines scene duration, but scenes are composed before audio exists | MEDIUM | Two-pass system: compose scenes first, then adjust timing after TTS. Pipeline already accounts for this |
 | 5 | **Context window limits** — Asset manifest + feedback rules + script might exceed LLM context | MEDIUM | Phased prompts: script generation and scene composition are separate LLM calls with different context |
-| 6 | **Subjective quality gates** — "Does this look good?" is hard to automate | LOW | Asset-level quality is guaranteed (pre-tested). Scene-level gates check structural rules only (layer count, element presence, etc.) |
+| 6 | **Subjective quality gates** — "Does this look good?" is hard to automate | LOW | Asset-level quality is guaranteed (pre-tested). Scene-level gates check structural rules only |
 | 7 | **Large initial time investment** — Building the first ~50 universal assets before producing any video | LOW | User confirmed time is not a problem. Assets are reusable across all future videos |
-| 8 | **Untested in Remotion** — ComposedScene concept hasn't been rendered yet | HIGH | Step 1 is specifically a prototype to validate this works |
 
 ---
 
@@ -61,11 +86,11 @@ We have completed a thorough planning phase. Three specification documents are w
 
 | Step | Task | Status | Details |
 |------|------|--------|---------|
-| 0.1 | **Build SceneComposer prototype** | ⬜ Not started | New component: `SceneComposer.tsx` that accepts a `ComposedScene` object and renders 10 SVG layers in order. Minimal, just prove the concept works in Remotion Studio. |
-| 0.2 | **Create 5 dummy test assets** | ⬜ Not started | Simple SVG components: 1 sky, 1 terrain, 1 structure, 1 character, 1 atmosphere overlay. Doesn't need to be pretty — just functional. |
-| 0.3 | **Test render performance** | ⬜ Not started | Render a 30s test scene at 1080p/30fps. Measure: render time, frame drops, memory usage. Set baseline performance numbers. |
-| 0.4 | **Evaluate visual cohesion** | ⬜ Not started | Does the layered output look like one unified scene or a collage? If collage → adjust approach before continuing. |
-| 0.5 | **Build position presets system** | ⬜ Not started | Define position presets (far_left_bg, center_mid, right_front, etc.) with x/y/scale/zIndex values. Test that characters placed via presets look natural. |
+| 0.1 | **Build SceneComposer prototype** | ✅ Done | `src/motor/SceneComposer.tsx` — accepts ComposedScene, renders 10 layers. Asset registry met `registerAsset()`. |
+| 0.2 | **Create 5 dummy test assets** | ✅ Done | `src/assets/test/placeholders.tsx` — 10 placeholder assets (sky, terrain, water, structure, vegetation, character, prop, foreground, atmosphere, lighting). Test composition in `src/videos/TestVideo.tsx`. |
+| 0.3 | **Test render performance** | ⬜ Not started | Render a 30s test scene at 1080p/30fps. Measure: render time, frame drops, memory usage. **Moet handmatig in Remotion Studio.** |
+| 0.4 | **Evaluate visual cohesion** | ⬜ Not started | Does the layered output look like one unified scene or a collage? If collage → adjust approach before continuing. **Handmatige visuele beoordeling.** |
+| 0.5 | **Build position presets system** | ⬜ Not started | Define position presets (far_left_bg, center_mid, right_front, etc.) with x/y/scale/zIndex values. Bestand: `src/motor/PositionPresets.ts` |
 
 ### Phase 1: Minimum Viable Library (Universal Assets)
 > Goal: Build ~50 universal assets that work across any video theme.
@@ -101,9 +126,9 @@ We have completed a thorough planning phase. Three specification documents are w
 | Step | Task | Status | Details |
 |------|------|--------|---------|
 | 3.1 | **SceneComposer (production)** | ⬜ Not started | Upgrade prototype to full production component. Handle all 10 layers, animations, transitions. |
-| 3.2 | **LLM Script Generator** | ⬜ Not started | Prompt engineering: topic + sources + asset manifest → full script with scene compositions. Two-step: script first, then scene composition. |
-| 3.3 | **Quality Gates system** | ⬜ Not started | `QualityGates.ts` — Automated checks at asset, scene, and video level. Feedback compliance checking. |
-| 3.4 | **FeedbackStore integration** | ⬜ Not started | Connect `rules.json` → LLM prompt injection. Ensure all active rules are included in every LLM call. |
+| 3.2 | **LLM Script Generator** | ⬜ Not started | Prompt engineering: topic + sources + asset manifest → full script with scene compositions. |
+| 3.3 | **Quality Gates system** | ⬜ Not started | Automated checks at asset, scene, and video level. Feedback compliance checking. |
+| 3.4 | **FeedbackStore integration** | ⬜ Not started | Connect `rules.json` → LLM prompt injection. |
 | 3.5 | **First end-to-end test** | ⬜ Not started | Generate 1 complete Egypt video: topic → LLM script → composed scenes → rendered video. No audio yet. |
 
 ### Phase 4: Audio Pipeline
@@ -142,18 +167,15 @@ We have completed a thorough planning phase. Three specification documents are w
 
 ---
 
-## What Exists Now (Reference Code)
+## What Exists Now
 
-The current codebase has ~68 files, ~27,000 lines. This is all **reference material** — not production-ready:
+Na de opschoning bevat de repo ~20 bestanden:
 
-- **10 characters**: ProfessorPint, AverageJoe, Pharaoh, Worker, Banker, WallStreetBroker, CryptoBro, TaxAdvisor, MarketVendor, Scribe
-- **16 backgrounds**: 6 Egypt, 8 Aztec, Pub, Classroom (oil painting style — good quality reference)
-- **2 crowd systems**: Egyptian (12 types), Aztec (12 types)
-- **Systems**: SceneRenderer, Camera, CameraPath (12 presets), Subtitles, Transitions (7 types), AudioSync, MusicSFX, Overlays, SketchOverlay
-- **Pipeline**: ScriptGenerator, LLMClient, ElevenLabsTTS (partial), FeedbackStore, SceneDatabase, StyleGuide, VideoPipeline, N8nPipeline
-- **2 compositions**: PyramidsOfGiza (12 min, 55 scenes), AztekenVideo (12 min)
-
-These serve as examples of SVG quality, animation patterns, and architecture. The new system will build on these patterns but with the composable asset library approach.
+- **1 character**: ProfessorPint (in `src/personages/`) — werkend met emotions, idle, talking animaties
+- **Motor**: SceneComposer, SceneRenderer, Camera, CameraPath, Subtitles, Transitions (in `src/motor/`)
+- **Animaties**: easing, emotions, gestures, idle, talking (in `src/animaties/`)
+- **Test**: SceneComposerTest compositie + 10 placeholder assets (in `src/videos/` en `src/assets/`)
+- **Oude code**: Verwijderd maar beschikbaar in git history voor referentie
 
 ---
 
@@ -161,21 +183,19 @@ These serve as examples of SVG quality, animation patterns, and architecture. Th
 
 | File | Phase | Purpose |
 |------|-------|---------|
-| `src/systems/SceneComposer.tsx` | 0.1 | Renders ComposedScene from 10 layers |
-| `src/systems/PositionPresets.ts` | 0.5 | x/y/scale/zIndex definitions for scene placement |
-| `src/pipeline/AssetManifest.ts` | 1.9 | JSON catalog of all library assets |
-| `src/pipeline/QualityGates.ts` | 3.3 | Automated quality validation |
-| `src/pipeline/SrtExporter.ts` | 4.5 | SRT subtitle file generation |
+| `src/motor/PositionPresets.ts` | 0.5 | x/y/scale/zIndex definitions for scene placement |
+| `src/motor/AssetManifest.ts` | 1.9 | JSON catalog of all library assets |
+| `src/motor/QualityGates.ts` | 3.3 | Automated quality validation |
+| `src/motor/SrtExporter.ts` | 4.5 | SRT subtitle file generation |
 | `src/library/` | 1.x | All asset library components (skies, terrains, etc.) |
 | `data/feedback/rules.json` | 3.4 | Feedback rules storage |
-| `data/assets/manifest.json` | 1.9 | Asset manifest data file |
 
 ---
 
 ## How to Continue
 
 1. Open a new chat session
-2. Say: "Check PROJECT-STATE.md — waar staan we en wat moeten we doen?"
+2. Say: "Check docs/PROJECT-STATE.md — waar staan we en wat moeten we doen?"
 3. The AI reads this file, sees the current state, and picks up from the first ⬜ step
 4. After completing steps, update this file's status indicators
 5. Commit updated PROJECT-STATE.md after each session
@@ -183,5 +203,5 @@ These serve as examples of SVG quality, animation patterns, and architecture. Th
 ### Status Legend
 - ⬜ Not started
 - 🔄 In progress
-- ✅ Completed
+- ✅ Done
 - ⛔ Blocked (with reason noted)
