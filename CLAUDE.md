@@ -1,6 +1,66 @@
-# Professor Pint - Project Instructions
+# Professor Pint — Project Instructions
 
-> **Lees dit bestand ALTIJD eerst bij een nieuwe sessie.**
+> **STOP. Lees dit bestand volledig voordat je iets doet.**
+
+---
+
+## STAP 1: Lees PROJECT-STATE.md
+
+**PROJECT-STATE.md is de ENIGE bron van waarheid voor wat er gedaan is en wat er nog moet gebeuren.**
+
+Lees dat bestand EERST. Daarin staat:
+- Huidige project status
+- Alle genomen beslissingen
+- Geïdentificeerde risico's
+- Het complete stappenplan (Phase 0-6) met status per stap
+- Welke bestanden aangemaakt moeten worden
+
+**Doe NIETS voordat je PROJECT-STATE.md hebt gelezen en begrepen.**
+
+---
+
+## STAP 2: Begrijp de project-structuur
+
+### Spec-documenten (v2.0, definitief)
+
+| Document | Wat het is |
+|----------|------------|
+| `PROJECT-STATE.md` | Waar we staan + stappenplan. **Start hier.** |
+| `VIDEO-SPEC.md` | De "bijbel" — alle regels voor video output, asset library, 10-layer compositie, characters, camera, audio, quality gates |
+| `PIPELINE-ARCHITECTURE.md` | End-to-end pipeline: Topic → Script → Compose → Render → YouTube. n8n workflow, kosten |
+| `FEEDBACK-SYSTEM.md` | Self-learning feedback via n8n. Categorieën, prioriteiten, rules.json |
+
+### Bestaande code = REFERENTIEMATERIAAL
+
+De ~68 bestanden in `src/` zijn **voorbeelden en referentie**. Ze zijn NIET productie-klaar. Ze tonen:
+- SVG-kwaliteit en stijl (oil painting look)
+- Animatie-patronen (emotions, lip sync, idle)
+- Architectuur-patronen (SceneRenderer, CameraPath, etc.)
+
+**Gebruik deze code als inspiratie, NIET als iets dat "gefixed" of "verbeterd" moet worden.**
+
+---
+
+## STAP 3: Wat je NIET moet doen
+
+- **NIET** de bestaande code gaan "fixen" (tsconfig, dependencies, bugs)
+- **NIET** de bestaande compositions gaan verbeteren
+- **NIET** een eigen roadmap verzinnen — het stappenplan staat in PROJECT-STATE.md
+- **NIET** aannemen dat het project "80% klaar" is — de implementatie is nog niet gestart
+- **NIET** bestanden lezen/analyseren tenzij het relevant is voor de huidige stap
+
+---
+
+## Kernbeslissingen (samenvatting)
+
+1. **Asset Library** — LLM composeert scenes uit pre-gebouwde SVG-componenten (genereert NIET from scratch)
+2. **10-laags compositie** — sky → terrain → water → structures → vegetation → characters → props → foreground → atmosphere → lighting
+3. **Position presets** — Voorgedefinieerde x/y/scale posities zodat LLM geen coördinaten raadt
+4. **Bestaande code = referentie** — Niet productie, niet fixen
+5. **English only** — Alle video content in het Engels
+6. **n8n-only feedback** — Geen dashboard, alleen approve/feedback/reject buttons
+
+---
 
 ## Git Workflow
 
@@ -10,69 +70,10 @@
 - Push altijd met: `git push -u origin claude/automate-professor-pint-yJ69L`
 
 ### Before pulling from remote
-Altijd stashen voor je pullt:
-
 ```bash
 git stash
 git pull origin claude/automate-professor-pint-yJ69L --rebase
 git stash pop
-```
-
-Dit voorkomt de `error: cannot pull with rebase: You have unstaged changes` fout.
-
----
-
-## Project Overview
-
-**Professor Pint** is een geautomatiseerde YouTube-videopipeline gebouwd met **Remotion 4.0** (React + TypeScript). Het genereert SVG-geanimeerde educatieve video's met een excentrieke, Einstein-achtige professor die financiële concepten uitlegt in een pub-setting. Alle characters, backgrounds en animaties zijn handgeschreven SVG, gerenderd frame-by-frame op **30fps, 1920x1080**.
-
-### Taal: Nederlands (primair), Engels (secundair)
-
----
-
-## Architecture
-
-```
-src/
-├── animations/          # Animation systems
-│   ├── emotions.ts      # 6 emotion states with smooth transitions
-│   ├── idle.ts          # Breathing, blinking, sway animations
-│   └── talking.ts       # Mouth shapes, phoneme-based lip sync
-├── backgrounds/         # SVG background scenes (each ~400-800 lines)
-│   ├── Pub.tsx          # Classic pub interior with chalkboard
-│   ├── Classroom.tsx    # Academic setting
-│   ├── Pyramids.tsx          # Giza pyramids at dusk (+ CrowdLayer)
-│   ├── DesertConstruction.tsx # Pyramid construction site (+ CrowdLayer)
-│   ├── InsidePyramid.tsx     # Dark tomb interior (+ CrowdLayer)
-│   ├── NileRiver.tsx         # Nile riverside with boats (+ CrowdLayer)
-│   ├── WorkersVillage.tsx    # Ancient worker settlement (+ CrowdLayer)
-│   └── SphinxView.tsx        # Great Sphinx close-up (+ CrowdLayer)
-├── characters/          # SVG character components
-│   ├── ProfessorPint.tsx     # Main character (~1200 lines SVG)
-│   ├── AverageJoe.tsx        # Supporting character
-│   ├── Pharaoh.tsx           # Egypt-themed character
-│   └── Worker.tsx            # Egypt-themed character
-├── crowds/              # Animated crowd mini-figures
-│   └── CrowdWorkers.tsx      # 12 figure types + CrowdLayer + CROWD_CONFIGS
-├── systems/             # Core rendering systems
-│   ├── SceneRenderer.tsx     # Main scene renderer (reads SceneData[])
-│   ├── Camera.tsx            # Static camera with smooth transitions
-│   ├── CameraPath.tsx        # Keyframe camera system (12 presets)
-│   ├── Subtitles.tsx         # Animated subtitle overlay
-│   ├── Transitions.tsx       # Scene transition effects
-│   ├── AudioSync.tsx         # Audio playback + lip sync
-│   ├── MusicSFX.tsx          # Background music + sound effects
-│   └── Overlays.tsx          # Data cards, charts overlay system
-├── pipeline/            # Video generation pipeline
-│   ├── ScriptGenerator.ts    # Template-based script generation
-│   ├── LLMClient.ts          # OpenAI/Claude API integration
-│   ├── VideoPipeline.ts      # Orchestrates full render pipeline
-│   ├── FeedbackStore.ts      # Self-learning feedback system
-│   ├── StyleGuide.ts         # Professor Pint voice/personality
-│   ├── SceneDatabase.ts      # Scene storage for reuse
-│   └── N8nPipeline.ts        # n8n webhook integration
-├── Root.tsx             # Remotion composition definitions
-└── index.ts             # Entry point
 ```
 
 ---
@@ -87,51 +88,15 @@ npx remotion studio
 npx tsc --noEmit
 
 # Render a specific composition
-npx remotion render src/index.ts ProfessorPint-Pyramids-of-Giza out/pyramids.mp4
+npx remotion render src/index.ts [CompositionId] out/output.mp4
 ```
-
----
-
-## Compositions (in Root.tsx)
-
-- `ProfessorPint-Pub` - Pub scene (60s)
-- `ProfessorPint-Pyramids-of-Giza` - Egypt pyramid scene (720s / 12 min, 55 scenes)
-- `ProfessorPint-Full-Pipeline` - Full pipeline demo
-
----
-
-## Known Issues
-
-### Critical
-1. **CrowdLayer SVG rendering**: Crowd figures renderen SVG inside parent SVG backgrounds. Visueel verifiëren in Remotion Studio.
-2. **FeedbackStore + SceneDatabase gebruiken Node.js `fs`**: Werkt NIET in browser/Remotion Studio. Alleen in Node.js pipeline scripts.
-
-### High Priority
-3. **ElevenLabs audio**: User heeft API key. AudioSync.tsx is klaar maar TTS is nog niet aangesloten.
-4. **CameraPath niet in bestaande compositions**: Pyramids compositie is gebouwd voor CameraPath bestond.
-
-### Medium Priority
-5. **Pub/Classroom backgrounds**: Nog geen crowd workers (alleen Egypt heeft ze).
-6. **LLM integration testing**: LLMClient en StyleGuide testen met echte API keys.
-7. **n8n pipeline testing**: Geen webhook server - N8nPipeline is alleen de logica-laag.
 
 ---
 
 ## User Preferences
 
-- **Taal**: Nederlands primair, Engels secundair
+- **Communicatie**: Nederlands
+- **Video content**: Engels
 - **Stijl**: Casual, pub-sfeer, bier-metaforen, straattaal gemixed met academisch
-- **Visueel**: Niet minimalistisch - gedetailleerde, levendige scenes met veel geanimeerde figuren
-- **Camera**: Dynamische beweging, professor altijd in beeld
-- **Feedback**: Geef eenmaal, onthoud voor altijd (self-learning system)
-- **Doel**: Volledig geautomatiseerde YouTube pipeline: topic -> script -> render -> upload via n8n
-
----
-
-## Next Steps (Roadmap)
-
-1. Visuele output verifiëren in Remotion Studio (crowd workers + camera)
-2. ElevenLabs TTS integratie
-3. Egypt als referentie gebruiken, dan patronen toepassen op andere thema's
-4. Full pipeline testen met een topic end-to-end
-5. n8n webhook server (Express/Fastify wrapper)
+- **Visueel**: Gedetailleerd, levendig, veel geanimeerde figuren — niet minimalistisch
+- **Aanpak**: Eerst plan, dan bouwen. Geen tokens verspillen aan werk zonder richting.
