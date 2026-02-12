@@ -180,6 +180,7 @@ export const ProfessorPint: React.FC<ProfessorPintProps> = ({
         <ellipse cx={2} cy={145} rx={32} ry={4} fill={C.shadowDeep} />
 
         <Legs />
+        <Pelvis />
 
         <g transform={`scale(${idle.breathing.scaleX}, 1)`}>
           <Body />
@@ -196,30 +197,61 @@ export const ProfessorPint: React.FC<ProfessorPintProps> = ({
   );
 };
 
-// ─── Legs ──────────────────────────────────────────────────
+// ─── Legs — originate from pelvis anchor points ───────────
 const Legs: React.FC = () => (
   <g>
-    <path d="M-18,70 Q-20,95 -22,115 Q-23,125 -22,135" fill="none" stroke={C.outline} strokeWidth={12} strokeLinecap="round" />
-    <path d="M-18,70 Q-20,95 -22,115 Q-23,125 -22,135" fill="none" stroke="url(#pp-pants-grad)" strokeWidth={9} strokeLinecap="round" />
-    <path d="M-24,90 Q-20,92 -17,90" fill="none" stroke={C.pantsFold} strokeWidth={0.8} opacity={0.5} />
-    <path d="M-25,105 Q-21,107 -18,105" fill="none" stroke={C.pantsFold} strokeWidth={0.7} opacity={0.4} />
-    <path d="M-25,118 Q-21,120 -18,118" fill="none" stroke={C.pantsFold} strokeWidth={0.6} opacity={0.3} />
+    {/* Left leg — anchored at pelvis left (x=-14) */}
+    <path d="M-14,78 Q-18,95 -22,115 Q-23,125 -22,135" fill="none" stroke={C.outline} strokeWidth={12} strokeLinecap="round" />
+    <path d="M-14,78 Q-18,95 -22,115 Q-23,125 -22,135" fill="none" stroke="url(#pp-pants-grad)" strokeWidth={9} strokeLinecap="round" />
+    <path d="M-20,92 Q-17,94 -14,92" fill="none" stroke={C.pantsFold} strokeWidth={0.8} opacity={0.5} />
+    <path d="M-24,107 Q-20,109 -17,107" fill="none" stroke={C.pantsFold} strokeWidth={0.7} opacity={0.4} />
+    <path d="M-25,120 Q-21,122 -18,120" fill="none" stroke={C.pantsFold} strokeWidth={0.6} opacity={0.3} />
 
-    <path d="M18,70 Q20,95 21,115 Q22,125 21,135" fill="none" stroke={C.outline} strokeWidth={12} strokeLinecap="round" />
-    <path d="M18,70 Q20,95 21,115 Q22,125 21,135" fill="none" stroke="url(#pp-pants-grad)" strokeWidth={9} strokeLinecap="round" />
-    <path d="M17,92 Q21,94 24,92" fill="none" stroke={C.pantsFold} strokeWidth={0.8} opacity={0.5} />
-    <path d="M17,108 Q21,110 24,108" fill="none" stroke={C.pantsFold} strokeWidth={0.7} opacity={0.4} />
+    {/* Right leg — anchored at pelvis right (x=+14) */}
+    <path d="M14,78 Q18,95 21,115 Q22,125 21,135" fill="none" stroke={C.outline} strokeWidth={12} strokeLinecap="round" />
+    <path d="M14,78 Q18,95 21,115 Q22,125 21,135" fill="none" stroke="url(#pp-pants-grad)" strokeWidth={9} strokeLinecap="round" />
+    <path d="M14,92 Q18,94 21,92" fill="none" stroke={C.pantsFold} strokeWidth={0.8} opacity={0.5} />
+    <path d="M14,108 Q18,110 21,108" fill="none" stroke={C.pantsFold} strokeWidth={0.7} opacity={0.4} />
 
+    {/* Inner gap hint — separates the two legs visually */}
+    <line x1={0} y1={78} x2={0} y2={86} stroke={C.pantsDark} strokeWidth={1.2} opacity={0.35} />
+
+    {/* Left shoe */}
     <g transform="translate(-26, 137) rotate(-5)">
       <ellipse cx={0} cy={0} rx={18} ry={8} fill="url(#pp-shoe-grad)" stroke={C.outline} strokeWidth={2.5} />
       <ellipse cx={-4} cy={-2} rx={5} ry={2.5} fill={C.shoeHighlight} opacity={0.25} />
       <path d="M-14,2 Q-14,5 -10,5 L10,5 Q14,5 14,2" fill={C.shoeSole} opacity={0.6} />
     </g>
+    {/* Right shoe */}
     <g transform="translate(25, 137) rotate(5)">
       <ellipse cx={0} cy={0} rx={18} ry={8} fill="url(#pp-shoe-grad)" stroke={C.outline} strokeWidth={2.5} />
       <ellipse cx={-3} cy={-2} rx={5} ry={2.5} fill={C.shoeHighlight} opacity={0.2} />
       <path d="M-14,2 Q-14,5 -10,5 L10,5 Q14,5 14,2" fill={C.shoeSole} opacity={0.6} />
     </g>
+  </g>
+);
+
+// ─── Pelvis/Hip — connects torso to legs ──────────────────
+// Subtle weight shift: 2px right offset + 1° rotation for natural "smart" stance
+const Pelvis: React.FC = () => (
+  <g transform="translate(2, 0) rotate(1, 0, 74)">
+    {/* Main pelvis shape — rounded trapezoid, narrower than vest */}
+    <path
+      d="M-30,64 Q-32,66 -28,80 L-14,82 Q0,84 14,82 L28,80 Q32,66 30,64 Z"
+      fill="url(#pp-pants-grad)" stroke={C.outline} strokeWidth={2.5}
+      strokeLinejoin="round"
+    />
+    {/* Belt/waistband hint */}
+    <path
+      d="M-29,65 Q0,62 29,65"
+      fill="none" stroke={C.pantsDark} strokeWidth={2.5} strokeLinecap="round"
+    />
+    {/* Center seam */}
+    <line x1={0} y1={66} x2={0} y2={82} stroke={C.pantsDark} strokeWidth={1} opacity={0.3} />
+    {/* Fabric fold — left side */}
+    <path d="M-20,68 Q-18,74 -20,80" fill="none" stroke={C.pantsFold} strokeWidth={0.8} opacity={0.3} />
+    {/* Fabric fold — right side */}
+    <path d="M18,68 Q16,74 18,80" fill="none" stroke={C.pantsFold} strokeWidth={0.8} opacity={0.25} />
   </g>
 );
 
@@ -241,11 +273,11 @@ const Body: React.FC = () => (
     <path d="M-6,40 Q0,52 6,40" fill={C.shirtShadow} opacity={0.2} />
 
     {/* ─── VEST — full torso coverage including shoulders ─── */}
-    {/* Vest left panel — covers from shoulder to hip, curves with belly */}
+    {/* Vest left panel — covers from shoulder to hip, left flap hangs 3px lower (asymmetric) */}
     <path
       d="M-48,-48 Q-48,-52 -34,-52 L-8,-52 L-8,-28
-         L-8,10 Q-10,40 -16,58 Q-22,70 -30,74
-         L-36,70 Q-44,60 -46,40 Q-48,15 -48,-48 Z"
+         L-8,10 Q-10,40 -16,58 Q-20,68 -26,73
+         Q-28,75 -30,74 L-36,70 Q-44,60 -46,40 Q-48,15 -48,-48 Z"
       fill="url(#pp-vest-grad-l)" stroke={C.outline} strokeWidth={SW}
     />
     {/* Vest left lapel edge */}
@@ -258,11 +290,11 @@ const Body: React.FC = () => (
     {/* Vest left stitch */}
     <path d="M-42,-40 Q-42,5 -40,40" stroke={C.vestStitch} strokeWidth={0.5} opacity={0.12} strokeDasharray="3,4" />
 
-    {/* Vest right panel */}
+    {/* Vest right panel — right flap ends slightly higher than left */}
     <path
       d="M48,-48 Q48,-52 34,-52 L8,-52 L8,-28
-         L8,10 Q10,40 16,58 Q22,70 30,74
-         L36,70 Q44,60 46,40 Q48,15 48,-48 Z"
+         L8,10 Q10,40 16,58 Q22,68 28,71
+         Q30,72 30,71 L36,68 Q44,58 46,40 Q48,15 48,-48 Z"
       fill="url(#pp-vest-grad-r)" stroke={C.outline} strokeWidth={SW}
     />
     {/* Vest right lapel */}
