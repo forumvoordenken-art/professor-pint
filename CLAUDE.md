@@ -64,6 +64,42 @@ De bestanden in `src/` zijn **voorbeelden en referentie**. Ze tonen:
 
 ---
 
+## STAP 4: Hoe je werkt
+
+### Elke stap moet uitgelegd worden
+
+Voordat je een stap uit het stappenplan uitvoert, leg je ALTIJD uit:
+1. **WAAROM** we deze stap doen — wat is het nut, welk probleem lost het op?
+2. **WAT** je gaat bouwen — concreet, geen vage beschrijvingen
+3. **HOE** het past in het grotere geheel — welke stappen komen erna en hoe hangt het samen?
+
+De gebruiker wil kritisch meedenken. Geef hem de informatie om dat te kunnen doen.
+
+### Branch & merge workflow
+
+Bij het opleveren van werk, geef ALTIJD deze instructies:
+
+1. **Op welke branch het werk staat** — noem de exacte branch naam
+2. **Hoe te mergen naar main** — exacte commando's die de gebruiker in zijn Codespace terminal moet draaien:
+   ```bash
+   git fetch origin [branch-naam]
+   git stash
+   git merge origin/[branch-naam]
+   git stash pop
+   git push origin main
+   ```
+3. **Hoe te testen** — exacte commando's:
+   ```bash
+   # Type check
+   npx tsc --noEmit
+   # Preview in browser
+   npx remotion studio
+   # Render naar bestand
+   npx remotion render src/index.ts [CompositionId] out/output.mp4
+   ```
+
+---
+
 ## Kernbeslissingen (samenvatting)
 
 1. **Asset Library** — LLM composeert scenes uit pre-gebouwde SVG-componenten (genereert NIET from scratch)
@@ -81,6 +117,9 @@ De bestanden in `src/` zijn **voorbeelden en referentie**. Ze tonen:
 # Type check
 npx tsc --noEmit
 
+# Preview in browser (alleen in Codespace, niet in Claude omgeving)
+npx remotion studio
+
 # Render a specific composition
 npx remotion render src/index.ts [CompositionId] out/output.mp4
 ```
@@ -94,3 +133,4 @@ npx remotion render src/index.ts [CompositionId] out/output.mp4
 - **Stijl**: Casual, pub-sfeer, bier-metaforen, straattaal gemixed met academisch
 - **Visueel**: Gedetailleerd, levendig, veel geanimeerde figuren — niet minimalistisch
 - **Aanpak**: Eerst plan, dan bouwen. Geen tokens verspillen aan werk zonder richting.
+- **Kritisch meedenken**: Leg bij elke stap uit WAAROM we het doen, zodat de gebruiker kan challengen.
