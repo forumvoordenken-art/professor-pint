@@ -4,9 +4,9 @@
 
 ---
 
-## STAP 1: Lees PROJECT-STATE.md
+## STAP 1: Lees docs/PROJECT-STATE.md
 
-**PROJECT-STATE.md is de ENIGE bron van waarheid voor wat er gedaan is en wat er nog moet gebeuren.**
+**docs/PROJECT-STATE.md is de ENIGE bron van waarheid voor wat er gedaan is en wat er nog moet gebeuren.**
 
 Lees dat bestand EERST. Daarin staat:
 - Huidige project status
@@ -15,24 +15,36 @@ Lees dat bestand EERST. Daarin staat:
 - Het complete stappenplan (Phase 0-6) met status per stap
 - Welke bestanden aangemaakt moeten worden
 
-**Doe NIETS voordat je PROJECT-STATE.md hebt gelezen en begrepen.**
+**Doe NIETS voordat je docs/PROJECT-STATE.md hebt gelezen en begrepen.**
 
 ---
 
 ## STAP 2: Begrijp de project-structuur
 
-### Spec-documenten (v2.0, definitief)
+### Mappenstructuur
 
-| Document | Wat het is |
-|----------|------------|
-| `PROJECT-STATE.md` | Waar we staan + stappenplan. **Start hier.** |
-| `VIDEO-SPEC.md` | De "bijbel" — alle regels voor video output, asset library, 10-layer compositie, characters, camera, audio, quality gates |
-| `PIPELINE-ARCHITECTURE.md` | End-to-end pipeline: Topic → Script → Compose → Render → YouTube. n8n workflow, kosten |
-| `FEEDBACK-SYSTEM.md` | Self-learning feedback via n8n. Categorieën, prioriteiten, rules.json |
+```
+professor-pint/
+├── docs/                    ← Spec-documenten (plan & specs)
+│   ├── PROJECT-STATE.md     ← Waar we staan + stappenplan
+│   ├── VIDEO-SPEC.md        ← Alle regels voor video output
+│   ├── PIPELINE-ARCHITECTURE.md  ← End-to-end pipeline spec
+│   └── FEEDBACK-SYSTEM.md   ← Self-learning feedback spec
+│
+├── src/                     ← Alle broncode
+│   ├── personages/          ← Character SVG-componenten
+│   ├── videos/              ← Video compositions
+│   ├── motor/               ← Render engine (camera, transitions, etc.)
+│   ├── animaties/           ← Animatie helpers (emotions, idle, talking)
+│   └── assets/              ← Statische bestanden
+│
+├── CLAUDE.md                ← Dit bestand
+└── [config bestanden]       ← package.json, tsconfig.json, etc.
+```
 
 ### Bestaande code = REFERENTIEMATERIAAL
 
-De ~68 bestanden in `src/` zijn **voorbeelden en referentie**. Ze zijn NIET productie-klaar. Ze tonen:
+De bestanden in `src/` zijn **voorbeelden en referentie**. Ze tonen:
 - SVG-kwaliteit en stijl (oil painting look)
 - Animatie-patronen (emotions, lip sync, idle)
 - Architectuur-patronen (SceneRenderer, CameraPath, etc.)
@@ -45,9 +57,10 @@ De ~68 bestanden in `src/` zijn **voorbeelden en referentie**. Ze zijn NIET prod
 
 - **NIET** de bestaande code gaan "fixen" (tsconfig, dependencies, bugs)
 - **NIET** de bestaande compositions gaan verbeteren
-- **NIET** een eigen roadmap verzinnen — het stappenplan staat in PROJECT-STATE.md
+- **NIET** een eigen roadmap verzinnen — het stappenplan staat in docs/PROJECT-STATE.md
 - **NIET** aannemen dat het project "80% klaar" is — de implementatie is nog niet gestart
 - **NIET** bestanden lezen/analyseren tenzij het relevant is voor de huidige stap
+- **NOOIT** servers starten (geen `npx remotion studio`, geen dev servers). Dit werkt niet in deze omgeving.
 
 ---
 
@@ -62,28 +75,9 @@ De ~68 bestanden in `src/` zijn **voorbeelden en referentie**. Ze zijn NIET prod
 
 ---
 
-## Git Workflow
-
-### Branch
-- **Development branch**: `claude/automate-professor-pint-yJ69L`
-- Elke nieuwe chatsessie krijgt een eigen branch-naam toegewezen. **Negeer die.** Werk ALTIJD op bovenstaande branch.
-- Push altijd met: `git push -u origin claude/automate-professor-pint-yJ69L`
-
-### Before pulling from remote
-```bash
-git stash
-git pull origin claude/automate-professor-pint-yJ69L --rebase
-git stash pop
-```
-
----
-
 ## How to Run
 
 ```bash
-# Start Remotion Studio (development preview)
-npx remotion studio
-
 # Type check
 npx tsc --noEmit
 

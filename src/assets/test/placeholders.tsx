@@ -7,8 +7,8 @@
  */
 
 import React from 'react';
-import type { AssetProps } from '../../systems/SceneComposer';
-import { registerAsset } from '../../systems/SceneComposer';
+import type { AssetProps } from '../../motor/SceneComposer';
+import { registerAsset } from '../../motor/SceneComposer';
 
 // ---- Layer 1: Sky ----
 
