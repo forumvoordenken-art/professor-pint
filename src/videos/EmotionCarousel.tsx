@@ -9,6 +9,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { ProfessorPint } from '../personages/ProfessorPint';
+import { PaintEffect } from '../motor/PaintEffect';
 import type { Emotion } from '../animaties/emotions';
 
 const EMOTIONS: Emotion[] = [
@@ -40,66 +41,68 @@ export const ProfessorPintEmotionCarousel: React.FC = () => {
   const isTalking = talkingEmotions.includes(currentEmotion) && frameInEmotion > 10;
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: '100%',
-      height: '100%',
-      backgroundColor: '#E8E0D4',
-    }}>
-      {/* Emotion label */}
+    <PaintEffect preset="standard" id="emotions">
       <div style={{
-        fontFamily: 'Georgia, serif',
-        fontSize: 42,
-        fontWeight: 'bold',
-        color: '#1A1A1A',
-        marginBottom: 20,
-        letterSpacing: 2,
-        textTransform: 'uppercase',
-      }}>
-        {currentEmotion}
-      </div>
-
-      {/* Professor Pint */}
-      <ProfessorPint
-        emotion={currentEmotion}
-        previousEmotion={previousEmotion}
-        emotionTransitionProgress={transitionProgress}
-        talking={isTalking}
-        scale={2.5}
-      />
-
-      {/* Progress bar */}
-      <div style={{
-        marginTop: 30,
         display: 'flex',
-        gap: 6,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#E8E0D4',
       }}>
-        {EMOTIONS.map((emo, i) => (
-          <div
-            key={emo}
-            style={{
-              width: 16,
-              height: 16,
-              borderRadius: '50%',
-              backgroundColor: i === emotionIndex ? '#2D5016' : i < emotionIndex ? '#D4A012' : '#CCC',
-              border: '2px solid #1A1A1A',
-            }}
-          />
-        ))}
-      </div>
+        {/* Emotion label */}
+        <div style={{
+          fontFamily: 'Georgia, serif',
+          fontSize: 42,
+          fontWeight: 'bold',
+          color: '#1A1A1A',
+          marginBottom: 20,
+          letterSpacing: 2,
+          textTransform: 'uppercase',
+        }}>
+          {currentEmotion}
+        </div>
 
-      {/* Counter */}
-      <div style={{
-        fontFamily: 'monospace',
-        fontSize: 18,
-        color: '#666',
-        marginTop: 12,
-      }}>
-        {emotionIndex + 1} / {EMOTIONS.length}
+        {/* Professor Pint */}
+        <ProfessorPint
+          emotion={currentEmotion}
+          previousEmotion={previousEmotion}
+          emotionTransitionProgress={transitionProgress}
+          talking={isTalking}
+          scale={2.5}
+        />
+
+        {/* Progress bar */}
+        <div style={{
+          marginTop: 30,
+          display: 'flex',
+          gap: 6,
+        }}>
+          {EMOTIONS.map((emo, i) => (
+            <div
+              key={emo}
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                backgroundColor: i === emotionIndex ? '#2D5016' : i < emotionIndex ? '#D4A012' : '#CCC',
+                border: '2px solid #1A1A1A',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Counter */}
+        <div style={{
+          fontFamily: 'monospace',
+          fontSize: 18,
+          color: '#666',
+          marginTop: 12,
+        }}>
+          {emotionIndex + 1} / {EMOTIONS.length}
+        </div>
       </div>
-    </div>
+    </PaintEffect>
   );
 };
