@@ -96,15 +96,15 @@ export const NightMoon: React.FC<AssetProps> = ({ frame }) => {
       {/* Base gradient — cool moonlit blue-black */}
       <GradientSky id={`${ID}-base`} stops={SKY_STOPS} />
 
-      {/* Moon-washed area — brighter patch around moon position */}
+      {/* Moon-washed area — subtle patch around moon position */}
       <defs>
         <radialGradient id={`${ID}-moonwash`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0%" stopColor="#304868" stopOpacity={0.3} />
-          <stop offset="40%" stopColor="#203050" stopOpacity={0.12} />
-          <stop offset="100%" stopColor="#203050" stopOpacity={0} />
+          <stop offset="0%" stopColor="#283858" stopOpacity={0.15} />
+          <stop offset="40%" stopColor="#1C2840" stopOpacity={0.06} />
+          <stop offset="100%" stopColor="#1C2840" stopOpacity={0} />
         </radialGradient>
       </defs>
-      <ellipse cx={1300} cy={200} rx={600} ry={500} fill={`url(#${ID}-moonwash)`} />
+      <ellipse cx={1300} cy={200} rx={500} ry={400} fill={`url(#${ID}-moonwash)`} />
 
       {/* Dim stars — washed out near moon */}
       <g opacity={0.4}>
@@ -137,17 +137,17 @@ export const NightMoon: React.FC<AssetProps> = ({ frame }) => {
         })}
       </g>
 
-      {/* The Moon — large, detailed, bright */}
+      {/* The Moon — detailed, subtler glow */}
       <CelestialBody
         cx={1300}
         cy={200}
-        r={50}
-        fill="#E0E8F0"
-        glowColor="#8098B8"
-        glowRadius={300}
+        r={45}
+        fill="#D8E0EC"
+        glowColor="#607898"
+        glowRadius={160}
         frame={frame}
         craters={MOON_CRATERS}
-        pulseAmount={0.03}
+        pulseAmount={0.015}
       />
 
       {/* Moon surface detail — mare (dark patches) */}
@@ -160,16 +160,16 @@ export const NightMoon: React.FC<AssetProps> = ({ frame }) => {
       {/* Wispy clouds — passing across/near moon */}
       <CloudLayer clouds={clouds.wispy} frame={frame} idPrefix={`${ID}-wp`} />
 
-      {/* Moonbeam — subtle ray of light downward */}
+      {/* Moonbeam — very subtle ray of light downward */}
       <defs>
         <linearGradient id={`${ID}-beam`} x1="0.5" y1="0" x2="0.5" y2="1">
-          <stop offset="0%" stopColor="#8098B8" stopOpacity={0.08} />
-          <stop offset="100%" stopColor="#8098B8" stopOpacity={0} />
+          <stop offset="0%" stopColor="#607898" stopOpacity={0.04} />
+          <stop offset="100%" stopColor="#607898" stopOpacity={0} />
         </linearGradient>
       </defs>
-      <g opacity={0.5}>
+      <g opacity={0.3}>
         <polygon
-          points="1280,250 1320,250 1450,1080 1150,1080"
+          points="1285,245 1315,245 1420,1080 1180,1080"
           fill={`url(#${ID}-beam)`}
         />
       </g>

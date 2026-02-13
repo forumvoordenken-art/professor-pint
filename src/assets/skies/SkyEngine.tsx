@@ -81,6 +81,43 @@ export function seededRandom(seed: number): () => number {
   };
 }
 
+// ─── Long-cycle noise for non-repeating animation ────────
+//
+// Combines 5 sine waves with irrational frequency ratios.
+// The combined waveform never exactly repeats within practical
+// timeframes (millions of frames), solving the "looks the same
+// every 7 seconds" problem in 10-15 minute videos.
+//
+// Returns a value in approximately [-1, 1] range.
+// Use `seed` to create independent noise channels.
+
+const PHI = 1.6180339887;
+const SQRT2 = 1.4142135624;
+const SQRT3 = 1.7320508076;
+const SQRT5 = 2.2360679775;
+
+export function longCycleNoise(frame: number, seed: number): number {
+  return (
+    Math.sin(frame * 0.017 * PHI + seed) * 0.35 +
+    Math.sin(frame * 0.011 * SQRT2 + seed * 1.3) * 0.25 +
+    Math.sin(frame * 0.007 * SQRT3 + seed * 0.7) * 0.20 +
+    Math.sin(frame * 0.003 * PHI * PHI + seed * 2.1) * 0.12 +
+    Math.sin(frame * 0.001 * SQRT5 + seed * 1.7) * 0.08
+  );
+}
+
+/**
+ * Slow-evolving noise — changes over minutes, not seconds.
+ * Useful for gradual drift in cloud movement, light color shifts, etc.
+ */
+export function slowDrift(frame: number, seed: number): number {
+  return (
+    Math.sin(frame * 0.0031 * PHI + seed) * 0.4 +
+    Math.sin(frame * 0.0017 * SQRT3 + seed * 1.9) * 0.35 +
+    Math.sin(frame * 0.0007 * SQRT2 + seed * 0.6) * 0.25
+  );
+}
+
 // ─── Gradient Sky ─────────────────────────────────────────
 
 interface GradientSkyProps {
@@ -208,7 +245,9 @@ interface StarFieldProps {
 export const StarField: React.FC<StarFieldProps> = ({ stars, frame, twinkleSpeed = 0.06 }) => (
   <g>
     {stars.map((s, i) => {
-      const twinkle = 0.4 + 0.6 * Math.abs(Math.sin(frame * twinkleSpeed + s.phase * Math.PI * 2));
+      // Non-repeating twinkle using longCycleNoise with per-star seed
+      const noise = longCycleNoise(frame * twinkleSpeed * 18, s.phase * 100 + i * 7.3);
+      const twinkle = 0.45 + 0.55 * Math.abs(noise);
       const opacity = s.brightness * twinkle;
       const glowR = s.r * 3;
       return (
@@ -258,7 +297,8 @@ export const CelestialBody: React.FC<CelestialBodyProps> = ({
   cx, cy, r, fill, glowColor, glowRadius, frame,
   craters, pulseAmount = 0.08,
 }) => {
-  const pulse = 1 + Math.sin(frame * 0.03) * pulseAmount;
+  // Non-repeating pulse using longCycleNoise
+  const pulse = 1 + longCycleNoise(frame, cx * 0.1 + cy * 0.07) * pulseAmount;
   const currentGlow = glowRadius * pulse;
 
   return (
