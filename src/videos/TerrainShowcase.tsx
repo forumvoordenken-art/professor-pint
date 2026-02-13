@@ -4,17 +4,13 @@
  * Each terrain is shown for 4 seconds (120 frames at 30fps).
  * Total duration: 15 × 120 = 1800 frames (60 seconds).
  *
- * Displays:
- * - Full-screen terrain render (with neutral sky background)
- * - Terrain name label at the top
- * - Category label
- * - Progress dots at the bottom
+ * Terrains worden al per-asset gewrapt met paint effects via withAssetPaint
+ * in de index. Geen extra scene-level effecten nodig.
  */
 
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import { TERRAIN_ASSETS } from '../assets/terrain';
-import { PaintEffect } from '../motor/PaintEffect';
 
 const FRAMES_PER_TERRAIN = 120; // 4 seconds at 30fps
 const TOTAL_TERRAINS = TERRAIN_ASSETS.length;
@@ -46,7 +42,6 @@ export const TerrainShowcase: React.FC = () => {
   const fadeIn = Math.min(localFrame / 15, 1);
 
   return (
-    <PaintEffect preset="scene_only" id={`terrain-${terrainIndex}`}>
     <AbsoluteFill style={{ backgroundColor: '#2A3040' }}>
       {/* Neutral sky background — so terrain isn't floating on black */}
       <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{ position: 'absolute' }}>
@@ -61,7 +56,7 @@ export const TerrainShowcase: React.FC = () => {
         <rect x={0} y={0} width={1920} height={1080} fill="url(#showcase-sky)" />
       </svg>
 
-      {/* Terrain render — full frame */}
+      {/* Terrain render — paint effects zitten al in de component */}
       <AbsoluteFill style={{ opacity: fadeIn }}>
         <TerrainComponent frame={localFrame} />
       </AbsoluteFill>
@@ -154,7 +149,6 @@ export const TerrainShowcase: React.FC = () => {
         {terrainIndex + 1}/{TOTAL_TERRAINS} — frame {localFrame}/{FRAMES_PER_TERRAIN}
       </div>
     </AbsoluteFill>
-    </PaintEffect>
   );
 };
 

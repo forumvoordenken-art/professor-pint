@@ -63,84 +63,84 @@ interface AssetPaintConfig {
 
 const ASSET_PAINT_CONFIGS: Record<AssetPaintCategory, AssetPaintConfig> = {
   sky_day: {
-    displacement: 1.2,
-    turbFrequency: 0.025,
-    grainFrequency: 0.5,
-    grainOctaves: 3,
-    grainOpacity: 0.04,
-    grainBlend: 'multiply',
-    edgeRadius: 0,         // Skies have soft edges already
-    saturationBoost: 1.05,
-  },
-  sky_twilight: {
-    displacement: 1.5,
-    turbFrequency: 0.02,
-    grainFrequency: 0.4,
-    grainOctaves: 4,
-    grainOpacity: 0.05,
-    grainBlend: 'overlay',
-    edgeRadius: 0,
-    saturationBoost: 1.08, // Boost sunset colors
-  },
-  sky_night: {
-    displacement: 0.5,     // Very subtle — don't blur stars
-    turbFrequency: 0.015,
-    grainFrequency: 0.6,
-    grainOctaves: 2,
-    grainOpacity: 0.025,
-    grainBlend: 'multiply',
-    edgeRadius: 0,
-    saturationBoost: 1.03,
-  },
-  sky_storm: {
-    displacement: 2.0,     // More displacement for dramatic clouds
-    turbFrequency: 0.03,
-    grainFrequency: 0.35,
-    grainOctaves: 4,
-    grainOpacity: 0.05,
-    grainBlend: 'multiply',
-    edgeRadius: 0,
-    saturationBoost: 1.04,
-  },
-  sky_special: {
-    displacement: 1.0,
+    displacement: 3.0,       // Zichtbare edge wobble op wolkenranden
     turbFrequency: 0.02,
     grainFrequency: 0.45,
     grainOctaves: 3,
-    grainOpacity: 0.04,
+    grainOpacity: 0.09,      // Duidelijk zichtbaar canvas
+    grainBlend: 'multiply',
+    edgeRadius: 0,
+    saturationBoost: 1.08,
+  },
+  sky_twilight: {
+    displacement: 4.0,       // Meer wobble — sunset wolken mogen wild
+    turbFrequency: 0.018,
+    grainFrequency: 0.35,
+    grainOctaves: 4,
+    grainOpacity: 0.11,
+    grainBlend: 'overlay',
+    edgeRadius: 0,
+    saturationBoost: 1.12,   // Sunset kleuren pompen
+  },
+  sky_night: {
+    displacement: 1.5,       // Subtiel — sterren moeten scherp blijven
+    turbFrequency: 0.012,
+    grainFrequency: 0.55,
+    grainOctaves: 2,
+    grainOpacity: 0.06,
     grainBlend: 'multiply',
     edgeRadius: 0,
     saturationBoost: 1.05,
   },
-  terrain: {
-    displacement: 1.8,     // Terrain benefits from more displacement
-    turbFrequency: 0.03,
-    grainFrequency: 0.55,
+  sky_storm: {
+    displacement: 5.0,       // Flink — storm wolken mogen chaotisch
+    turbFrequency: 0.025,
+    grainFrequency: 0.3,
     grainOctaves: 4,
-    grainOpacity: 0.05,
+    grainOpacity: 0.13,
     grainBlend: 'multiply',
-    edgeRadius: 0.3,       // Slight edge roughening for organic feel
+    edgeRadius: 0,
     saturationBoost: 1.06,
   },
-  terrain_indoor: {
-    displacement: 0.8,     // Indoor is already very detailed
+  sky_special: {
+    displacement: 3.0,
     turbFrequency: 0.02,
-    grainFrequency: 0.7,
+    grainFrequency: 0.4,
     grainOctaves: 3,
-    grainOpacity: 0.035,
+    grainOpacity: 0.09,
     grainBlend: 'multiply',
     edgeRadius: 0,
-    saturationBoost: 1.02,
+    saturationBoost: 1.07,
+  },
+  terrain: {
+    displacement: 4.5,       // Terrains hebben meer textuur nodig
+    turbFrequency: 0.025,
+    grainFrequency: 0.5,
+    grainOctaves: 4,
+    grainOpacity: 0.12,
+    grainBlend: 'multiply',
+    edgeRadius: 0.6,         // Zichtbare edge roughening
+    saturationBoost: 1.10,
+  },
+  terrain_indoor: {
+    displacement: 2.0,       // Indoor al gedetailleerd
+    turbFrequency: 0.018,
+    grainFrequency: 0.6,
+    grainOctaves: 3,
+    grainOpacity: 0.08,
+    grainBlend: 'multiply',
+    edgeRadius: 0,
+    saturationBoost: 1.05,
   },
   character: {
-    displacement: 0.6,     // Characters need crisp faces
-    turbFrequency: 0.025,
-    grainFrequency: 0.6,
-    grainOctaves: 2,
-    grainOpacity: 0.03,
+    displacement: 1.8,       // Gezicht leesbaar maar toch painterly
+    turbFrequency: 0.02,
+    grainFrequency: 0.5,
+    grainOctaves: 3,
+    grainOpacity: 0.07,
     grainBlend: 'soft-light',
     edgeRadius: 0,
-    saturationBoost: 1.04,
+    saturationBoost: 1.06,
   },
   none: {
     displacement: 0,
@@ -170,7 +170,9 @@ interface SvgAssetPaintProps {
  * This is the core rendering unit — the HOC below creates this
  * automatically for each wrapped asset.
  */
-const SvgAssetPaint: React.FC<SvgAssetPaintProps> = ({
+export { ASSET_PAINT_CONFIGS };
+
+export const SvgAssetPaint: React.FC<SvgAssetPaintProps> = ({
   id,
   config,
   frame,
