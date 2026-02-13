@@ -3,18 +3,20 @@
 > **Lees dit bestand aan het begin van elke nieuwe chatsessie.**
 > Zeg: "Check docs/PROJECT-STATE.md — waar staan we en wat moeten we doen?"
 
-**Laatste update:** 2026-02-12
+**Laatste update:** 2026-02-13
 
 ---
 
-## Current State: Phase 1 gestart — Professor Pint v2 klaar
+## Current State: Phase 1 — Skies + Terrains klaar, vegetatie volgende
 
 - Specs zijn geschreven (v2.0)
 - Repository is opgeschoond en herstructureerd met Nederlandse mapnamen
 - SceneComposer prototype en test assets zijn gebouwd (stap 0.1 + 0.2)
 - Phase 0 is volledig afgerond (prototype gevalideerd, performance getest, presets gebouwd)
 - **Professor Pint v2.2 is af** — 12 emoties, vest met mouwen, pelvis/hip-connectie, idle+talking animaties
-- Volgende stap: **Phase 1 assets bouwen (skies, terrains, vegetation, etc.)**
+- **15 sky assets klaar** + SkyEngine + longCycleNoise systeem voor non-repeating animatie
+- **15 terrain assets klaar** + TerrainEngine + TerrainShowcase
+- Volgende stap: **Step 1.3 — Vegetation assets bouwen**
 
 ---
 
@@ -98,8 +100,8 @@ professor-pint/
 
 | Step | Task | Status | Details |
 |------|------|--------|---------|
-| 1.1 | **Sky assets (5-8)** | ⬜ Not started | Clear day, sunset, night, overcast, dawn, stormy, etc. Each with color palette variations. |
-| 1.2 | **Terrain assets (5-8)** | ⬜ Not started | Grassland, desert, forest floor, stone, snow, water edge, etc. |
+| 1.1 | **Sky assets (5-8)** | ✅ Done | **15 skies gebouwd** + SkyEngine met shared primitives + SkyShowcase. Varianten: day_clear, day_cloudy, day_hazy, day_tropical, dawn_golden, sunset_warm, sunset_cold, dusk_red, night_stars, night_moon, night_aurora, storm_dark, storm_rain, sandstorm, indoor_ceiling. Alle animaties via longCycleNoise (non-repeating voor 10-15min videos). |
+| 1.2 | **Terrain assets (5-8)** | ✅ Done | **15 terrains gebouwd** + TerrainEngine met shared primitives + TerrainShowcase. Varianten: grass_plain, grass_hill, sand_flat, sand_dunes, dirt_plain, cobblestone, rocky_mountain, snow_field, jungle_floor, river_bank, sea_shore, camp_ground, indoor_floor, cliff_edge, abstract_plane. Shared components: GroundPlane, HorizonBlend, HillSilhouette, SurfaceScatter, GroundMist, WaterSurface, TerrainTexture. Alle animaties via longCycleNoise. |
 | 1.3 | **Vegetation assets (8-10)** | ⬜ Not started | Trees (oak, palm, pine), bushes, flowers, grass patches, vines. Each with idle animation. |
 | 1.4 | **Atmosphere overlays (4-6)** | ⬜ Not started | Dust particles, fog, rain, snow, fireflies, heat shimmer. |
 | 1.5 | **Lighting overlays (4-6)** | ⬜ Not started | Golden hour, moonlight, indoor warm, dramatic spotlight, candlelight. |
