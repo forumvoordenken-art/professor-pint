@@ -41,7 +41,7 @@ export const SkyShowcase: React.FC = () => {
   const fadeIn = Math.min(localFrame / 15, 1);
 
   return (
-    <PaintEffect preset="cinematic" id={`sky-${skyIndex}`}>
+    <PaintEffect preset="scene_only" id={`sky-${skyIndex}`}>
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
       {/* Sky render — full frame */}
       <AbsoluteFill style={{ opacity: fadeIn }}>

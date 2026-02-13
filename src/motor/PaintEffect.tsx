@@ -33,7 +33,7 @@ import type { CanvasPreset, KuwaharaStrength } from './TextureOverlay';
 
 // ─── Effect Presets ──────────────────────────────────────
 
-export type PaintPreset = 'none' | 'subtle' | 'standard' | 'cinematic' | 'heavy' | 'custom';
+export type PaintPreset = 'none' | 'scene_only' | 'subtle' | 'standard' | 'cinematic' | 'heavy' | 'custom';
 
 interface PaintEffectConfig {
   /** Enable oil paint displacement filter */
@@ -67,6 +67,25 @@ interface PaintEffectConfig {
 }
 
 const PRESETS: Record<Exclude<PaintPreset, 'custom'>, PaintEffectConfig> = {
+  // Scene-level only: vignette + color grade + film grain
+  // Use when per-asset paint is handled by withAssetPaint HOC
+  scene_only: {
+    oilPaint: false,
+    oilPaintStrength: 'subtle',
+    kuwahara: false,
+    kuwaharaStrength: 'subtle',
+    canvasTexture: false,
+    canvasPreset: 'linen',
+    canvasOpacity: 0,
+    filmGrain: true,
+    filmGrainIntensity: 0.03,
+    pigmentVariation: false,
+    pigmentIntensity: 0,
+    colorGrade: 'golden',
+    colorGradeIntensity: 0.6,
+    vignette: true,
+    vignetteIntensity: 0.3,
+  },
   none: {
     oilPaint: false,
     oilPaintStrength: 'subtle',

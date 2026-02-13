@@ -14,6 +14,8 @@ export { CanvasTexture, SvgCanvasTexture, KuwaharaFilter, SvgKuwaharaDefs, FilmG
 export type { CanvasPreset, KuwaharaStrength } from './TextureOverlay';
 export { PaintEffect } from './PaintEffect';
 export type { PaintPreset } from './PaintEffect';
+export { withAssetPaint, skyPaintCategory, terrainPaintCategory } from './withAssetPaint';
+export type { AssetPaintCategory } from './withAssetPaint';
 
 // ── Rive Character Integration ──────────────────────────
 export { RiveCharacter, shouldBlink, breathCycle, DEFAULT_EMOTION_MAP } from './RiveIntegration';

@@ -46,7 +46,7 @@ export const TerrainShowcase: React.FC = () => {
   const fadeIn = Math.min(localFrame / 15, 1);
 
   return (
-    <PaintEffect preset="standard" id={`terrain-${terrainIndex}`}>
+    <PaintEffect preset="scene_only" id={`terrain-${terrainIndex}`}>
     <AbsoluteFill style={{ backgroundColor: '#2A3040' }}>
       {/* Neutral sky background — so terrain isn't floating on black */}
       <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{ position: 'absolute' }}>
