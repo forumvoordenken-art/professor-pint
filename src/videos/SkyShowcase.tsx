@@ -4,17 +4,13 @@
  * Each sky is shown for 4 seconds (120 frames at 30fps).
  * Total duration: 15 × 120 = 1800 frames (60 seconds).
  *
- * Displays:
- * - Full-screen sky render
- * - Sky name label at the top
- * - Category label
- * - Progress dots at the bottom
+ * Skies worden al per-asset gewrapt met paint effects via withAssetPaint
+ * in de index. Geen extra scene-level effecten nodig.
  */
 
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import { SKY_ASSETS } from '../assets/skies';
-import { PaintEffect } from '../motor/PaintEffect';
 
 const FRAMES_PER_SKY = 120; // 4 seconds at 30fps
 const TOTAL_SKIES = SKY_ASSETS.length;
@@ -41,9 +37,8 @@ export const SkyShowcase: React.FC = () => {
   const fadeIn = Math.min(localFrame / 15, 1);
 
   return (
-    <PaintEffect preset="scene_only" id={`sky-${skyIndex}`}>
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
-      {/* Sky render — full frame */}
+      {/* Sky render — full frame, paint effects zitten al in de component */}
       <AbsoluteFill style={{ opacity: fadeIn }}>
         <SkyComponent frame={localFrame} />
       </AbsoluteFill>
@@ -136,7 +131,6 @@ export const SkyShowcase: React.FC = () => {
         {skyIndex + 1}/{TOTAL_SKIES} — frame {localFrame}/{FRAMES_PER_SKY}
       </div>
     </AbsoluteFill>
-    </PaintEffect>
   );
 };
 

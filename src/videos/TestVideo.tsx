@@ -3,11 +3,12 @@
  *
  * Renders a hardcoded ComposedScene using placeholder assets and position presets
  * to validate the 10-layer composition system + position preset system in Remotion Studio.
+ *
+ * Assets worden per-stuk gewrapt met paint effects via de index registratie.
  */
 
 import React from 'react';
 import { SceneComposer } from '../motor/SceneComposer';
-import { PaintEffect } from '../motor/PaintEffect';
 import type { ComposedScene } from '../motor/SceneComposer';
 import { registerTestAssets } from '../assets/test/placeholders';
 
@@ -43,9 +44,5 @@ const testScene: ComposedScene = {
 };
 
 export const SceneComposerTest: React.FC = () => {
-  return (
-    <PaintEffect preset="scene_only" id="test">
-      <SceneComposer scene={testScene} />
-    </PaintEffect>
-  );
+  return <SceneComposer scene={testScene} />;
 };
