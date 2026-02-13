@@ -17,6 +17,7 @@ import {
   AtmosphericHaze,
   generateStars,
   seededRandom,
+  longCycleNoise,
 } from './SkyEngine';
 
 const ID = 'night-aurora';
@@ -188,10 +189,10 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
                 frame * band.waveSpeed * 0.6 + ray.wavePhaseOffset * 1.3 + band.phase * 0.7
               ) * band.waveAmp * 0.4;
 
-              // Brightness shimmer: each ray pulses independently
-              const shimmer = 0.3 + 0.7 * Math.abs(Math.sin(
-                frame * band.shimmerSpeed + ray.brightnessPhase
-              ));
+              // Non-repeating brightness shimmer for 10-15 min videos
+              const shimmer = 0.3 + 0.7 * Math.abs(
+                longCycleNoise(frame * band.shimmerSpeed * 15, ray.brightnessPhase * 50 + bi * 7)
+              );
               const rayOpacity = shimmer * ray.brightnessMult;
 
               // Ray position
@@ -238,7 +239,7 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
         ];
         return coreLines.map((line, i) => {
           const xShift = Math.sin(frame * line.speed + i * 1.5) * 80;
-          const pulse = 0.4 + 0.6 * Math.sin(frame * 0.025 + i * 2);
+          const pulse = 0.4 + 0.6 * Math.abs(longCycleNoise(frame * 0.4, i * 13.7 + 100));
           return (
             <rect
               key={i}
@@ -263,7 +264,7 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
           { x: 1400, height: 200, width: 14, phase: 4.5 },
         ];
         return pillars.map((p, i) => {
-          const cycle = Math.sin(frame * 0.013 + p.phase);
+          const cycle = longCycleNoise(frame * 0.2, p.phase * 20 + 200);
           const pillarOpacity = Math.max(0, cycle) * 0.08;
           if (pillarOpacity < 0.01) return null;
           const xWave = Math.sin(frame * 0.008 + p.phase * 0.7) * 30;
@@ -310,7 +311,7 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
           { cx: 1500, cy: 300, rx: 60, ry: 35, color: '#6838A0', phase: 2.2 },
         ];
         return patches.map((p, i) => {
-          const pulse = 0.3 + 0.7 * Math.abs(Math.sin(frame * 0.018 + p.phase));
+          const pulse = 0.3 + 0.7 * Math.abs(longCycleNoise(frame * 0.3, p.phase * 30 + 300));
           const drift = Math.sin(frame * 0.006 + p.phase * 1.3) * 30;
           return (
             <ellipse key={i}
@@ -323,25 +324,17 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
         });
       })()}
 
-      {/* ─── Horizon treeline silhouette — grounding ─── */}
-      <path d={`M0,920
-        L40,910 L60,895 L70,910 L100,905 L120,888 L135,895 L150,910
-        L180,908 L210,885 L225,878 L240,890 L260,910 L290,905
-        L320,880 L340,870 L355,882 L380,895 L400,910 L430,908
-        L460,878 L480,865 L495,872 L510,885 L530,910 L560,905
-        L590,890 L610,875 L625,868 L640,878 L660,895 L690,910
-        L720,905 L750,882 L770,870 L790,878 L810,910 L840,908
-        L870,890 L890,880 L910,872 L930,885 L950,910 L980,905
-        L1010,888 L1030,878 L1050,870 L1070,882 L1090,910
-        L1120,905 L1150,890 L1170,882 L1190,875 L1210,885 L1230,910
-        L1260,908 L1290,895 L1310,885 L1330,878 L1350,888 L1370,910
-        L1400,905 L1430,890 L1450,880 L1470,868 L1490,880 L1510,910
-        L1540,905 L1570,895 L1590,888 L1610,880 L1630,890 L1660,910
-        L1690,908 L1720,895 L1740,885 L1760,878 L1780,888 L1800,910
-        L1830,905 L1860,895 L1880,890 L1900,900 L1920,910
-        L1920,1080 L0,1080 Z`}
-        fill="#060810" opacity={0.85}
-      />
+      {/* ─── Soft horizon fade — no hard treeline, blends with terrain layers ─── */}
+      <defs>
+        <linearGradient id={`${ID}-horizon-fade`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#060810" stopOpacity={0} />
+          <stop offset="40%" stopColor="#060810" stopOpacity={0} />
+          <stop offset="70%" stopColor="#060810" stopOpacity={0.3} />
+          <stop offset="85%" stopColor="#060810" stopOpacity={0.65} />
+          <stop offset="100%" stopColor="#060810" stopOpacity={0.9} />
+        </linearGradient>
+      </defs>
+      <rect x={0} y={600} width={1920} height={480} fill={`url(#${ID}-horizon-fade)`} />
 
       {/* Aurora reflection on low clouds / horizon */}
       <defs>
