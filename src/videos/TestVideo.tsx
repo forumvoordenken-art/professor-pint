@@ -44,7 +44,7 @@ const testScene: ComposedScene = {
 
 export const SceneComposerTest: React.FC = () => {
   return (
-    <PaintEffect preset="standard" id="test">
+    <PaintEffect preset="scene_only" id="test">
       <SceneComposer scene={testScene} />
     </PaintEffect>
   );

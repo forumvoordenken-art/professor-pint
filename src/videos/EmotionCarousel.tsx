@@ -41,7 +41,7 @@ export const ProfessorPintEmotionCarousel: React.FC = () => {
   const isTalking = talkingEmotions.includes(currentEmotion) && frameInEmotion > 10;
 
   return (
-    <PaintEffect preset="standard" id="emotions">
+    <PaintEffect preset="scene_only" id="emotions">
       <div style={{
         display: 'flex',
         flexDirection: 'column',
