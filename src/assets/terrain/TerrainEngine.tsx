@@ -464,3 +464,274 @@ export const TerrainTexture: React.FC<TerrainTextureProps> = ({
     </g>
   );
 };
+
+// ─── Multi-Octave Painterly Texture (Enhanced) ───────────
+
+interface PainterlyTextureProps {
+  id: string;
+  /** Area to cover */
+  y: number;
+  height: number;
+  /** Primary pigment color */
+  color: string;
+  /** Secondary color for pigment variation (optional) */
+  secondaryColor?: string;
+  /** Third color for warm/cool variation (optional) */
+  tertiaryColor?: string;
+  opacity: number;
+  /** Seed for deterministic generation */
+  seed?: number;
+  /**
+   * Level of detail: 'basic' (fast), 'standard', 'rich' (slow but beautiful).
+   * - basic:    ~60 elements  — fine for distant terrain
+   * - standard: ~150 elements — good default
+   * - rich:     ~300 elements — close-up hero shots
+   */
+  detail?: 'basic' | 'standard' | 'rich';
+}
+
+/**
+ * Multi-octave painterly texture — simulates real oil painting surface.
+ *
+ * Unlike the simple TerrainTexture (just dots), this renders
+ * multiple layers of procedural marks:
+ *
+ * 1. Canvas grain — fine-frequency dots simulating woven canvas
+ * 2. Pigment variation — medium blotches of color density variation
+ * 3. Brush stroke marks — elongated ellipses simulating brush direction
+ * 4. Impasto highlights — small bright spots where paint is thick
+ * 5. Warm/cool color shifts — subtle temperature variation across surface
+ *
+ * Each octave uses different element sizes and densities.
+ * The result is a rich, organic texture that reads as "painted"
+ * even in video format at 1080p.
+ *
+ * All positions are deterministic via seededRandom — same seed = same texture.
+ */
+export const PainterlyTexture: React.FC<PainterlyTextureProps> = ({
+  id,
+  y,
+  height,
+  color,
+  secondaryColor,
+  tertiaryColor,
+  opacity,
+  seed = 900,
+  detail = 'standard',
+}) => {
+  const rng = seededRandom(seed);
+
+  // Detail level controls element counts per octave
+  const multiplier = detail === 'basic' ? 0.4 : detail === 'rich' ? 2.0 : 1.0;
+
+  // Parse primary color for blending
+  const parseHex = (hex: string) => ({
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  });
+  const primary = parseHex(color);
+  const secondary = secondaryColor ? parseHex(secondaryColor) : {
+    r: Math.max(0, primary.r - 20),
+    g: Math.max(0, primary.g - 15),
+    b: Math.max(0, primary.b - 10),
+  };
+  const tertiary = tertiaryColor ? parseHex(tertiaryColor) : {
+    r: Math.min(255, primary.r + 15),
+    g: Math.min(255, primary.g + 10),
+    b: Math.min(255, primary.b - 5),
+  };
+
+  const toHex = (c: { r: number; g: number; b: number }) =>
+    `#${c.r.toString(16).padStart(2, '0')}${c.g.toString(16).padStart(2, '0')}${c.b.toString(16).padStart(2, '0')}`;
+
+  // ── Octave 1: Canvas grain (many tiny dots) ────────────
+  const grainCount = Math.floor(40 * multiplier);
+  const grainElements = Array.from({ length: grainCount }, () => ({
+    cx: rng() * 1920,
+    cy: y + rng() * height,
+    r: 0.8 + rng() * 1.5,
+    op: 0.3 + rng() * 0.4,
+  }));
+
+  // ── Octave 2: Pigment density variation (medium blotches) ──
+  const pigmentCount = Math.floor(20 * multiplier);
+  const pigmentElements = Array.from({ length: pigmentCount }, () => {
+    const blend = rng();
+    const blendedColor = {
+      r: Math.round(primary.r * (1 - blend) + secondary.r * blend),
+      g: Math.round(primary.g * (1 - blend) + secondary.g * blend),
+      b: Math.round(primary.b * (1 - blend) + secondary.b * blend),
+    };
+    return {
+      cx: rng() * 1920,
+      cy: y + rng() * height,
+      rx: 8 + rng() * 20,
+      ry: 4 + rng() * 10,
+      angle: rng() * 180,
+      color: toHex(blendedColor),
+      op: 0.08 + rng() * 0.12,
+    };
+  });
+
+  // ── Octave 3: Brush stroke marks (elongated) ──────────
+  const strokeCount = Math.floor(25 * multiplier);
+  const strokeElements = Array.from({ length: strokeCount }, () => ({
+    cx: rng() * 1920,
+    cy: y + rng() * height,
+    rx: 12 + rng() * 35,
+    ry: 1.5 + rng() * 3,
+    angle: -20 + rng() * 40, // mostly horizontal with variation
+    op: 0.06 + rng() * 0.08,
+  }));
+
+  // ── Octave 4: Impasto highlights (tiny bright spots) ──
+  const impastoCount = Math.floor(15 * multiplier);
+  const impastoElements = Array.from({ length: impastoCount }, () => ({
+    cx: rng() * 1920,
+    cy: y + rng() * height,
+    r: 1 + rng() * 2.5,
+    op: 0.08 + rng() * 0.1,
+  }));
+
+  // ── Octave 5: Warm/cool color shifts (large soft areas) ──
+  const shiftCount = Math.floor(8 * multiplier);
+  const shiftElements = Array.from({ length: shiftCount }, () => {
+    const warm = rng() > 0.5;
+    return {
+      cx: rng() * 1920,
+      cy: y + rng() * height,
+      rx: 60 + rng() * 120,
+      ry: 30 + rng() * 60,
+      color: warm ? toHex(tertiary) : toHex(secondary),
+      op: 0.04 + rng() * 0.06,
+    };
+  });
+
+  return (
+    <g opacity={opacity}>
+      {/* Octave 5: Large warm/cool shifts (behind everything) */}
+      {shiftElements.map((el, i) => (
+        <ellipse
+          key={`${id}-shift-${i}`}
+          cx={el.cx} cy={el.cy}
+          rx={el.rx} ry={el.ry}
+          fill={el.color} opacity={el.op}
+        />
+      ))}
+
+      {/* Octave 2: Pigment density blotches */}
+      {pigmentElements.map((el, i) => (
+        <ellipse
+          key={`${id}-pigment-${i}`}
+          cx={el.cx} cy={el.cy}
+          rx={el.rx} ry={el.ry}
+          fill={el.color} opacity={el.op}
+          transform={`rotate(${el.angle}, ${el.cx}, ${el.cy})`}
+        />
+      ))}
+
+      {/* Octave 3: Brush stroke marks */}
+      {strokeElements.map((el, i) => (
+        <ellipse
+          key={`${id}-stroke-${i}`}
+          cx={el.cx} cy={el.cy}
+          rx={el.rx} ry={el.ry}
+          fill={color} opacity={el.op}
+          transform={`rotate(${el.angle}, ${el.cx}, ${el.cy})`}
+        />
+      ))}
+
+      {/* Octave 1: Fine canvas grain */}
+      {grainElements.map((el, i) => (
+        <circle
+          key={`${id}-grain-${i}`}
+          cx={el.cx} cy={el.cy}
+          r={el.r}
+          fill={color} opacity={el.op}
+        />
+      ))}
+
+      {/* Octave 4: Impasto highlights (on top) */}
+      {impastoElements.map((el, i) => (
+        <circle
+          key={`${id}-impasto-${i}`}
+          cx={el.cx} cy={el.cy}
+          r={el.r}
+          fill="white" opacity={el.op}
+        />
+      ))}
+    </g>
+  );
+};
+
+// ─── SVG Paint Filter Defs (for use inside terrain SVGs) ──
+
+interface TerrainPaintFilterDefsProps {
+  id: string;
+  /** How much edges wobble (1-3 typical) */
+  displacement?: number;
+  /** Canvas grain frequency */
+  grainFrequency?: number;
+}
+
+/**
+ * Lightweight SVG filter defs for individual terrain components.
+ * Apply to specific groups within a terrain SVG for selective painterly treatment.
+ *
+ * Usage:
+ *   <TerrainPaintFilterDefs id="my-terrain" />
+ *   <g filter="url(#my-terrain-paint)">
+ *     <SomeTerrainElements />
+ *   </g>
+ *   <g filter="url(#my-terrain-grain)">
+ *     <SomeOtherElements />
+ *   </g>
+ */
+export const TerrainPaintFilterDefs: React.FC<TerrainPaintFilterDefsProps> = ({
+  id,
+  displacement = 1.5,
+  grainFrequency = 0.5,
+}) => (
+  <defs>
+    {/* Paint edge displacement filter */}
+    <filter id={`${id}-paint`} x="-3%" y="-3%" width="106%" height="106%">
+      <feTurbulence
+        type="fractalNoise"
+        baseFrequency={0.03}
+        numOctaves={2}
+        seed={42}
+        result="noise"
+      />
+      <feDisplacementMap
+        in="SourceGraphic"
+        in2="noise"
+        scale={displacement}
+        xChannelSelector="R"
+        yChannelSelector="G"
+      />
+    </filter>
+
+    {/* Canvas grain texture filter */}
+    <filter id={`${id}-grain`} x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence
+        type="fractalNoise"
+        baseFrequency={grainFrequency}
+        numOctaves={3}
+        seed={7}
+        result="grain"
+      />
+      <feColorMatrix
+        in="grain"
+        type="saturate"
+        values="0"
+        result="monoGrain"
+      />
+      <feBlend
+        in="SourceGraphic"
+        in2="monoGrain"
+        mode="multiply"
+      />
+    </filter>
+  </defs>
+);
