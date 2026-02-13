@@ -77,9 +77,13 @@ professor-pint/
 
 ## Asset Creation Workflow
 
-### Stap 1: ChatGPT prompt
+### Twee prompt-types
 
-Gebruik deze standaard prompt in ChatGPT (DALL-E):
+Er zijn twee prompts: één voor **objecten** (props, characters, vegetation) en één voor **achtergronden** (skies, terrains).
+
+---
+
+### Prompt A: Objecten (props, characters, vegetation)
 
 ```
 Create a single [OBJECT DESCRIPTION] as a centered illustration on a pure white background.
@@ -97,31 +101,79 @@ Style rules (STRICT):
 Why these rules: This image will be vectorized into SVG. Every color boundary becomes a separate path. Fewer colors + simpler shapes = fewer paths = smaller file that performs well in animation.
 ```
 
-Vervang `[OBJECT DESCRIPTION]` met wat je wilt, bijv:
+Voorbeelden voor `[OBJECT DESCRIPTION]`:
 - `a cartoon beer mug with foam`
-- `an Egyptian pharaoh character, full body, front-facing`
+- `an Egyptian pharaoh character, full body, front-facing, wearing traditional headdress and golden collar, arms slightly away from body`
 - `a tall palm tree with green fronds`
 
-### Stap 2: vectorizer.ai
+**Doel na vectorizer.ai: 50-500 paden, max 16 kleuren.**
 
-Upload de PNG naar vectorizer.ai met deze instellingen:
-- **Detail level**: laag/medium (niet maximaal)
-- **Color count**: max 16-24
-- **Minimum path size**: omhoog zetten zodat kleine vlekjes wegvallen
-- **Output**: SVG
+---
 
-**Doel: 300-500 paden per SVG.** Check met: `grep -c '<path' bestand.svg`
+### Prompt B: Achtergronden (skies, terrains)
 
-### Stap 3: Upload naar `src/assets/`
+```
+Create a wide landscape background in 16:9 aspect ratio showing [SCENE DESCRIPTION].
 
-- Hernoem naar beschrijvende naam: `palm-tree.svg`, `pharaoh.svg`, etc. (geen spaties, geen timestamps)
+Style rules (STRICT):
+- Flat color fills only — NO gradients, NO soft shadows, NO texture, NO noise
+- Maximum 24 distinct colors total
+- Large simple shapes with clean edges
+- Cel-shaded look: shadow = one darker flat color per surface
+- No characters, no small objects — only the environment itself
+- Fill the entire frame edge to edge — no white borders, no margins
+- Style reference: Kurzgesagt / TED-Ed animation backgrounds
+
+Why these rules: This image will be vectorized into SVG and used as a static background layer in an animation. Fewer colors + simpler shapes = fewer paths = better performance.
+```
+
+Voorbeelden voor `[SCENE DESCRIPTION]`:
+- `a warm sunset sky with orange and pink clouds over a desert horizon`
+- `a dark stormy sky with heavy grey clouds and distant lightning`
+- `flat Egyptian desert sand dunes stretching to the horizon under a clear sky`
+- `green rolling hills with a calm river in the distance`
+- `a starry night sky with a crescent moon`
+- `the interior of an ancient Egyptian temple with tall stone columns`
+
+**Doel na vectorizer.ai: 500-2000 paden, max 24 kleuren.** Achtergronden zijn groter, dat is prima.
+
+---
+
+### Hybride aanpak voor achtergronden
+
+ChatGPT levert de **statische basis** (kleuren, vormen, sfeer). Claude voegt daar **geanimeerde elementen** overheen:
+- **Sky**: driftende wolken, twinkelende sterren, pulserende zon/maan, bliksemflitsen
+- **Terrain**: wuivend gras, kabbelend water, stofdeeltjes, bewegende schaduwen
+- **Atmosphere**: mist, regen, sneeuw, vuurvliegjes
+
+Dit geeft het beste van beide: rijke visuele basis + levende animatie.
+
+---
+
+### vectorizer.ai instellingen
+
+Upload de PNG naar vectorizer.ai met:
+- **File Format**: SVG
+- **SVG Version**: SVG 1.1
+- **Draw Style**: Fill shapes
+- **Shape Stacking**: Stack shapes on top
+- **Group By**: Color
+- **Line Fit Tolerance**: Coarse (voor objecten) / Medium (voor achtergronden)
+- **Gap Filler**: Fill Gaps ✅
+
+Check padcount met: `grep -c '<path' bestand.svg`
+
+### Naamgeving en upload
+
+- Hernoem naar beschrijvende naam: `palm-tree.svg`, `sky-sunset-warm.svg`, `terrain-desert-flat.svg`
+- Geen spaties, geen timestamps, geen ChatGPT-bestandsnamen
 - Upload naar `src/assets/` op main via GitHub
 
-### Stap 4: Claude animeert
+### Claude animeert
 
 Claude wraps de SVG in een React component met:
-- Idle animatie (sway, bob, etc.)
-- Optionele interactie-animaties
+- Idle animatie (sway, bob, drift, etc.)
+- Geanimeerde overlay-elementen (wolken, sterren, water, etc.)
 - `withAssetPaint` post-processing voor oil painting look
 - Registratie in het asset registry
 
@@ -131,6 +183,7 @@ Claude wraps de SVG in een React component met:
 - **Position-animaties**: drifting, flying, sliding
 - **Filter-animaties**: color shifts, blur changes
 - **Clip-path animaties**: reveal/hide delen van de SVG
+- **Overlay-animaties**: extra React-elementen bovenop de statische SVG
 
 ### Wat Claude NIET kan:
 - Interne SVG-structuur veranderen (bijv. een arm los bewegen tenzij het een apart `<g>` element is)
