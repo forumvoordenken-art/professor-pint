@@ -10,7 +10,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { seededRandom } from './SkyEngine';
+import { seededRandom, longCycleNoise, slowDrift } from './SkyEngine';
 
 const ID = 'indoor';
 
@@ -30,9 +30,14 @@ const STONE = {
 export const IndoorCeiling: React.FC<{ frame: number }> = ({ frame }) => {
   const rng = seededRandom(7001);
 
-  // Torch flicker — varies light intensity (stronger range)
-  const flicker1 = 0.8 + Math.sin(frame * 0.18) * 0.08 + Math.sin(frame * 0.31) * 0.06 + Math.sin(frame * 0.53) * 0.04;
-  const flicker2 = 0.8 + Math.sin(frame * 0.22 + 1) * 0.08 + Math.sin(frame * 0.37 + 2) * 0.06 + Math.sin(frame * 0.47 + 3) * 0.04;
+  // Torch flicker — non-repeating via longCycleNoise for 10-15min videos
+  const baseFlicker1 = 0.78 + longCycleNoise(frame, 10.0) * 0.12;
+  const baseFlicker2 = 0.78 + longCycleNoise(frame, 20.0) * 0.12;
+  // Wind gusts — occasional strong flicker events (non-periodic)
+  const gustNoise = longCycleNoise(frame * 0.5, 30.0);
+  const gust = gustNoise > 0.7 ? (gustNoise - 0.7) * 3.3 : 0; // triggers ~15% of time
+  const flicker1 = Math.min(1, baseFlicker1 + gust * 0.15 + slowDrift(frame, 1.0) * 0.04);
+  const flicker2 = Math.min(1, baseFlicker2 + gust * 0.10 + slowDrift(frame, 2.0) * 0.04);
 
   // Dust motes data
   const dustMotes = useMemo(() =>
@@ -296,7 +301,7 @@ export const IndoorCeiling: React.FC<{ frame: number }> = ({ frame }) => {
 
       {/* ─── THIRD TORCH — deeper, dimmer, center-back for depth ─── */}
       {(() => {
-        const flicker3 = 0.6 + Math.sin(frame * 0.25 + 2.5) * 0.06 + Math.sin(frame * 0.41 + 4) * 0.04;
+        const flicker3 = 0.55 + longCycleNoise(frame, 35.0) * 0.10 + slowDrift(frame, 3.5) * 0.03;
         return (
           <g>
             <defs>
@@ -498,6 +503,250 @@ export const IndoorCeiling: React.FC<{ frame: number }> = ({ frame }) => {
         <path d="M1420,420 Q1220,350 960,380 L950,390 Q1220,360 1410,430Z" fill="#0A0806" />
         <path d="M1720,610 Q1520,520 1220,610 L1220,620 Q1520,530 1720,620Z" fill="#0A0806" />
       </g>
+
+      {/* ─── FLAGSTONE FLOOR — visible in lower third ─── */}
+      <g opacity={0.18}>
+        {Array.from({ length: 8 }, (_, row) =>
+          Array.from({ length: 10 }, (_, col) => {
+            const flagW = 160 + (col % 3) * 30 + (row % 2) * 15;
+            const flagH = 80 + (row % 2) * 20;
+            const x = col * 195 + (row % 2) * 95 - 20;
+            const y = 780 + row * (flagH + 4);
+            const shade = ((row + col) * 7) % 5;
+            const fill = shade < 2 ? STONE.dark : shade < 4 ? STONE.mid : STONE.warm;
+            return (
+              <g key={`f${row}-${col}`}>
+                <rect x={x} y={y} width={flagW} height={flagH} fill={fill}
+                  rx={2} opacity={0.5 + (shade % 3) * 0.15} />
+                <rect x={x} y={y} width={flagW} height={flagH} fill="none"
+                  stroke={STONE.grout} strokeWidth={2} rx={2} opacity={0.4} />
+              </g>
+            );
+          })
+        )}
+      </g>
+      {/* Floor wear marks — polished paths where people walk */}
+      <g opacity={0.06}>
+        <ellipse cx={960} cy={950} rx={300} ry={30} fill={STONE.light} />
+        <ellipse cx={500} cy={920} rx={150} ry={20} fill={STONE.light} />
+        <ellipse cx={1400} cy={930} rx={180} ry={22} fill={STONE.light} />
+      </g>
+      {/* Puddle on floor — near drip point */}
+      <g opacity={0.08}>
+        <ellipse cx={520} cy={720} rx={25} ry={8} fill="#506070" />
+        <ellipse cx={520} cy={720} rx={18} ry={5} fill="#607080" opacity={0.4} />
+      </g>
+
+      {/* ─── COLUMN CAPITALS at vault springers ─── */}
+      <g opacity={0.3}>
+        {/* Left springer — where ribs meet the wall */}
+        <rect x={0} y={570} width={60} height={35} fill={STONE.mid} rx={3} />
+        <rect x={-5} y={560} width={70} height={15} fill={STONE.light} rx={2} />
+        <rect x={-3} y={600} width={66} height={10} fill={STONE.light} rx={2} />
+        {/* Decorative corbel detail */}
+        <path d="M5,605 Q30,630 55,605" fill="none" stroke={STONE.highlight} strokeWidth={1.5} />
+        <path d="M10,610 Q30,625 50,610" fill="none" stroke={STONE.mid} strokeWidth={1} />
+        {/* Right springer */}
+        <rect x={1860} y={570} width={60} height={35} fill={STONE.mid} rx={3} />
+        <rect x={1855} y={560} width={70} height={15} fill={STONE.light} rx={2} />
+        <rect x={1857} y={600} width={66} height={10} fill={STONE.light} rx={2} />
+        <path d="M1865,605 Q1890,630 1915,605" fill="none" stroke={STONE.highlight} strokeWidth={1.5} />
+        {/* Center-left springer at crossing rib */}
+        <rect x={180} y={575} width={50} height={30} fill={STONE.mid} rx={3} />
+        <rect x={175} y={567} width={60} height={12} fill={STONE.light} rx={2} />
+        {/* Center-right springer */}
+        <rect x={1690} y={575} width={50} height={30} fill={STONE.mid} rx={3} />
+        <rect x={1685} y={567} width={60} height={12} fill={STONE.light} rx={2} />
+      </g>
+
+      {/* ─── PASSAGE / DOORWAY — light leak from another room ─── */}
+      {(() => {
+        // Distant doorway on the right wall — warm light leaking in
+        const passageFlicker = 0.6 + longCycleNoise(frame, 50.0) * 0.15;
+        return (
+          <g>
+            {/* Dark archway shape */}
+            <path d="M1850,650 Q1870,600 1890,650 L1890,850 L1850,850 Z"
+              fill="#0A0808" opacity={0.4} />
+            {/* Warm light leak */}
+            <defs>
+              <radialGradient id={`${ID}-passage`} cx="0.5" cy="0.4" r="0.6">
+                <stop offset="0%" stopColor="#D09040" stopOpacity={0.12 * passageFlicker} />
+                <stop offset="50%" stopColor="#C08030" stopOpacity={0.04 * passageFlicker} />
+                <stop offset="100%" stopColor="#C08030" stopOpacity={0} />
+              </radialGradient>
+            </defs>
+            <ellipse cx={1870} cy={740} rx={120} ry={160} fill={`url(#${ID}-passage)`} />
+            {/* Light spill on floor */}
+            <ellipse cx={1800} cy={860} rx={80} ry={20}
+              fill="#D09040" opacity={0.03 * passageFlicker} />
+          </g>
+        );
+      })()}
+
+      {/* ─── TORCH EMBER SPARKS — rising orange dots ─── */}
+      {(() => {
+        // Each spark has a unique lifecycle driven by non-repeating noise
+        const sparks = useMemo(() => {
+          const sparkRng = seededRandom(8001);
+          return Array.from({ length: 20 }, (_, i) => ({
+            torchX: i < 10 ? 350 : 1570,
+            offsetX: -15 + sparkRng() * 30,
+            speed: 0.4 + sparkRng() * 0.8,
+            interval: 60 + Math.floor(sparkRng() * 200),
+            phase: Math.floor(sparkRng() * 300),
+            size: 0.5 + sparkRng() * 1.5,
+            drift: -0.3 + sparkRng() * 0.6,
+            wobbleSpeed: 0.08 + sparkRng() * 0.12,
+            wobbleAmp: 3 + sparkRng() * 8,
+          }));
+        }, []);
+
+        return sparks.map((s, i) => {
+          // Non-repeating interval variation using noise
+          const intervalVar = s.interval + Math.floor(longCycleNoise(frame * 0.1, i * 3.7) * 40);
+          const progress = ((frame + s.phase) % Math.max(30, intervalVar)) / Math.max(30, intervalVar);
+          if (progress > 0.6) return null; // spark only alive for 60% of cycle
+          const life = progress / 0.6;
+          const x = s.torchX + s.offsetX + Math.sin(frame * s.wobbleSpeed + i) * s.wobbleAmp * life + frame * s.drift * 0.1;
+          const y = 800 - life * 250 * s.speed;
+          const fade = life < 0.3 ? life / 0.3 : 1 - (life - 0.3) / 0.7;
+          return (
+            <circle key={i} cx={x} cy={y} r={s.size * (1 - life * 0.5)}
+              fill="#F0A030" opacity={0.3 * fade} />
+          );
+        });
+      })()}
+
+      {/* ─── RAT SHADOW — occasional dart across floor ─── */}
+      {(() => {
+        // Rat appears every ~500-700 frames, runs across in ~60 frames
+        const ratCycle = 600 + Math.floor(slowDrift(frame, 99.0) * 80);
+        const ratProgress = (frame % Math.max(200, ratCycle));
+        const runDuration = 50;
+        if (ratProgress >= runDuration) return null;
+        const t = ratProgress / runDuration;
+        // Alternating direction based on cycle count
+        const direction = Math.floor(frame / Math.max(200, ratCycle)) % 2 === 0 ? 1 : -1;
+        const startX = direction > 0 ? -30 : 1950;
+        const ratX = startX + direction * t * 1980;
+        const ratY = 900 + Math.sin(t * Math.PI * 6) * 3; // tiny scurry bounce
+        return (
+          <g opacity={0.12}>
+            {/* Body */}
+            <ellipse cx={ratX} cy={ratY} rx={12} ry={5} fill="#1A1614" />
+            {/* Head */}
+            <ellipse cx={ratX + direction * 10} cy={ratY - 2} rx={5} ry={4} fill="#1A1614" />
+            {/* Tail */}
+            <path d={`M${ratX - direction * 12},${ratY} q${-direction * 15},${-8} ${-direction * 25},${3}`}
+              fill="none" stroke="#1A1614" strokeWidth={1.5} />
+          </g>
+        );
+      })()}
+
+      {/* ─── FALLING STONE DUST — from cracks, non-repeating ─── */}
+      {(() => {
+        const dustSources = [
+          { x: 522, y: 310, seed: 9001 },
+          { x: 1378, y: 270, seed: 9002 },
+          { x: 900, y: 80, seed: 9003 },
+        ];
+        return dustSources.map((src, si) => {
+          // Trigger dust fall non-periodically
+          const trigger = longCycleNoise(frame * 0.3, src.seed);
+          if (trigger < 0.5) return null; // only active ~25% of time
+          const intensity = (trigger - 0.5) * 2;
+          const dustRng = seededRandom(src.seed + Math.floor(frame / 120));
+          return (
+            <g key={si} opacity={0.15 * intensity}>
+              {Array.from({ length: 5 }, (_, di) => {
+                const dx = -8 + dustRng() * 16;
+                const fallSpeed = 0.3 + dustRng() * 0.5;
+                const dy = (frame * fallSpeed + dustRng() * 100) % 200;
+                return (
+                  <circle key={di}
+                    cx={src.x + dx + Math.sin(frame * 0.05 + di) * 2}
+                    cy={src.y + dy}
+                    r={0.4 + dustRng() * 0.8}
+                    fill={STONE.mid} />
+                );
+              })}
+            </g>
+          );
+        });
+      })()}
+
+      {/* ─── WALL NICHES — recessed alcoves with deeper shadow ─── */}
+      <g opacity={0.2}>
+        {/* Left wall niche */}
+        <rect x={80} y={650} width={60} height={100} fill="#0E0C0A" rx={3} />
+        <path d="M80,650 Q110,635 140,650" fill="none" stroke={STONE.mid} strokeWidth={2} />
+        <rect x={82} y={652} width={56} height={96} fill="none" stroke={STONE.grout} strokeWidth={1} rx={2} />
+        {/* Right wall niche */}
+        <rect x={1780} y={660} width={55} height={90} fill="#0E0C0A" rx={3} />
+        <path d="M1780,660 Q1807,648 1835,660" fill="none" stroke={STONE.mid} strokeWidth={2} />
+        <rect x={1782} y={662} width={51} height={86} fill="none" stroke={STONE.grout} strokeWidth={1} rx={2} />
+      </g>
+
+      {/* ─── PILLAR BASES — at floor level ─── */}
+      <g opacity={0.25}>
+        {/* Left pillar base */}
+        <rect x={170} y={750} width={70} height={200} fill={STONE.mid} rx={2} />
+        <rect x={165} y={745} width={80} height={12} fill={STONE.light} rx={2} />
+        <rect x={168} y={940} width={74} height={10} fill={STONE.light} rx={2} />
+        {/* Right pillar base */}
+        <rect x={1680} y={750} width={70} height={200} fill={STONE.mid} rx={2} />
+        <rect x={1675} y={745} width={80} height={12} fill={STONE.light} rx={2} />
+        <rect x={1678} y={940} width={74} height={10} fill={STONE.light} rx={2} />
+      </g>
+
+      {/* ─── ANIMATED SMOKE RINGS from torches — slow rising ─── */}
+      {(() => {
+        const rings = [
+          { torchX: 350, seed: 6001 },
+          { torchX: 1570, seed: 6002 },
+          { torchX: 960, seed: 6003 },
+        ];
+        return rings.map((ring, ri) => {
+          const ringRng = seededRandom(ring.seed);
+          return Array.from({ length: 3 }, (_, i) => {
+            const interval = 180 + Math.floor(ringRng() * 120);
+            const phase = Math.floor(ringRng() * interval);
+            const progress = ((frame + phase) % interval) / interval;
+            const y = (ring.torchX === 960 ? 720 : 790) - progress * 350;
+            const radius = 8 + progress * 30;
+            const fade = progress < 0.1 ? progress / 0.1 : Math.max(0, 1 - (progress - 0.3) / 0.7);
+            const wobble = longCycleNoise(frame * 0.5, ring.seed + i * 11) * 15;
+            return (
+              <ellipse key={`${ri}-${i}`}
+                cx={ring.torchX + wobble}
+                cy={y}
+                rx={radius} ry={radius * 0.4}
+                fill="none" stroke="#706050"
+                strokeWidth={1.5 - progress}
+                opacity={0.04 * fade} />
+            );
+          });
+        });
+      })()}
+
+      {/* ─── LIGHT COLOR TEMPERATURE SHIFT — slow drift warm↔cool ─── */}
+      {(() => {
+        const tempShift = slowDrift(frame, 42.0);
+        // When positive: slightly warmer. When negative: slightly cooler.
+        const warmOverlay = Math.max(0, tempShift) * 0.03;
+        const coolOverlay = Math.max(0, -tempShift) * 0.02;
+        return (
+          <g>
+            {warmOverlay > 0.005 && (
+              <rect x={0} y={0} width={1920} height={1080} fill="#D08020" opacity={warmOverlay} />
+            )}
+            {coolOverlay > 0.005 && (
+              <rect x={0} y={0} width={1920} height={1080} fill="#4060A0" opacity={coolOverlay} />
+            )}
+          </g>
+        );
+      })()}
 
       {/* ─── DEPTH AND ATMOSPHERE ─── */}
 
