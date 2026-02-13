@@ -34,9 +34,9 @@ professor-pint/
 ├── src/                     ← Alle broncode
 │   ├── personages/          ← Character SVG-componenten
 │   ├── videos/              ← Video compositions
-│   ├── motor/               ← Render engine (camera, transitions, etc.)
+│   ├── motor/               ← Render engine + post-processing (SceneComposer, withAssetPaint, OilPaintFilter, etc.)
 │   ├── animaties/           ← Animatie helpers (emotions, idle, talking)
-│   └── assets/              ← Statische bestanden
+│   └── assets/              ← Sky, terrain, test assets (index-bestanden wrappen met paint effects)
 │
 ├── CLAUDE.md                ← Dit bestand
 └── [config bestanden]       ← package.json, tsconfig.json, etc.
@@ -109,6 +109,8 @@ Bij het opleveren van werk, geef ALTIJD deze instructies:
 4. **Bestaande code = referentie** — Niet productie, niet fixen
 5. **English only** — Alle video content in het Engels
 6. **n8n-only feedback** — Geen dashboard, alleen approve/feedback/reject buttons
+7. **Per-asset post-processing** — Painterly effecten zitten op asset-niveau (via `withAssetPaint` HOC in index-bestanden), NIET op scene-niveau. Dit voorkomt dubbele filters en maakt per-asset tuning mogelijk.
+8. **Geen vignette op showcases** — Showcases tonen assets puur, zonder extra scene-level effecten
 
 ---
 

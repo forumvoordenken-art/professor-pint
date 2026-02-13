@@ -7,7 +7,7 @@
 
 ---
 
-## Current State: Phase 1 — Skies + Terrains klaar, vegetatie volgende
+## Current State: Phase 1 — Post-processing klaar, achtergronden verbeteren + vegetation
 
 - Specs zijn geschreven (v2.0)
 - Repository is opgeschoond en herstructureerd met Nederlandse mapnamen
@@ -16,7 +16,8 @@
 - **Professor Pint v2.2 is af** — 12 emoties, vest met mouwen, pelvis/hip-connectie, idle+talking animaties
 - **15 sky assets klaar** + SkyEngine + longCycleNoise systeem voor non-repeating animatie
 - **15 terrain assets klaar** + TerrainEngine + TerrainShowcase
-- Volgende stap: **Step 1.3 — Vegetation assets bouwen**
+- **Per-asset painterly post-processing gebouwd** — withAssetPaint HOC wraps alle 31 assets met edge displacement + canvas grain + saturation boost
+- Volgende sessie: **Achtergronden visueel verbeteren + meer kwaliteitstools onderzoeken**, daarna **Step 1.3 — Vegetation assets bouwen**
 
 ---
 
@@ -176,9 +177,36 @@ Na de opschoning bevat de repo ~20 bestanden:
 
 - **1 character**: ProfessorPint (in `src/personages/`) — werkend met emotions, idle, talking animaties
 - **Motor**: SceneComposer, SceneRenderer, Camera, CameraPath, Subtitles, Transitions (in `src/motor/`)
+- **Post-processing motor**: OilPaintFilter, TextureOverlay, PaintEffect, withAssetPaint HOC, RiveIntegration (in `src/motor/`)
 - **Animaties**: easing, emotions, gestures, idle, talking (in `src/animaties/`)
 - **Test**: SceneComposerTest compositie + 10 placeholder assets (in `src/videos/` en `src/assets/`)
 - **Oude code**: Verwijderd maar beschikbaar in git history voor referentie
+
+### Post-Processing Systeem (per-asset)
+
+Elk asset wordt automatisch gewrapt met painterly effects via `withAssetPaint` HOC in de index-bestanden. Geen wijzigingen nodig aan individuele asset-bestanden.
+
+| Component | Wat het doet | Waar |
+|-----------|-------------|------|
+| `withAssetPaint` | HOC die assets wrapt met SVG filters per categorie | `src/motor/withAssetPaint.tsx` |
+| `OilPaintFilter` | SVG filter chain: turbulence → displacement → emboss → color | `src/motor/OilPaintFilter.tsx` |
+| `TextureOverlay` | Canvas/papier grain + Kuwahara approximatie + film grain | `src/motor/TextureOverlay.tsx` |
+| `PaintEffect` | Scene-level wrapper (vignette, color grade, film grain) | `src/motor/PaintEffect.tsx` |
+| `RiveIntegration` | Placeholder bridge voor Rive character animatie | `src/motor/RiveIntegration.tsx` |
+
+**Per-asset categorie instellingen:**
+
+| Categorie | Displacement | Grain | Saturation | Toelichting |
+|-----------|-------------|-------|------------|-------------|
+| `sky_day` | 3px | 9% | +8% | Zachtere wolkenranden |
+| `sky_twilight` | 4px | 11% overlay | +12% | Sunset kleuren verrijkt |
+| `sky_night` | 1.5px | 6% | +5% | Sterren scherp houden |
+| `sky_storm` | 5px | 13% | +6% | Chaotische wolken |
+| `terrain` | 4.5px | 12% | +10% | Organische grondtextuur |
+| `terrain_indoor` | 2px | 8% | +5% | Al zeer gedetailleerd |
+| `character` | 1.8px | 7% soft-light | +6% | Gezicht leesbaar |
+
+**Status:** Gebouwd en werkend. Effecten zijn zichtbaar maar moeten visueel geëvalueerd worden in Remotion Studio. Volgende sessie: achtergronden verbeteren + meer kwaliteitstools onderzoeken.
 
 ---
 
