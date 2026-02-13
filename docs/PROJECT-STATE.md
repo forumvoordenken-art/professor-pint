@@ -7,7 +7,7 @@
 
 ---
 
-## Current State: Phase 1 — Post-processing klaar, achtergronden verbeteren + vegetation
+## Current State: Phase 1 — Kwaliteitstools gebouwd, klaar voor visuele evaluatie + vegetation
 
 - Specs zijn geschreven (v2.0)
 - Repository is opgeschoond en herstructureerd met Nederlandse mapnamen
@@ -17,7 +17,12 @@
 - **15 sky assets klaar** + SkyEngine + longCycleNoise systeem voor non-repeating animatie
 - **15 terrain assets klaar** + TerrainEngine + TerrainShowcase
 - **Per-asset painterly post-processing gebouwd** — withAssetPaint HOC wraps alle 31 assets met edge displacement + canvas grain + saturation boost
-- Volgende sessie: **Achtergronden visueel verbeteren + meer kwaliteitstools onderzoeken**, daarna **Step 1.3 — Vegetation assets bouwen**
+- **Kwaliteitstools gebouwd:**
+  - `HorizonMatcher` — Atmosferische blending tussen sky en terrain (haze band + light spill + dust particles), 10 mood presets, 15 curated sky+terrain combinaties
+  - `CombinedShowcase` compositie — Sky + terrain samen met HorizonMatcher, toont 15 curated combos (75 sec)
+  - `ComparisonShowcase` compositie — Raw vs painted side-by-side vergelijking met sliding divider (50 sec)
+  - `withAssetPaint` verbeterd — Geanimeerde grain seed (levend canvas) + impasto highlight layer (dikke verf op hoge-contrast randen)
+- Volgende sessie: **Render showcases en evalueer visueel**, daarna **Step 1.3 — Vegetation assets bouwen**
 
 ---
 
@@ -206,7 +211,32 @@ Elk asset wordt automatisch gewrapt met painterly effects via `withAssetPaint` H
 | `terrain_indoor` | 2px | 8% | +5% | Al zeer gedetailleerd |
 | `character` | 1.8px | 7% soft-light | +6% | Gezicht leesbaar |
 
-**Status:** Gebouwd en werkend. Effecten zijn zichtbaar maar moeten visueel geëvalueerd worden in Remotion Studio. Volgende sessie: achtergronden verbeteren + meer kwaliteitstools onderzoeken.
+**Status:** Gebouwd en werkend. Effecten zijn zichtbaar maar moeten visueel geëvalueerd worden in Remotion Studio.
+
+### Kwaliteitstools
+
+| Component | Wat het doet | Waar |
+|-----------|-------------|------|
+| `HorizonMatcher` | Atmosferische blending sky↔terrain: haze band, light spill, dust particles. 10 mood presets. | `src/motor/HorizonMatcher.tsx` |
+| `CombinedShowcase` | 15 curated sky+terrain combos met HorizonMatcher. Test visuele cohesie. | `src/videos/CombinedShowcase.tsx` |
+| `ComparisonShowcase` | Raw vs painted side-by-side met sliding divider. Test paint effect kwaliteit. | `src/videos/ComparisonShowcase.tsx` |
+
+**Horizon moods:** day_warm, day_cool, dawn, sunset_warm, sunset_cold, dusk, night, storm, sand, indoor
+
+**withAssetPaint verbeteringen:**
+- Geanimeerde grain seed — canvas textuur verandert per frame (levend effect, als olieverf die licht vangt)
+- Impasto highlight — emboss-achtige lichtval op dikke verf bij hoge-contrast randen (alleen bij displacement ≥ 3px)
+
+**Render commando's voor kwaliteitstools:**
+```bash
+# Sky + terrain cohesie test (75 sec)
+npx remotion render src/index.ts Combined-Showcase out/combined-showcase.mp4
+
+# Raw vs painted vergelijking (50 sec)
+npx remotion render src/index.ts Comparison-Showcase out/comparison-showcase.mp4
+```
+
+**Status:** Klaar om te renderen en visueel te evalueren. Volgende sessie: render en evalueer, daarna vegetation.
 
 ---
 

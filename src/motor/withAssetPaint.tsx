@@ -182,8 +182,12 @@ export const SvgAssetPaint: React.FC<SvgAssetPaintProps> = ({
   const filterId = `${id}-asset-paint`;
   const grainId = `${id}-asset-grain`;
 
-  // Slow seed drift for organic feel
+  // Slow seed drift for organic displacement feel
   const seed = Math.floor(((frame * 0.003 + 7.3) % 10) + 5);
+
+  // Animated grain seed — changes every frame for living canvas texture
+  // (like real oil paint catching light at different micro-angles)
+  const grainSeed = (frame * 3 + 47) % 999;
 
   // Build saturation matrix values
   const s = cfg.saturationBoost;
@@ -318,7 +322,7 @@ export const SvgAssetPaint: React.FC<SvgAssetPaintProps> = ({
                   type="fractalNoise"
                   baseFrequency={cfg.grainFrequency}
                   numOctaves={cfg.grainOctaves}
-                  seed={seed + 100}
+                  seed={grainSeed}
                   result="grain"
                 />
                 <feColorMatrix
@@ -334,6 +338,65 @@ export const SvgAssetPaint: React.FC<SvgAssetPaintProps> = ({
               width={1920}
               height={1080}
               filter={`url(#${grainId})`}
+            />
+          </svg>
+        </div>
+      )}
+
+      {/* Impasto highlight — simulates thick paint catching light
+       * Uses a separate noise pattern blended as soft-light to create
+       * subtle raised/lowered paint texture visible on edges.
+       * Only applied for categories with significant displacement. */}
+      {cfg.displacement >= 3.0 && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            mixBlendMode: 'soft-light',
+            opacity: Math.min(cfg.displacement * 0.012, 0.06),
+          }}
+        >
+          <svg
+            width="100%"
+            height="100%"
+            viewBox="0 0 1920 1080"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            <defs>
+              <filter id={`${id}-impasto`} x="0%" y="0%" width="100%" height="100%">
+                <feTurbulence
+                  type="turbulence"
+                  baseFrequency={cfg.turbFrequency * 1.5}
+                  numOctaves={3}
+                  seed={seed + 200}
+                  result="impastoNoise"
+                />
+                {/* Emboss-like directional light (top-left source) */}
+                <feConvolveMatrix
+                  in="impastoNoise"
+                  order="3"
+                  kernelMatrix="-1 -1 0 -1 1 1 0 1 1"
+                  divisor="1"
+                  bias="0.5"
+                  result="embossed"
+                />
+                <feColorMatrix
+                  in="embossed"
+                  type="saturate"
+                  values="0"
+                />
+              </filter>
+            </defs>
+            <rect
+              x={0}
+              y={0}
+              width={1920}
+              height={1080}
+              filter={`url(#${id}-impasto)`}
             />
           </svg>
         </div>
