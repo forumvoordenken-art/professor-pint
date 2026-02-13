@@ -15,6 +15,7 @@ import {
   AtmosphericHaze,
   generateStars,
   seededRandom,
+  longCycleNoise,
 } from './SkyEngine';
 
 const ID = 'night-stars';
@@ -67,11 +68,23 @@ export const NightStars: React.FC<AssetProps> = ({ frame }) => {
     { cx: 750, cy: 240, rx: 160, ry: 75, color: '#221840', opacity: 0.07 },
   ], []);
 
-  // Shooting star — appears every ~6 seconds (180 frames), lasts 8 frames
-  const shootingInterval = 180;
-  const shootingDuration = 8;
-  const shootingProgress = frame % shootingInterval;
-  const isShootingStar = shootingProgress < shootingDuration;
+  // Shooting stars — multiple, randomized timing/position/direction
+  // Each star has a pseudo-random cycle driven by longCycleNoise
+  const shootingStarData = useMemo(() => {
+    const sRng = seededRandom(7777);
+    return Array.from({ length: 5 }, (_, i) => ({
+      baseInterval: 120 + Math.floor(sRng() * 240), // 4-12 sec between appearances
+      duration: 6 + Math.floor(sRng() * 8),          // 6-14 frames visible
+      startX: 200 + sRng() * 1500,
+      startY: 50 + sRng() * 350,
+      angle: 0.3 + sRng() * 1.0,                     // direction angle (radians)
+      length: 150 + sRng() * 250,                     // travel distance
+      tailLength: 50 + sRng() * 100,
+      brightness: 0.5 + sRng() * 0.5,
+      seed: i * 17.3,
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <svg width="1920" height="1080" viewBox="0 0 1920 1080">
@@ -146,39 +159,45 @@ export const NightStars: React.FC<AssetProps> = ({ frame }) => {
         <circle cx={800} cy={80} r={10} fill="#9090B0" opacity={0.05} />
       </g>
 
-      {/* Shooting star — periodic event */}
-      {isShootingStar && (() => {
-        const t = shootingProgress / shootingDuration;
-        const startX = 1200;
-        const startY = 100;
-        const endX = 900;
-        const endY = 350;
-        const currentX = startX + (endX - startX) * t;
-        const currentY = startY + (endY - startY) * t;
-        const tailLength = 80;
-        const angle = Math.atan2(endY - startY, endX - startX);
-        const tailX = currentX - Math.cos(angle) * tailLength;
-        const tailY = currentY - Math.sin(angle) * tailLength;
-        const opacity = t < 0.3 ? t / 0.3 : 1 - (t - 0.3) / 0.7;
+      {/* Shooting stars — randomized timing, position, direction */}
+      {shootingStarData.map((star, si) => {
+        // Non-repeating interval variation — never the same pattern twice
+        const intervalNoise = longCycleNoise(frame * 0.05, star.seed);
+        const interval = Math.max(60, star.baseInterval + Math.floor(intervalNoise * 80));
+        const progress = (frame % interval);
+        if (progress >= star.duration) return null;
+
+        const t = progress / star.duration;
+        // Position varies per cycle using noise
+        const cycleIndex = Math.floor(frame / interval);
+        const posNoise1 = longCycleNoise(cycleIndex * 50, star.seed + 100);
+        const posNoise2 = longCycleNoise(cycleIndex * 50, star.seed + 200);
+        const angleNoise = longCycleNoise(cycleIndex * 50, star.seed + 300);
+
+        const sx = star.startX + posNoise1 * 400;
+        const sy = star.startY + posNoise2 * 150;
+        const angle = star.angle + angleNoise * 0.4;
+        const dist = star.length * t;
+        const currentX = sx + Math.cos(angle) * dist;
+        const currentY = sy + Math.sin(angle) * dist;
+        const tailX = currentX - Math.cos(angle) * star.tailLength;
+        const tailY = currentY - Math.sin(angle) * star.tailLength;
+        const opacity = star.brightness * (t < 0.2 ? t / 0.2 : 1 - (t - 0.2) / 0.8);
 
         return (
-          <g opacity={opacity}>
-            <defs>
-              <linearGradient id={`${ID}-shoot`} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="white" stopOpacity={0} />
-                <stop offset="80%" stopColor="white" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="white" stopOpacity={0.9} />
-              </linearGradient>
-            </defs>
+          <g key={si} opacity={opacity}>
+            {/* Glow trail */}
             <line x1={tailX} y1={tailY} x2={currentX} y2={currentY}
-              stroke="white" strokeWidth={2} opacity={0.8} />
+              stroke="#8888FF" strokeWidth={4} opacity={0.12} />
+            {/* Core streak */}
             <line x1={tailX} y1={tailY} x2={currentX} y2={currentY}
-              stroke="#8888FF" strokeWidth={4} opacity={0.15} />
-            <circle cx={currentX} cy={currentY} r={2} fill="white" opacity={0.9} />
-            <circle cx={currentX} cy={currentY} r={5} fill="white" opacity={0.15} />
+              stroke="white" strokeWidth={1.5} opacity={0.8} />
+            {/* Head */}
+            <circle cx={currentX} cy={currentY} r={1.8} fill="white" opacity={0.9} />
+            <circle cx={currentX} cy={currentY} r={5} fill="white" opacity={0.1} />
           </g>
         );
-      })()}
+      })}
 
       {/* Atmospheric haze — very subtle dark blue */}
       <AtmosphericHaze color="#0E1828" intensity={0.4} horizonY={0.88} id={ID} />
