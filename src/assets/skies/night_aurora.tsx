@@ -64,48 +64,63 @@ interface AuroraBand {
   seed: number;
 }
 
-const AURORA_BANDS: AuroraBand[] = [
-  // Main bright curtain — dominant green-to-purple
+// Asymmetric bands — concentrated left-of-center, each on different x-range
+// xBias shifts the ray distribution (negative = leftward, positive = rightward)
+interface AuroraBandExt extends AuroraBand {
+  /** Horizontal center bias — shifts ray cluster off-center */
+  xBias: number;
+  /** Horizontal spread — how wide the rays are distributed */
+  xSpread: number;
+}
+
+const AURORA_BANDS: AuroraBandExt[] = [
+  // Main bright curtain — left-of-center, dominant
   {
-    yCenter: 300, height: 320, rayCount: 80, opacity: 0.35,
+    yCenter: 320, height: 300, rayCount: 65, opacity: 0.28,
     colorBottom: '#40E870', colorTop: '#8040C0',
-    waveSpeed: 0.012, waveAmp: 50, shimmerSpeed: 0.04, phase: 0, seed: 5001,
+    waveSpeed: 0.012, waveAmp: 45, shimmerSpeed: 0.04, phase: 0, seed: 5001,
+    xBias: -250, xSpread: 1400,
   },
-  // Secondary curtain — shifted right, slightly dimmer
+  // Secondary curtain — far right, dimmer, sparse
   {
-    yCenter: 280, height: 280, rayCount: 60, opacity: 0.22,
+    yCenter: 260, height: 240, rayCount: 35, opacity: 0.16,
     colorBottom: '#30D060', colorTop: '#6030A8',
-    waveSpeed: 0.015, waveAmp: 40, shimmerSpeed: 0.035, phase: 1.8, seed: 5002,
+    waveSpeed: 0.015, waveAmp: 35, shimmerSpeed: 0.035, phase: 1.8, seed: 5002,
+    xBias: 300, xSpread: 900,
   },
-  // High purple fringe — delicate upper edge
+  // High purple fringe — left side only
   {
-    yCenter: 180, height: 200, rayCount: 40, opacity: 0.15,
+    yCenter: 170, height: 180, rayCount: 25, opacity: 0.10,
     colorBottom: '#50B868', colorTop: '#A050D8',
-    waveSpeed: 0.018, waveAmp: 30, shimmerSpeed: 0.05, phase: 0.7, seed: 5003,
+    waveSpeed: 0.018, waveAmp: 25, shimmerSpeed: 0.05, phase: 0.7, seed: 5003,
+    xBias: -400, xSpread: 800,
   },
-  // Low green wash — broad, diffuse base
+  // Low green wash — broad but left-leaning
   {
-    yCenter: 420, height: 200, rayCount: 50, opacity: 0.18,
+    yCenter: 430, height: 180, rayCount: 40, opacity: 0.13,
     colorBottom: '#28C850', colorTop: '#38A850',
-    waveSpeed: 0.008, waveAmp: 60, shimmerSpeed: 0.03, phase: 2.5, seed: 5004,
+    waveSpeed: 0.008, waveAmp: 50, shimmerSpeed: 0.03, phase: 2.5, seed: 5004,
+    xBias: -100, xSpread: 1600,
   },
-  // Faint pink/magenta accent — rare color in real aurora
+  // Faint pink/magenta — isolated patch, right-center
   {
-    yCenter: 240, height: 160, rayCount: 30, opacity: 0.10,
+    yCenter: 220, height: 140, rayCount: 18, opacity: 0.06,
     colorBottom: '#D060A0', colorTop: '#8030B0',
-    waveSpeed: 0.02, waveAmp: 25, shimmerSpeed: 0.06, phase: 3.2, seed: 5005,
+    waveSpeed: 0.02, waveAmp: 20, shimmerSpeed: 0.06, phase: 3.2, seed: 5005,
+    xBias: 150, xSpread: 600,
   },
 ];
 
-/** Generates ray data for a single aurora band */
-function generateRays(band: AuroraBand) {
+/** Generates ray data for a single aurora band — asymmetric distribution */
+function generateRays(band: AuroraBandExt) {
   const rng = seededRandom(band.seed);
+  const center = 960 + band.xBias;
   return Array.from({ length: band.rayCount }, () => ({
-    x: rng() * 2200 - 140,
-    widthBase: 3 + rng() * 12,
-    heightMult: 0.5 + rng() * 0.5,
+    x: center - band.xSpread / 2 + rng() * band.xSpread,
+    widthBase: 2 + rng() * 10,
+    heightMult: 0.4 + rng() * 0.6,
     brightnessPhase: rng() * Math.PI * 2,
-    brightnessMult: 0.4 + rng() * 0.6,
+    brightnessMult: 0.3 + rng() * 0.7,
     wavePhaseOffset: rng() * Math.PI * 2,
   }));
 }
@@ -133,11 +148,11 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
       </g>
       <StarField stars={STARS_BRIGHT} frame={frame} twinkleSpeed={0.05} />
 
-      {/* Aurora glow — overall atmospheric green glow behind curtains */}
+      {/* Aurora glow — asymmetric, left-of-center */}
       <defs>
-        <radialGradient id={`${ID}-aglow`} cx="0.5" cy="0.3" r="0.6">
-          <stop offset="0%" stopColor="#20A040" stopOpacity={0.08} />
-          <stop offset="50%" stopColor="#18803A" stopOpacity={0.04} />
+        <radialGradient id={`${ID}-aglow`} cx="0.35" cy="0.3" r="0.5">
+          <stop offset="0%" stopColor="#20A040" stopOpacity={0.06} />
+          <stop offset="50%" stopColor="#18803A" stopOpacity={0.03} />
           <stop offset="100%" stopColor="#18803A" stopOpacity={0} />
         </radialGradient>
       </defs>
@@ -200,38 +215,38 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
               );
             })}
 
-            {/* Diffuse glow behind this band — soft wide ellipse */}
+            {/* Diffuse glow behind this band — asymmetric, follows xBias */}
             <ellipse
-              cx={960 + Math.sin(frame * band.waveSpeed * 0.5 + band.phase) * 100}
+              cx={960 + band.xBias + Math.sin(frame * band.waveSpeed * 0.5 + band.phase) * 80}
               cy={band.yCenter}
-              rx={800}
-              ry={band.height * 0.6}
+              rx={band.xSpread * 0.45}
+              ry={band.height * 0.5}
               fill={band.colorBottom}
-              opacity={band.opacity * 0.06}
+              opacity={band.opacity * 0.05}
             />
           </g>
         );
       })}
 
-      {/* ─── Bright core lines — horizontal brightness peaks ─── */}
+      {/* ─── Bright core lines — asymmetric, left-weighted ─── */}
       {(() => {
         const coreLines = [
-          { y: 280, width: 1400, opacity: 0.08, speed: 0.01, color: '#50F080' },
-          { y: 320, width: 1200, opacity: 0.06, speed: 0.013, color: '#40D870' },
-          { y: 250, width: 1000, opacity: 0.05, speed: 0.016, color: '#9060D0' },
-          { y: 380, width: 1100, opacity: 0.04, speed: 0.009, color: '#38C060' },
+          { y: 300, xCenter: 650, width: 1100, opacity: 0.06, speed: 0.01, color: '#50F080' },
+          { y: 340, xCenter: 750, width: 900, opacity: 0.04, speed: 0.013, color: '#40D870' },
+          { y: 230, xCenter: 550, width: 700, opacity: 0.035, speed: 0.016, color: '#9060D0' },
+          { y: 400, xCenter: 800, width: 1000, opacity: 0.03, speed: 0.009, color: '#38C060' },
         ];
         return coreLines.map((line, i) => {
-          const xShift = Math.sin(frame * line.speed + i * 1.5) * 120;
-          const pulse = 0.5 + 0.5 * Math.sin(frame * 0.025 + i * 2);
+          const xShift = Math.sin(frame * line.speed + i * 1.5) * 80;
+          const pulse = 0.4 + 0.6 * Math.sin(frame * 0.025 + i * 2);
           return (
             <rect
               key={i}
-              x={960 - line.width / 2 + xShift}
-              y={line.y - 2}
+              x={line.xCenter - line.width / 2 + xShift}
+              y={line.y - 1.5}
               width={line.width}
-              height={4}
-              rx={2}
+              height={3}
+              rx={1.5}
               fill={line.color}
               opacity={line.opacity * pulse}
             />
@@ -239,28 +254,27 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
         });
       })()}
 
-      {/* ─── Vertical bright pillars — occasional intense columns ─── */}
+      {/* ─── Vertical bright pillars — asymmetric, mostly left side ─── */}
       {(() => {
         const pillars = [
-          { x: 600, height: 350, width: 30, phase: 0 },
-          { x: 900, height: 400, width: 25, phase: 1.2 },
-          { x: 1200, height: 320, width: 35, phase: 2.4 },
-          { x: 1500, height: 280, width: 20, phase: 3.6 },
-          { x: 350, height: 300, width: 22, phase: 4.8 },
+          { x: 280, height: 320, width: 22, phase: 0 },
+          { x: 520, height: 380, width: 18, phase: 1.5 },
+          { x: 750, height: 280, width: 25, phase: 3.0 },
+          { x: 1400, height: 200, width: 14, phase: 4.5 },
         ];
         return pillars.map((p, i) => {
-          const cycle = Math.sin(frame * 0.015 + p.phase);
-          const pillarOpacity = Math.max(0, cycle) * 0.12;
+          const cycle = Math.sin(frame * 0.013 + p.phase);
+          const pillarOpacity = Math.max(0, cycle) * 0.08;
           if (pillarOpacity < 0.01) return null;
-          const xWave = Math.sin(frame * 0.01 + p.phase * 0.7) * 40;
+          const xWave = Math.sin(frame * 0.008 + p.phase * 0.7) * 30;
           return (
             <g key={i}>
               <defs>
                 <linearGradient id={`${ID}-pillar-${i}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#8050C0" stopOpacity={0} />
-                  <stop offset="20%" stopColor="#8050C0" stopOpacity={pillarOpacity * 0.5} />
+                  <stop offset="20%" stopColor="#8050C0" stopOpacity={pillarOpacity * 0.4} />
                   <stop offset="50%" stopColor="#40E870" stopOpacity={pillarOpacity} />
-                  <stop offset="80%" stopColor="#30C860" stopOpacity={pillarOpacity * 0.6} />
+                  <stop offset="80%" stopColor="#30C860" stopOpacity={pillarOpacity * 0.5} />
                   <stop offset="100%" stopColor="#30C860" stopOpacity={0} />
                 </linearGradient>
               </defs>
@@ -272,20 +286,62 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
                 rx={p.width / 2}
                 fill={`url(#${ID}-pillar-${i})`}
               />
-              {/* Soft glow around pillar */}
               <rect
-                x={p.x + xWave - p.width}
+                x={p.x + xWave - p.width * 0.8}
                 y={300 - p.height / 2}
-                width={p.width * 3}
+                width={p.width * 2.6}
                 height={p.height}
                 rx={p.width}
                 fill="#40E870"
-                opacity={pillarOpacity * 0.15}
+                opacity={pillarOpacity * 0.1}
               />
             </g>
           );
         });
       })()}
+
+      {/* ─── Scattered faint glow patches — irregular, organic ─── */}
+      {(() => {
+        const patches = [
+          { cx: 380, cy: 250, rx: 120, ry: 60, color: '#30A850', phase: 0 },
+          { cx: 680, cy: 350, rx: 90, ry: 50, color: '#28C048', phase: 1.7 },
+          { cx: 1100, cy: 200, rx: 70, ry: 45, color: '#7040A0', phase: 3.1 },
+          { cx: 200, cy: 380, rx: 100, ry: 40, color: '#38B050', phase: 4.4 },
+          { cx: 1500, cy: 300, rx: 60, ry: 35, color: '#6838A0', phase: 2.2 },
+        ];
+        return patches.map((p, i) => {
+          const pulse = 0.3 + 0.7 * Math.abs(Math.sin(frame * 0.018 + p.phase));
+          const drift = Math.sin(frame * 0.006 + p.phase * 1.3) * 30;
+          return (
+            <ellipse key={i}
+              cx={p.cx + drift} cy={p.cy}
+              rx={p.rx} ry={p.ry}
+              fill={p.color}
+              opacity={0.03 * pulse}
+            />
+          );
+        });
+      })()}
+
+      {/* ─── Horizon treeline silhouette — grounding ─── */}
+      <path d={`M0,920
+        L40,910 L60,895 L70,910 L100,905 L120,888 L135,895 L150,910
+        L180,908 L210,885 L225,878 L240,890 L260,910 L290,905
+        L320,880 L340,870 L355,882 L380,895 L400,910 L430,908
+        L460,878 L480,865 L495,872 L510,885 L530,910 L560,905
+        L590,890 L610,875 L625,868 L640,878 L660,895 L690,910
+        L720,905 L750,882 L770,870 L790,878 L810,910 L840,908
+        L870,890 L890,880 L910,872 L930,885 L950,910 L980,905
+        L1010,888 L1030,878 L1050,870 L1070,882 L1090,910
+        L1120,905 L1150,890 L1170,882 L1190,875 L1210,885 L1230,910
+        L1260,908 L1290,895 L1310,885 L1330,878 L1350,888 L1370,910
+        L1400,905 L1430,890 L1450,880 L1470,868 L1490,880 L1510,910
+        L1540,905 L1570,895 L1590,888 L1610,880 L1630,890 L1660,910
+        L1690,908 L1720,895 L1740,885 L1760,878 L1780,888 L1800,910
+        L1830,905 L1860,895 L1880,890 L1900,900 L1920,910
+        L1920,1080 L0,1080 Z`}
+        fill="#060810" opacity={0.85}
+      />
 
       {/* Aurora reflection on low clouds / horizon */}
       <defs>
@@ -311,12 +367,12 @@ export const NightAurora: React.FC<AssetProps> = ({ frame }) => {
       {/* Atmospheric haze — very dark, cold */}
       <AtmosphericHaze color="#0A1020" intensity={0.4} horizonY={0.9} id={ID} />
 
-      {/* Dark vignette — focus on the aurora */}
+      {/* Dark vignette — slightly left-focused to match aurora concentration */}
       <defs>
-        <radialGradient id={`${ID}-vig`} cx="0.5" cy="0.3" r="0.75">
+        <radialGradient id={`${ID}-vig`} cx="0.4" cy="0.3" r="0.7">
           <stop offset="0%" stopColor="#000000" stopOpacity={0} />
-          <stop offset="65%" stopColor="#000000" stopOpacity={0} />
-          <stop offset="100%" stopColor="#000000" stopOpacity={0.35} />
+          <stop offset="60%" stopColor="#000000" stopOpacity={0} />
+          <stop offset="100%" stopColor="#000000" stopOpacity={0.3} />
         </radialGradient>
       </defs>
       <rect x={0} y={0} width={1920} height={1080} fill={`url(#${ID}-vig)`} />

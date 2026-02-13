@@ -294,6 +294,211 @@ export const IndoorCeiling: React.FC<{ frame: number }> = ({ frame }) => {
         <rect x={1580} y={830} width={6} height={50} fill="#3A3430" rx={1} />
       </g>
 
+      {/* ─── THIRD TORCH — deeper, dimmer, center-back for depth ─── */}
+      {(() => {
+        const flicker3 = 0.6 + Math.sin(frame * 0.25 + 2.5) * 0.06 + Math.sin(frame * 0.41 + 4) * 0.04;
+        return (
+          <g>
+            <defs>
+              <radialGradient id={`${ID}-torch-c`} cx="0.5" cy="1" r="0.7">
+                <stop offset="0%" stopColor="#D89030" stopOpacity={0.25 * flicker3} />
+                <stop offset="30%" stopColor="#C07828" stopOpacity={0.12 * flicker3} />
+                <stop offset="60%" stopColor="#A06020" stopOpacity={0.04 * flicker3} />
+                <stop offset="100%" stopColor="#A06020" stopOpacity={0} />
+              </radialGradient>
+            </defs>
+            <ellipse cx={960} cy={780} rx={350} ry={400} fill={`url(#${ID}-torch-c)`} />
+            <ellipse cx={960} cy={740} rx={5} ry={10} fill="#E0A040" opacity={0.3 * flicker3} />
+            <ellipse cx={960} cy={735} rx={2.5} ry={6} fill="#F0C070" opacity={0.35 * flicker3} />
+            <rect x={952} y={750} width={16} height={4} fill="#3A3430" opacity={0.25} rx={1} />
+            <rect x={948} y={750} width={4} height={35} fill="#3A3430" opacity={0.25} rx={1} />
+          </g>
+        );
+      })()}
+
+      {/* ─── SOOT MARKS above torches ─── */}
+      <g opacity={0.18}>
+        <ellipse cx={350} cy={790} rx={35} ry={80} fill="#0A0806" />
+        <ellipse cx={350} cy={740} rx={25} ry={50} fill="#0A0806" opacity={0.6} />
+        <ellipse cx={350} cy={700} rx={15} ry={30} fill="#0A0806" opacity={0.3} />
+        <ellipse cx={1570} cy={790} rx={35} ry={80} fill="#0A0806" />
+        <ellipse cx={1570} cy={740} rx={25} ry={50} fill="#0A0806" opacity={0.6} />
+        <ellipse cx={1570} cy={700} rx={15} ry={30} fill="#0A0806" opacity={0.3} />
+        <ellipse cx={960} cy={710} rx={20} ry={50} fill="#0A0806" opacity={0.4} />
+      </g>
+
+      {/* ─── STONE CARVINGS / RELIEF on vault panels ─── */}
+      <g opacity={0.12}>
+        {/* Left panel — shield/cross motif */}
+        <rect x={380} y={220} width={80} height={100} fill="none" stroke={STONE.mid} strokeWidth={2} rx={4} />
+        <line x1={420} y1={220} x2={420} y2={320} stroke={STONE.mid} strokeWidth={1.5} />
+        <line x1={380} y1={270} x2={460} y2={270} stroke={STONE.mid} strokeWidth={1.5} />
+        <circle cx={420} cy={270} r={20} fill="none" stroke={STONE.light} strokeWidth={1} />
+        {/* Right panel — arch motif */}
+        <rect x={1400} y={200} width={90} height={110} fill="none" stroke={STONE.mid} strokeWidth={2} rx={4} />
+        <path d="M1410,310 Q1445,230 1480,310" fill="none" stroke={STONE.light} strokeWidth={1.5} />
+        <path d="M1420,310 Q1445,245 1470,310" fill="none" stroke={STONE.mid} strokeWidth={1} />
+        {/* Center medallion near keystone */}
+        <circle cx={960} cy={100} r={30} fill="none" stroke={STONE.light} strokeWidth={2} />
+        <circle cx={960} cy={100} r={18} fill="none" stroke={STONE.mid} strokeWidth={1.5} />
+        <line x1={960} y1={82} x2={960} y2={118} stroke={STONE.mid} strokeWidth={1} />
+        <line x1={942} y1={100} x2={978} y2={100} stroke={STONE.mid} strokeWidth={1} />
+        {/* Small rosette patterns between ribs */}
+        {[680, 1240].map((cx, i) => (
+          <g key={i}>
+            <circle cx={cx} cy={160} r={14} fill="none" stroke={STONE.mid} strokeWidth={1} />
+            {[0, 60, 120, 180, 240, 300].map((angle, j) => (
+              <line key={j}
+                x1={cx + Math.cos(angle * Math.PI / 180) * 6}
+                y1={160 + Math.sin(angle * Math.PI / 180) * 6}
+                x2={cx + Math.cos(angle * Math.PI / 180) * 14}
+                y2={160 + Math.sin(angle * Math.PI / 180) * 14}
+                stroke={STONE.mid} strokeWidth={0.8} />
+            ))}
+          </g>
+        ))}
+      </g>
+
+      {/* ─── CRACKS in stone — light bleeding through some ─── */}
+      <g>
+        {/* Major crack — left vault, warm light bleeds through */}
+        <path d="M520,180 L525,200 L518,225 L528,260 L522,290 L530,310"
+          fill="none" stroke="#1A1610" strokeWidth={2} opacity={0.25} />
+        <path d="M520,180 L525,200 L518,225 L528,260 L522,290 L530,310"
+          fill="none" stroke={STONE.litWarm} strokeWidth={0.8} opacity={0.08 * flicker1} />
+        {/* Branching hairline cracks */}
+        <path d="M525,200 L540,210 L545,230" fill="none" stroke="#1A1610" strokeWidth={1} opacity={0.18} />
+        <path d="M528,260 L515,270 L510,285" fill="none" stroke="#1A1610" strokeWidth={1} opacity={0.15} />
+        {/* Right side — wider crack, no light */}
+        <path d="M1380,150 L1375,175 L1382,210 L1370,240 L1378,270"
+          fill="none" stroke="#1A1610" strokeWidth={2.5} opacity={0.2} />
+        <path d="M1382,210 L1395,225 L1400,245" fill="none" stroke="#1A1610" strokeWidth={1.2} opacity={0.15} />
+        {/* Small star crack near keystone */}
+        <g opacity={0.15}>
+          <line x1={900} y1={80} x2={895} y2={65} stroke="#1A1610" strokeWidth={1} />
+          <line x1={900} y1={80} x2={910} y2={68} stroke="#1A1610" strokeWidth={0.8} />
+          <line x1={900} y1={80} x2={888} y2={78} stroke="#1A1610" strokeWidth={0.8} />
+        </g>
+      </g>
+
+      {/* ─── HANGING CHAINS with hooks — animated sway ─── */}
+      {(() => {
+        const chains = [
+          { x: 600, y: 320, length: 120, speed: 0.03, amp: 4, phase: 0 },
+          { x: 1320, y: 280, length: 150, speed: 0.025, amp: 5, phase: 1.5 },
+          { x: 960, y: 160, length: 100, speed: 0.02, amp: 3, phase: 3 },
+        ];
+        return chains.map((chain, ci) => {
+          const sway = Math.sin(frame * chain.speed + chain.phase) * chain.amp;
+          const sway2 = Math.sin(frame * chain.speed * 1.4 + chain.phase + 0.5) * chain.amp * 0.3;
+          const links = Math.floor(chain.length / 12);
+          return (
+            <g key={ci} opacity={0.22}>
+              {Array.from({ length: links }, (_, li) => {
+                const progress = li / links;
+                const linkSway = sway * progress + sway2 * progress * progress;
+                const lx = chain.x + linkSway;
+                const ly = chain.y + li * 12;
+                return li % 2 === 0 ? (
+                  <ellipse key={li} cx={lx} cy={ly} rx={3} ry={5}
+                    fill="none" stroke="#4A4440" strokeWidth={1.5} />
+                ) : (
+                  <ellipse key={li} cx={lx} cy={ly} rx={4} ry={3}
+                    fill="none" stroke="#4A4440" strokeWidth={1.5} />
+                );
+              })}
+              {/* Hook at the bottom */}
+              <path d={`M${chain.x + sway * 1},${chain.y + chain.length}
+                q0,8 -6,12 q-4,3 -2,8 q2,5 6,2`}
+                fill="none" stroke="#4A4440" strokeWidth={2} opacity={0.8} />
+            </g>
+          );
+        });
+      })()}
+
+      {/* ─── DRIPPING WATER — animated drops ─── */}
+      {(() => {
+        const drips = [
+          { x: 520, startY: 310, speed: 1.2, interval: 180, phase: 0 },
+          { x: 1375, startY: 270, speed: 1.5, interval: 240, phase: 60 },
+          { x: 780, startY: 220, speed: 1.0, interval: 300, phase: 120 },
+          { x: 1100, startY: 250, speed: 1.3, interval: 200, phase: 40 },
+        ];
+        return drips.map((drip, di) => {
+          const progress = ((frame + drip.phase) % drip.interval) / drip.interval;
+          // Water bead forming
+          if (progress < 0.3) {
+            const size = progress / 0.3;
+            return (
+              <ellipse key={di} cx={drip.x} cy={drip.startY + size * 3}
+                rx={1.5 * size} ry={2 * size}
+                fill="#8090A0" opacity={0.2 * size} />
+            );
+          }
+          // Drop falling
+          if (progress < 0.85) {
+            const fallProgress = (progress - 0.3) / 0.55;
+            const fallDist = fallProgress * fallProgress * 400;
+            return (
+              <g key={di}>
+                <ellipse cx={drip.x} cy={drip.startY + 3 + fallDist}
+                  rx={1.2} ry={2.5 + fallProgress * 2}
+                  fill="#8090A0" opacity={0.18 * (1 - fallProgress * 0.5)} />
+                {/* Tiny highlight on drop */}
+                <ellipse cx={drip.x - 0.5} cy={drip.startY + 2 + fallDist}
+                  rx={0.5} ry={1}
+                  fill="#B0C0D0" opacity={0.12 * (1 - fallProgress)} />
+              </g>
+            );
+          }
+          // Splash at bottom
+          const splashProgress = (progress - 0.85) / 0.15;
+          const splashY = drip.startY + 3 + 400;
+          return (
+            <g key={di} opacity={0.15 * (1 - splashProgress)}>
+              <ellipse cx={drip.x} cy={splashY}
+                rx={3 + splashProgress * 8} ry={1 + splashProgress * 2}
+                fill="#8090A0" />
+              <circle cx={drip.x - 3 * splashProgress} cy={splashY - 2 * splashProgress}
+                r={0.8} fill="#8090A0" />
+              <circle cx={drip.x + 4 * splashProgress} cy={splashY - 1.5 * splashProgress}
+                r={0.6} fill="#8090A0" />
+            </g>
+          );
+        });
+      })()}
+
+      {/* ─── EXTENDED COBWEBS — between arches, center ceiling ─── */}
+      <g opacity={0.08}>
+        {/* Large web between left rib and transverse — sagging catenary */}
+        <path d="M480,200 Q520,280 600,240 Q650,220 700,250 Q680,300 600,310 Q520,300 480,260"
+          fill="none" stroke="#B0B0A0" strokeWidth={0.6} />
+        <path d="M480,200 Q590,270 700,250" fill="none" stroke="#A0A090" strokeWidth={0.4} />
+        <path d="M600,240 Q600,290 600,310" fill="none" stroke="#A0A090" strokeWidth={0.4} />
+        <path d="M480,260 Q590,250 700,250" fill="none" stroke="#A0A090" strokeWidth={0.3} />
+        {/* Dusty web clump at chain attachment */}
+        <ellipse cx={600} cy={315} rx={12} ry={6} fill="#908880" opacity={0.3} />
+        {/* Right side web — simpler, sparser */}
+        <path d="M1300,180 Q1350,230 1400,200" fill="none" stroke="#B0B0A0" strokeWidth={0.5} />
+        <path d="M1350,230 Q1360,260 1340,280" fill="none" stroke="#A0A090" strokeWidth={0.4} />
+        <path d="M1300,180 Q1340,250 1340,280" fill="none" stroke="#A0A090" strokeWidth={0.3} />
+        {/* Thread from ceiling — single strand with dust */}
+        <path d="M850,50 Q852,120 848,200" fill="none" stroke="#B0B0A0" strokeWidth={0.4} />
+        <circle cx={848} cy={200} r={2} fill="#A09880" opacity={0.15} />
+      </g>
+
+      {/* ─── SHADOW PATTERNS from arch ribs ─── */}
+      <g opacity={0.08 * flicker1}>
+        {/* Left torch casts rib shadows rightward */}
+        <path d="M500,420 Q700,350 960,380 L970,390 Q700,360 510,430Z" fill="#0A0806" />
+        <path d="M300,610 Q500,520 700,610 L700,620 Q500,530 300,620Z" fill="#0A0806" />
+      </g>
+      <g opacity={0.06 * flicker2}>
+        {/* Right torch casts rib shadows leftward */}
+        <path d="M1420,420 Q1220,350 960,380 L950,390 Q1220,360 1410,430Z" fill="#0A0806" />
+        <path d="M1720,610 Q1520,520 1220,610 L1220,620 Q1520,530 1720,620Z" fill="#0A0806" />
+      </g>
+
       {/* ─── DEPTH AND ATMOSPHERE ─── */}
 
       {/* Upper darkness — not to black */}
