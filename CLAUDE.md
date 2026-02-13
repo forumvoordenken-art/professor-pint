@@ -111,6 +111,7 @@ Bij het opleveren van werk, geef ALTIJD deze instructies:
 6. **n8n-only feedback** — Geen dashboard, alleen approve/feedback/reject buttons
 7. **Per-asset post-processing** — Painterly effecten zitten op asset-niveau (via `withAssetPaint` HOC in index-bestanden), NIET op scene-niveau. Dit voorkomt dubbele filters en maakt per-asset tuning mogelijk.
 8. **Geen vignette op showcases** — Showcases tonen assets puur, zonder extra scene-level effecten
+9. **Asset creation via ChatGPT + vectorizer.ai** — Assets worden via ChatGPT (flat-color, max 16 kleuren, Kurzgesagt-stijl) gegenereerd als PNG, dan via vectorizer.ai naar SVG getraceerd (doel: 300-500 paden). Claude animeert de SVG in Remotion. Zie docs/PROJECT-STATE.md voor de volledige prompt en workflow.
 
 ---
 

@@ -71,6 +71,70 @@ professor-pint/
 8. **Existing code = reference only** — Current code serves as pattern examples, not production-ready
 9. **Costs acceptable** — ~$8-20 per video, ~$130-230/month for regular production
 10. **Music source TBD** — Still needs to be decided (royalty-free library, AI-generated, etc.)
+11. **Asset creation via ChatGPT + vectorizer.ai** — Assets worden NIET handmatig als SVG getekend. Workflow: ChatGPT genereert flat-color illustratie → vectorizer.ai traceert naar SVG → Claude animeert in Remotion. Doel: 300-500 paden per SVG, max 16 kleuren.
+
+---
+
+## Asset Creation Workflow
+
+### Stap 1: ChatGPT prompt
+
+Gebruik deze standaard prompt in ChatGPT (DALL-E):
+
+```
+Create a single [OBJECT DESCRIPTION] as a centered illustration on a pure white background.
+
+Style rules (STRICT):
+- Flat color fills only — NO gradients, NO soft shadows, NO texture, NO noise
+- Maximum 16 distinct colors total
+- Bold clean outlines (dark stroke, consistent width)
+- Large simple shapes — avoid tiny details, no individual hairs or stitching
+- Cel-shaded look: shadow = one darker flat color per surface, not a gradient
+- No background elements — only the object itself on white
+- No ground plane, no reflections, no glow effects
+- Style reference: Kurzgesagt / TED-Ed animation style
+
+Why these rules: This image will be vectorized into SVG. Every color boundary becomes a separate path. Fewer colors + simpler shapes = fewer paths = smaller file that performs well in animation.
+```
+
+Vervang `[OBJECT DESCRIPTION]` met wat je wilt, bijv:
+- `a cartoon beer mug with foam`
+- `an Egyptian pharaoh character, full body, front-facing`
+- `a tall palm tree with green fronds`
+
+### Stap 2: vectorizer.ai
+
+Upload de PNG naar vectorizer.ai met deze instellingen:
+- **Detail level**: laag/medium (niet maximaal)
+- **Color count**: max 16-24
+- **Minimum path size**: omhoog zetten zodat kleine vlekjes wegvallen
+- **Output**: SVG
+
+**Doel: 300-500 paden per SVG.** Check met: `grep -c '<path' bestand.svg`
+
+### Stap 3: Upload naar `src/assets/`
+
+- Hernoem naar beschrijvende naam: `palm-tree.svg`, `pharaoh.svg`, etc. (geen spaties, geen timestamps)
+- Upload naar `src/assets/` op main via GitHub
+
+### Stap 4: Claude animeert
+
+Claude wraps de SVG in een React component met:
+- Idle animatie (sway, bob, etc.)
+- Optionele interactie-animaties
+- `withAssetPaint` post-processing voor oil painting look
+- Registratie in het asset registry
+
+### Wat Claude WEL kan animeren op statische SVG's:
+- **Transform-animaties**: swaying, bobbing, rotating, scaling, bouncing
+- **Opacity-animaties**: fade in/out, flashing (bijv. bliksem)
+- **Position-animaties**: drifting, flying, sliding
+- **Filter-animaties**: color shifts, blur changes
+- **Clip-path animaties**: reveal/hide delen van de SVG
+
+### Wat Claude NIET kan:
+- Interne SVG-structuur veranderen (bijv. een arm los bewegen tenzij het een apart `<g>` element is)
+- Mesh deformation of skeletal animation op een flat SVG
 
 ---
 
