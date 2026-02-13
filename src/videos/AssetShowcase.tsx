@@ -2,7 +2,7 @@
  * AssetShowcase — Toont alle 8 nieuwe vector assets (4 skies + 4 terrains)
  *
  * Elke sky+terrain combo wordt 5 seconden getoond.
- * De sky vult het hele frame, terrain wordt onderaan geplaatst.
+ * Sky vult het hele frame, terrain zit onderaan met een zachte horizon-blend.
  *
  * Combos:
  * 1. sky-day-clear + terrain-grass-plain
@@ -41,6 +41,32 @@ const COMBOS = [
 
 export const ASSET_SHOWCASE_FRAMES = FRAMES_PER_COMBO * COMBOS.length;
 
+/**
+ * HorizonBlend — zachte gradient die sky en terrain laat samensmelten.
+ * Transparant bovenaan, sky-kleur in het midden, transparant onderaan.
+ */
+const HorizonBlend: React.FC<{ color: string }> = ({ color }) => (
+  <div
+    style={{
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: '30%',
+      height: '25%',
+      background: `linear-gradient(to bottom, transparent 0%, ${color} 40%, ${color} 60%, transparent 100%)`,
+      pointerEvents: 'none' as const,
+    }}
+  />
+);
+
+// Horizon blend kleuren per combo (matcht de onderkant van de sky)
+const HORIZON_COLORS = [
+  'rgba(200, 220, 255, 0.5)',  // day clear — lichtblauw
+  'rgba(255, 160, 80, 0.4)',   // sunset warm — oranje
+  'rgba(60, 60, 80, 0.6)',     // storm dark — donkergrijs
+  'rgba(20, 20, 50, 0.5)',     // night stars — donkerblauw
+];
+
 export const AssetShowcase: React.FC = () => {
   const frame = useCurrentFrame();
   const comboIndex = Math.min(
@@ -56,7 +82,7 @@ export const AssetShowcase: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
       <AbsoluteFill style={{ opacity: fadeIn }}>
-        {/* Sky — full background */}
+        {/* Layer 1: Sky — full background */}
         <AbsoluteFill>
           <Img
             src={staticFile(`assets/${combo.sky}`)}
@@ -64,8 +90,11 @@ export const AssetShowcase: React.FC = () => {
           />
         </AbsoluteFill>
 
-        {/* Terrain — bottom half with transparency blend */}
-        <AbsoluteFill style={{ top: '40%' }}>
+        {/* Layer 2: Horizon blend — zachte overgang */}
+        <HorizonBlend color={HORIZON_COLORS[comboIndex]} />
+
+        {/* Layer 3: Terrain — onderste 55% van het scherm */}
+        <AbsoluteFill style={{ top: '45%' }}>
           <Img
             src={staticFile(`assets/${combo.terrain}`)}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
