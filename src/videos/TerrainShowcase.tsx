@@ -14,6 +14,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import { TERRAIN_ASSETS } from '../assets/terrain';
+import { PaintEffect } from '../motor/PaintEffect';
 
 const FRAMES_PER_TERRAIN = 120; // 4 seconds at 30fps
 const TOTAL_TERRAINS = TERRAIN_ASSETS.length;
@@ -45,6 +46,7 @@ export const TerrainShowcase: React.FC = () => {
   const fadeIn = Math.min(localFrame / 15, 1);
 
   return (
+    <PaintEffect preset="standard" id={`terrain-${terrainIndex}`}>
     <AbsoluteFill style={{ backgroundColor: '#2A3040' }}>
       {/* Neutral sky background — so terrain isn't floating on black */}
       <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{ position: 'absolute' }}>
@@ -152,6 +154,7 @@ export const TerrainShowcase: React.FC = () => {
         {terrainIndex + 1}/{TOTAL_TERRAINS} — frame {localFrame}/{FRAMES_PER_TERRAIN}
       </div>
     </AbsoluteFill>
+    </PaintEffect>
   );
 };
 

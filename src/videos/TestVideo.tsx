@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { SceneComposer } from '../motor/SceneComposer';
+import { PaintEffect } from '../motor/PaintEffect';
 import type { ComposedScene } from '../motor/SceneComposer';
 import { registerTestAssets } from '../assets/test/placeholders';
 
@@ -42,5 +43,9 @@ const testScene: ComposedScene = {
 };
 
 export const SceneComposerTest: React.FC = () => {
-  return <SceneComposer scene={testScene} />;
+  return (
+    <PaintEffect preset="standard" id="test">
+      <SceneComposer scene={testScene} />
+    </PaintEffect>
+  );
 };

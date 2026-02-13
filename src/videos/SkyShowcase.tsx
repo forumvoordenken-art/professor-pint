@@ -14,6 +14,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
 import { SKY_ASSETS } from '../assets/skies';
+import { PaintEffect } from '../motor/PaintEffect';
 
 const FRAMES_PER_SKY = 120; // 4 seconds at 30fps
 const TOTAL_SKIES = SKY_ASSETS.length;
@@ -40,6 +41,7 @@ export const SkyShowcase: React.FC = () => {
   const fadeIn = Math.min(localFrame / 15, 1);
 
   return (
+    <PaintEffect preset="cinematic" id={`sky-${skyIndex}`}>
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
       {/* Sky render — full frame */}
       <AbsoluteFill style={{ opacity: fadeIn }}>
@@ -134,6 +136,7 @@ export const SkyShowcase: React.FC = () => {
         {skyIndex + 1}/{TOTAL_SKIES} — frame {localFrame}/{FRAMES_PER_SKY}
       </div>
     </AbsoluteFill>
+    </PaintEffect>
   );
 };
 
