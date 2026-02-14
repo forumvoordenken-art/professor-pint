@@ -5,17 +5,13 @@
  * viewBox matches actual content. Aspect ratios below are POST-CROP.
  *
  * Layout top → bottom:
-<<<<<<< HEAD
- *   Sky (full canvas) → Pub → Sidewalk (83%-90%) → Street (90%-100%)
-=======
  *   Sky (full canvas) → Pub → Ground (78%-100%: sidewalk + street combined)
->>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
  *
  * Assets (public/assets/) — aspect ratios after viewBox crop:
  *  - sky/sky-night.svg            1536×1024  (1.50:1, no crop needed)
  *  - props/prop-moon.svg           761×743   (1.02:1)
  *  - structures/struct-pub.svg     977×1024  (0.95:1)
- *  - terrain/terrain-ground.svg   generated as 1920×400 panoramic strip
+ *  - terrain/terrain-ground.png   1536×1024  (PNG direct, skip vectorizer)
  *  - props/prop-man-dog.svg        713×972   (0.73:1)
  *  - props/prop-lamp.svg           177×741   (0.24:1)
  */
@@ -37,19 +33,10 @@ const H = 1080;
 // ---------------------------------------------------------------------------
 // Scene from top to bottom:
 //   [sky fills entire canvas as background]
-<<<<<<< HEAD
-//   Pub bottom on sidewalk
-//   Sidewalk strip: 78%–88% (planters + pavement)
-//   Street: bottom 12% (88%–100%)
-
-const SIDEWALK_TOP = H * 0.78;
-const STREET_TOP = H * 0.88;
-=======
 //   Pub bottom on ground
 //   Ground: 78%–100% (sidewalk + street combined in one asset)
 
 const GROUND_TOP = H * 0.78;
->>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
 
 // Moon: upper-right, ~12% of canvas width
 // Post-crop viewBox: 761×743 → aspect 1.02:1
@@ -312,30 +299,20 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-<<<<<<< HEAD
-        {/* Layer 8: Sidewalk strip (between pub and street) */}
+        {/* Layer 8: Ground (sidewalk + street combined)
+             PNG used directly (skip vectorizer.ai to avoid aspect ratio issues).
+             Image is 1536×1024. Rendered at 1920×500 with bottom-align so only
+             the sidewalk + cobblestones are visible (white top area cropped). */}
         <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-sidewalk.svg')}
-            style={{
-              position: 'absolute',
-              left: 0, top: SIDEWALK_TOP,
-              width: W, height: STREET_TOP - SIDEWALK_TOP,
-              objectFit: 'fill',
-=======
-        {/* Layer 8: Ground (sidewalk + street combined) */}
-        <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-ground.svg')}
-            style={{
-              position: 'absolute',
-              left: 0, top: GROUND_TOP,
-              width: W, height: H - GROUND_TOP,
-              objectFit: 'cover',
-              objectPosition: 'center top',
->>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
-            }}
-          />
+          <div style={{
+            position: 'absolute',
+            left: 0, top: GROUND_TOP,
+            width: W, height: H - GROUND_TOP,
+            backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.png')})`,
+            backgroundSize: `${W}px ${(H - GROUND_TOP) * 2.1}px`,
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+          }} />
         </AbsoluteFill>
 
         {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
@@ -375,22 +352,6 @@ export const PubExteriorScene: React.FC = () => {
           />
         </AbsoluteFill>
 
-<<<<<<< HEAD
-        {/* Layer 11: Cobblestone street (bottom) */}
-        <AbsoluteFill style={{ zIndex: 11 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-street.svg')}
-            style={{
-              position: 'absolute',
-              left: 0, top: STREET_TOP,
-              width: W, height: H - STREET_TOP,
-              objectFit: 'fill',
-            }}
-          />
-        </AbsoluteFill>
-
-=======
->>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
         {/* Layer 12: Lamp glow halos */}
         <AbsoluteFill style={{ zIndex: 12, mixBlendMode: 'screen' }}>
           <LampGlow frame={frame} cx={GLOW_LEFT.cx} cy={GLOW_LEFT.cy} id="left" />
