@@ -136,12 +136,13 @@ Bij het opleveren van werk, geef ALTIJD deze instructies:
    - Dit is de visuele referentie voor verhoudingen en kleuren
    - Bewaar als `[scene-name]-reference.png` in `docs/videos/`
 
-2. **Visuele analyse van referentie** (GEEN handmatig meten!)
-   - Kijk naar de referentie en schat verhoudingen visueel:
-     - Hoe breed is het gebouw? (~60-70% van scherm?)
-     - Hoe hoog staan de lantaarns? (~70-80% van scherm?)
-     - Waar raken elementen de grond? (~90-95% van scherm?)
-   - Deze schattingen zijn genoeg — exacte pixels niet nodig
+2. **Metadata genereren via ChatGPT** (GEAUTOMATISEERD!)
+   - Upload de referentie-PNG naar ChatGPT
+   - Gebruik de prompt in `docs/chatgpt-metadata-prompt.md`
+   - ChatGPT analyseert de scene visueel en genereert metadata
+   - Kopieer de output en plak naar Claude
+   - Claude voegt het toe aan `AssetMetadata.ts`
+   - **Geen handmatig meten, geen gokken — ChatGPT doet de visuele analyse**
 
 3. **Genereer elk element apart**
    - Elk element op witte achtergrond via ChatGPT
@@ -153,20 +154,11 @@ Bij het opleveren van werk, geef ALTIJD deze instructies:
    node scripts/clean-svg-backgrounds.js
    ```
 
-5. **Voeg metadata toe** in `src/motor/AssetMetadata.ts`
-   - Gebruik je visuele schattingen uit stap 2
-   - Voorbeeld:
-     ```ts
-     'struct-pub-exterior': {
-       id: 'struct-pub-exterior',
-       category: 'structure',
-       anchor: 'bottom-center',     // waar element "staat"
-       naturalWidth: 0.65,           // 65% van canvas
-       naturalHeight: 0.75,          // 75% van canvas
-       groundLine: 0.92,             // raakt grond op 92%
-       viewBox: { width: 1536, height: 1024 },
-     }
-     ```
+5. **Plak ChatGPT metadata naar Claude**
+   - Gebruiker plakt de ChatGPT output
+   - Claude voegt het toe aan `src/motor/AssetMetadata.ts`
+   - Eventueel viewBox aanvullen uit SVG-bestanden
+   - **Volledig geautomatiseerd — geen handmatig typen**
 
 6. **Gebruik metadata in scene compositie**
    ```ts
