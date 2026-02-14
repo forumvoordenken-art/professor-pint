@@ -174,6 +174,85 @@ function computeElementBounds(elementStr) {
 }
 
 // ---------------------------------------------------------------------------
+// Group extraction with proper nesting
+// ---------------------------------------------------------------------------
+
+/**
+ * Find all top-level <g> groups with correct depth tracking.
+ * Returns the remaining string with groups removed.
+ *
+ * The old lazy regex /<g ...>[\s\S]*?<\/g>/ broke on nested groups:
+ *   <g fill="#abc">
+ *     <g transform="...">    ← nested
+ *       <path d="..." />
+ *     </g>                   ← lazy regex stopped HERE (wrong!)
+ *     <path d="..." />       ← orphaned, no fill → black
+ *   </g>
+ */
+function extractAndRemoveGroups(content, elements) {
+  const openTagRegex = /<g\s/g;
+  const groupRanges = []; // { start, end } of each top-level group
+
+  let match;
+  while ((match = openTagRegex.exec(content)) !== null) {
+    const startIdx = match.index;
+
+    // Find the end of the opening tag
+    const tagEnd = content.indexOf('>', startIdx);
+    if (tagEnd === -1) continue;
+
+    // Track nesting depth to find matching </g>
+    let depth = 1;
+    let i = tagEnd + 1;
+
+    while (depth > 0 && i < content.length) {
+      const nextOpen = content.indexOf('<g', i);
+      const nextClose = content.indexOf('</g>', i);
+
+      if (nextClose === -1) break; // malformed SVG
+
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        // Check it's actually a <g tag (not <gradient, <glyph, etc.)
+        const charAfterG = content[nextOpen + 2];
+        if (charAfterG === ' ' || charAfterG === '>' || charAfterG === '\n' || charAfterG === '\r' || charAfterG === '\t') {
+          depth++;
+        }
+        i = nextOpen + 2;
+      } else {
+        depth--;
+        if (depth === 0) {
+          const endIdx = nextClose + 4; // '</g>'.length
+          groupRanges.push({ start: startIdx, end: endIdx });
+        }
+        i = nextClose + 4;
+      }
+    }
+
+    // Skip past this group so we don't find nested <g> as top-level
+    if (groupRanges.length > 0) {
+      const lastRange = groupRanges[groupRanges.length - 1];
+      if (lastRange.start === startIdx) {
+        openTagRegex.lastIndex = lastRange.end;
+      }
+    }
+  }
+
+  // Extract groups (reverse order to preserve indices) and remove from content
+  let result = content;
+  for (let i = groupRanges.length - 1; i >= 0; i--) {
+    const range = groupRanges[i];
+    const groupStr = content.substring(range.start, range.end);
+    const bounds = computeElementBounds(groupStr);
+    if (bounds) {
+      elements.push({ type: 'fill-group', content: groupStr, bounds });
+    }
+    result = result.substring(0, range.start) + result.substring(range.end);
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
 // SVG element extraction
 // ---------------------------------------------------------------------------
 
@@ -220,30 +299,21 @@ function extractElements(svgContent) {
     }
   }
 
-  // Find all top-level elements OUTSIDE the stroke group.
-  // IMPORTANT: Extract groups FIRST and remove them, so child paths
-  // aren't double-extracted (which causes them to render black — no fill).
+  // Strip stroke group and SVG wrapper
   let remaining = svgContent;
   if (strokeGroupMatch) {
     remaining = remaining.replace(strokeGroupMatch[0], '');
   }
-
-  // Remove SVG wrapper
   remaining = remaining.replace(/<\?xml[^>]*\?>/, '');
   remaining = remaining.replace(/<!DOCTYPE[^>]*>/, '');
   remaining = remaining.replace(/<svg[^>]*>/, '');
   remaining = remaining.replace(/<\/svg>/, '');
 
-  // Step 1: Extract <g fill="...">...</g> groups and REMOVE from remaining.
-  // Children inside these groups inherit fill from the <g>, so they must
-  // stay together. If extracted individually, they'd lose fill → black.
-  remaining = remaining.replace(/<g\s+fill="[^"]*"[^>]*>[\s\S]*?<\/g>/g, (match) => {
-    const bounds = computeElementBounds(match);
-    if (bounds) {
-      elements.push({ type: 'fill-group', content: match, bounds });
-    }
-    return ''; // Remove so children aren't re-extracted below
-  });
+  // Step 1: Extract ALL <g>...</g> groups with proper nesting depth.
+  // Previous lazy regex [\s\S]*?</g> broke on nested groups — it stopped
+  // at the first </g> instead of the matching one. This left orphaned
+  // children without their parent's fill → rendered black.
+  remaining = extractAndRemoveGroups(remaining, elements);
 
   // Step 2: Extract remaining paths (only top-level ones now, groups are gone)
   for (const match of remaining.matchAll(/<path\s[^>]*?(?:\/>|>[\s\S]*?<\/path>)/g)) {
