@@ -172,7 +172,18 @@ function processSvg(filePath) {
   console.log(`   Aspect:      ${(newVB.width / newVB.height).toFixed(2)}:1`);
 
   if (!DRY_RUN) {
-    const updated = content.replace(/viewBox="[\d.\s-]+"/, `viewBox="${newViewBoxStr}"`);
+    let updated = content.replace(/viewBox="[\d.\s-]+"/, `viewBox="${newViewBoxStr}"`);
+
+    // Wide strips (aspect > 5:1, e.g. terrain) need preserveAspectRatio="none"
+    // so they stretch edge-to-edge instead of centering with gaps.
+    const aspect = newVB.width / newVB.height;
+    if (aspect > 5) {
+      if (!updated.includes('preserveAspectRatio')) {
+        updated = updated.replace(/<svg\b/, '<svg preserveAspectRatio="none"');
+        console.log(`   Added:       preserveAspectRatio="none" (wide strip)`);
+      }
+    }
+
     fs.writeFileSync(filePath, updated, 'utf8');
   }
 
