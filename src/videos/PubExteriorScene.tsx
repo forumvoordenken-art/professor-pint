@@ -300,17 +300,15 @@ export const PubExteriorScene: React.FC = () => {
         </AbsoluteFill>
 
         {/* Layer 8: Ground (sidewalk + street combined)
-             SVG viewBox is 1536×1024 but ground content starts at y≈190.
-             backgroundSize 100% 130% + bottom alignment crops out the
-             ~18% white top area from vectorizer.ai */}
+             Force-fill: vectorizer.ai outputs 1536×1024 regardless of input,
+             so we stretch to fill the thin ground strip. */}
         <AbsoluteFill style={{ zIndex: 8 }}>
           <div style={{
             position: 'absolute',
             left: 0, top: GROUND_TOP,
             width: W, height: H - GROUND_TOP,
             backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.svg')})`,
-            backgroundSize: '100% 130%',
-            backgroundPosition: 'center bottom',
+            backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
           }} />
         </AbsoluteFill>
