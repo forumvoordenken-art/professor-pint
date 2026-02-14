@@ -51,12 +51,12 @@ const SKY = { x: 0, y: 0, w: W, h: H };
 const MOON_SIZE = W * 0.10;
 const MOON = { x: W * 0.82, y: H * 0.05, w: MOON_SIZE, h: MOON_SIZE };
 
-// Terrain: bottom ~50%, full width (meer zichtbaar)
-const TERRAIN_TOP = H * 0.50;
+// Terrain: bottom ~40%, full width
+const TERRAIN_TOP = H * 0.60;
 const TERRAIN = { x: 0, y: TERRAIN_TOP, w: W, h: H - TERRAIN_TOP };
 
-// Pub: center, height ~90% of canvas, width from aspect ratio (2:3) — VEEL GROTER
-const PUB_H = H * 0.90;
+// Pub: center, height ~75% of canvas, width from aspect ratio (2:3)
+const PUB_H = H * 0.75;
 const PUB_W = PUB_H * (1024 / 1536);
 const PUB = {
   x: (W - PUB_W) / 2,
@@ -289,8 +289,7 @@ export const PubExteriorScene: React.FC = () => {
             style={{
               position: 'absolute',
               left: TERRAIN.x, top: TERRAIN.y, width: TERRAIN.w, height: TERRAIN.h,
-              objectFit: 'cover', // cover zorgt dat hij de volledige breedte + hoogte vult
-              objectPosition: 'center center',
+              objectFit: 'fill', // stretch to fit (geen cropping)
             }}
           />
         </AbsoluteFill>
