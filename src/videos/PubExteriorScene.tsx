@@ -47,28 +47,28 @@ const H = 1080;
 // Sky: fills entire canvas
 const SKY = { x: 0, y: 0, w: W, h: H };
 
-// Moon: upper-right, ~10% of canvas width
-const MOON_SIZE = W * 0.10; // square
-const MOON = { x: W * 0.82, y: H * 0.05, w: MOON_SIZE, h: MOON_SIZE };
+// Moon: upper-right, ~6% of canvas width (kleiner)
+const MOON_SIZE = W * 0.06;
+const MOON = { x: W * 0.88, y: H * 0.08, w: MOON_SIZE, h: MOON_SIZE };
 
-// Terrain: bottom ~42%, full width
-const TERRAIN_TOP = H * 0.58;
+// Terrain: bottom ~50%, full width (meer zichtbaar)
+const TERRAIN_TOP = H * 0.50;
 const TERRAIN = { x: 0, y: TERRAIN_TOP, w: W, h: H - TERRAIN_TOP };
 
-// Pub: center, height ~75% of canvas, width from aspect ratio (2:3)
-const PUB_H = H * 0.75;
-const PUB_W = PUB_H * (1024 / 1536); // maintain SVG aspect ratio
+// Pub: center, height ~90% of canvas, width from aspect ratio (2:3) — VEEL GROTER
+const PUB_H = H * 0.90;
+const PUB_W = PUB_H * (1024 / 1536);
 const PUB = {
   x: (W - PUB_W) / 2,
-  y: H * 0.97 - PUB_H, // bottom at 97%
+  y: H * 0.94 - PUB_H, // bottom at 94% (op de grond)
   w: PUB_W,
   h: PUB_H,
 };
 
-// Lamps: height ~50% of canvas, width from aspect ratio (2:3)
-const LAMP_H = H * 0.50;
+// Lamps: height ~60% of canvas, width from aspect ratio (2:3) — ook groter
+const LAMP_H = H * 0.60;
 const LAMP_W = LAMP_H * (1024 / 1536);
-const LAMP_BOTTOM = H * 0.97;
+const LAMP_BOTTOM = H * 0.94; // zelfde grondlijn als pub
 const LAMP_LEFT = {
   x: W * 0.10 - LAMP_W / 2,
   y: LAMP_BOTTOM - LAMP_H,
@@ -283,8 +283,7 @@ export const PubExteriorScene: React.FC = () => {
             style={{
               position: 'absolute',
               left: TERRAIN.x, top: TERRAIN.y, width: TERRAIN.w, height: TERRAIN.h,
-              objectFit: 'cover',
-              objectPosition: 'center bottom',
+              objectFit: 'fill', // NIET cover — we willen de hele straat zien
             }}
           />
         </AbsoluteFill>
