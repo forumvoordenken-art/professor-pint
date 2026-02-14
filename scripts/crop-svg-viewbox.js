@@ -151,6 +151,23 @@ function processSvg(filePath) {
     height: bounds.height + PADDING * 2,
   };
 
+  // Wide strips (aspect > 5:1, e.g. terrain) need preserveAspectRatio="none"
+  // so they stretch edge-to-edge instead of centering with gaps.
+  // This runs BEFORE the crop check so it applies even to already-cropped SVGs.
+  const currentAspect = oldViewBox.width / oldViewBox.height;
+  if (currentAspect > 5 && !content.includes('preserveAspectRatio')) {
+    if (!DRY_RUN) {
+      const patched = content.replace(/<svg\b/, '<svg preserveAspectRatio="none"');
+      fs.writeFileSync(filePath, patched, 'utf8');
+      console.log(`✅ ${relativePath}`);
+      console.log(`   Added:       preserveAspectRatio="none" (wide strip, aspect ${currentAspect.toFixed(1)}:1)`);
+      // Re-read for further processing
+      return processSvg(filePath);
+    } else {
+      console.log(`📝 ${relativePath} — would add preserveAspectRatio="none" (aspect ${currentAspect.toFixed(1)}:1)`);
+    }
+  }
+
   // Check of crop significant is (>5% verschil)
   const oldArea = oldViewBox.width * oldViewBox.height;
   const newArea = newVB.width * newVB.height;
@@ -172,18 +189,7 @@ function processSvg(filePath) {
   console.log(`   Aspect:      ${(newVB.width / newVB.height).toFixed(2)}:1`);
 
   if (!DRY_RUN) {
-    let updated = content.replace(/viewBox="[\d.\s-]+"/, `viewBox="${newViewBoxStr}"`);
-
-    // Wide strips (aspect > 5:1, e.g. terrain) need preserveAspectRatio="none"
-    // so they stretch edge-to-edge instead of centering with gaps.
-    const aspect = newVB.width / newVB.height;
-    if (aspect > 5) {
-      if (!updated.includes('preserveAspectRatio')) {
-        updated = updated.replace(/<svg\b/, '<svg preserveAspectRatio="none"');
-        console.log(`   Added:       preserveAspectRatio="none" (wide strip)`);
-      }
-    }
-
+    const updated = content.replace(/viewBox="[\d.\s-]+"/, `viewBox="${newViewBoxStr}"`);
     fs.writeFileSync(filePath, updated, 'utf8');
   }
 
