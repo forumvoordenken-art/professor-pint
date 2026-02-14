@@ -279,34 +279,85 @@ function extractAndRemoveGroups(content, elements) {
 function extractElements(svgContent) {
   const elements = [];
 
-  // Find the stroke group and extract its children individually
-  const strokeGroupMatch = svgContent.match(
-    /<g\s+stroke-width="[^"]*"\s+fill="none"[^>]*>([\s\S]*?)<\/g>/
-  );
+  // Find ALL stroke groups (SVG can have multiple!) using depth tracking.
+  // Previous code used .match() which only found the FIRST group, leaving
+  // the 2nd and 3rd stroke groups in `remaining` where their paths got
+  // re-extracted individually without stroke context → rendered black.
+  let remaining = svgContent;
+  const strokeGroupRegex = /<g\s+stroke-width="[^"]*"\s+fill="none"[^>]*>/g;
+  const strokeGroupRanges = [];
 
-  if (strokeGroupMatch) {
-    const strokeAttrs = svgContent.match(/<g\s+(stroke-width="[^"]*"\s+fill="none"[^>]*?)>/)?.[1] || '';
-    const innerContent = strokeGroupMatch[1];
+  let sgMatch;
+  while ((sgMatch = strokeGroupRegex.exec(remaining)) !== null) {
+    const startIdx = sgMatch.index;
+    const tagEnd = remaining.indexOf('>', startIdx);
+    if (tagEnd === -1) continue;
 
-    // Extract individual stroke paths
-    for (const match of innerContent.matchAll(/<path\s[^>]*\/>/g)) {
-      const bounds = computeElementBounds(match[0]);
-      if (bounds) {
-        elements.push({
-          type: 'stroke-path',
-          content: match[0],
-          bounds,
-          strokeGroupAttrs: strokeAttrs,
-        });
+    // Extract attributes from the opening tag
+    const attrsMatch = sgMatch[0].match(/<g\s+(.*?)>/s);
+    const strokeAttrs = attrsMatch ? attrsMatch[1] : 'stroke-width="2.00" fill="none"';
+
+    // Depth tracking to find matching </g>
+    let depth = 1;
+    let i = tagEnd + 1;
+
+    while (depth > 0 && i < remaining.length) {
+      const nextOpen = remaining.indexOf('<g', i);
+      const nextClose = remaining.indexOf('</g>', i);
+
+      if (nextClose === -1) break;
+
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        const charAfterG = remaining[nextOpen + 2];
+        if (charAfterG === ' ' || charAfterG === '>' || charAfterG === '\n' || charAfterG === '\r' || charAfterG === '\t') {
+          depth++;
+        }
+        i = nextOpen + 2;
+      } else {
+        depth--;
+        if (depth === 0) {
+          const endIdx = nextClose + 4; // '</g>'.length
+          const innerContent = remaining.substring(tagEnd + 1, nextClose);
+
+          // Extract individual stroke paths from this group
+          for (const pm of innerContent.matchAll(/<path\s[^>]*\/>/g)) {
+            const bounds = computeElementBounds(pm[0]);
+            if (bounds) {
+              elements.push({
+                type: 'stroke-path',
+                content: pm[0],
+                bounds,
+                strokeGroupAttrs: strokeAttrs,
+              });
+            }
+          }
+
+          strokeGroupRanges.push({ start: startIdx, end: endIdx });
+        }
+        i = nextClose + 4;
+      }
+    }
+
+    // Skip past this group
+    if (strokeGroupRanges.length > 0) {
+      const lastRange = strokeGroupRanges[strokeGroupRanges.length - 1];
+      if (lastRange.start === startIdx) {
+        strokeGroupRegex.lastIndex = lastRange.end;
       }
     }
   }
 
-  // Strip stroke group and SVG wrapper
-  let remaining = svgContent;
-  if (strokeGroupMatch) {
-    remaining = remaining.replace(strokeGroupMatch[0], '');
+  // Remove all stroke groups from remaining (reverse order to preserve indices)
+  for (let i = strokeGroupRanges.length - 1; i >= 0; i--) {
+    const range = strokeGroupRanges[i];
+    remaining = remaining.substring(0, range.start) + remaining.substring(range.end);
   }
+
+  if (strokeGroupRanges.length > 0) {
+    console.log(`  Found ${strokeGroupRanges.length} stroke group(s)`);
+  }
+
+  // Strip SVG wrapper
   remaining = remaining.replace(/<\?xml[^>]*\?>/, '');
   remaining = remaining.replace(/<!DOCTYPE[^>]*>/, '');
   remaining = remaining.replace(/<svg[^>]*>/, '');
