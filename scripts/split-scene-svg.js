@@ -427,6 +427,7 @@ function main() {
 
   // Assign elements to regions
   const buckets = {};
+  buckets['base'] = []; // auto-generated: wide background elements
   for (const region of regions) {
     buckets[region.id] = [];
   }
