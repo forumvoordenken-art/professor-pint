@@ -59,8 +59,8 @@ const TERRAIN = { x: 0, y: TERRAIN_TOP, w: W, h: H - TERRAIN_TOP };
 const FG_STREET_TOP = H * 0.75;
 const FG_STREET = { x: 0, y: FG_STREET_TOP, w: W, h: H - FG_STREET_TOP };
 
-// Pub: center, height ~115% of canvas (top kan buiten frame), width from aspect ratio (2:3)
-const PUB_H = H * 1.15;
+// Pub: center, height ~95% of canvas, width from aspect ratio (2:3)
+const PUB_H = H * 0.95;
 const PUB_W = PUB_H * (1024 / 1536);
 const PUB = {
   x: (W - PUB_W) / 2,
@@ -293,7 +293,7 @@ export const PubExteriorScene: React.FC = () => {
           <Stars frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 5: Terrain (bottom portion) — stretched wider via scaleX */}
+        {/* Layer 5: Terrain (bottom portion) — cover fills width, crops top/bottom */}
         <AbsoluteFill style={{ zIndex: 5 }}>
           <Img
             src={staticFile('assets/terrain/terrain-street.svg')}
@@ -301,9 +301,8 @@ export const PubExteriorScene: React.FC = () => {
               position: 'absolute',
               left: 0, top: TERRAIN.y,
               width: '100%', height: H - TERRAIN.y,
-              objectFit: 'fill',
-              transform: 'scaleX(1.5)',
-              transformOrigin: 'center center',
+              objectFit: 'cover',
+              objectPosition: 'center top',
             }}
           />
         </AbsoluteFill>
@@ -334,7 +333,7 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 9: Foreground (onderste 25%) — Trottoir + plantenbakken, stretched wider */}
+        {/* Layer 9: Foreground (onderste 25%) — Trottoir + plantenbakken */}
         <AbsoluteFill style={{ zIndex: 9 }}>
           <Img
             src={staticFile('assets/terrain/terrain-sidewalk-foreground.svg')}
@@ -342,9 +341,8 @@ export const PubExteriorScene: React.FC = () => {
               position: 'absolute',
               left: 0, top: FG_STREET.y,
               width: '100%', height: H - FG_STREET.y,
-              objectFit: 'fill',
-              transform: 'scaleX(1.5)',
-              transformOrigin: 'center center',
+              objectFit: 'cover',
+              objectPosition: 'center bottom',
             }}
           />
         </AbsoluteFill>
