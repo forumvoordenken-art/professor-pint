@@ -55,9 +55,9 @@ const MOON = { x: W * 0.82, y: H * 0.05, w: MOON_SIZE, h: MOON_SIZE };
 const TERRAIN_TOP = H * 0.50;
 const TERRAIN = { x: 0, y: TERRAIN_TOP, w: W, h: H - TERRAIN_TOP };
 
-// Foreground: onderste 25% — Trottoir + plantenbakken (USER MOET NIEUWE SVG MAKEN)
-const FG_STREET_TOP = H * 0.75;
-const FG_STREET = { x: 0, y: FG_STREET_TOP, w: W, h: H - FG_STREET_TOP };
+// Foreground: TODO — user moet terrain-sidewalk-foreground.svg nog maken via ChatGPT + vectorizer.ai
+// const FG_STREET_TOP = H * 0.75;
+// const FG_STREET = { x: 0, y: FG_STREET_TOP, w: W, h: H - FG_STREET_TOP };
 
 // Pub: center, height ~95% of canvas, width from aspect ratio (2:3) — VEEL GROTER
 const PUB_H = H * 0.95;
@@ -93,16 +93,16 @@ const GLOW_RIGHT = { cx: LAMP_RIGHT.x + LAMP_W / 2, cy: LAMP_RIGHT.y + LAMP_H * 
 // Pub center (for window light)
 const PUB_CENTER = { cx: PUB.x + PUB.w / 2, cy: PUB.y + PUB.h * 0.5 };
 
-// Man + Dog: op het trottoir (foreground rechts), hoogte ~35% van canvas
-const MAN_DOG_H = H * 0.35;
-const MAN_DOG_W = MAN_DOG_H * 0.6; // assume aspect ratio ~0.6 (portrait)
-const MAN_DOG_BOTTOM = H * 0.98; // bijna onderaan (op het trottoir)
-const MAN_DOG = {
-  x: W * 0.75 - MAN_DOG_W / 2, // rechts op het trottoir
-  y: MAN_DOG_BOTTOM - MAN_DOG_H,
-  w: MAN_DOG_W,
-  h: MAN_DOG_H,
-};
+// Man + Dog: TODO — user moet prop-dog-man.svg nog maken via ChatGPT + vectorizer.ai
+// const MAN_DOG_H = H * 0.35;
+// const MAN_DOG_W = MAN_DOG_H * 0.6;
+// const MAN_DOG_BOTTOM = H * 0.98;
+// const MAN_DOG = {
+//   x: W * 0.75 - MAN_DOG_W / 2,
+//   y: MAN_DOG_BOTTOM - MAN_DOG_H,
+//   w: MAN_DOG_W,
+//   h: MAN_DOG_H,
+// };
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -337,29 +337,8 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 9: Foreground (onderste 25%) — Trottoir + plantenbakken */}
-        <AbsoluteFill style={{ zIndex: 9 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-sidewalk-foreground.svg')}
-            style={{
-              position: 'absolute',
-              left: FG_STREET.x, top: FG_STREET.y, width: FG_STREET.w, height: FG_STREET.h,
-              objectFit: 'fill',
-            }}
-          />
-        </AbsoluteFill>
-
-        {/* Layer 10: Man + Dog (op trottoir, rechts) */}
-        <AbsoluteFill style={{ zIndex: 10 }}>
-          <Img
-            src={staticFile('assets/props/prop-dog+man.svg')}
-            style={{
-              position: 'absolute',
-              left: MAN_DOG.x, top: MAN_DOG.y,
-              width: MAN_DOG.w, height: MAN_DOG.h,
-            }}
-          />
-        </AbsoluteFill>
+        {/* Layer 9: Foreground — TODO: voeg terrain-sidewalk-foreground.svg toe */}
+        {/* Layer 10: Man + Dog — TODO: voeg prop-dog-man.svg toe */}
 
         {/* Layer 11: Street lamp LEFT */}
         <AbsoluteFill style={{ zIndex: 11 }}>
