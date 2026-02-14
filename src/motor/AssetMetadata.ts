@@ -91,60 +91,25 @@ export interface AssetMetadata {
  * Mapping van asset ID naar metadata
  */
 export const ASSET_METADATA: Record<string, AssetMetadata> = {
-  // ─── Pub Exterior Scene Assets ───────────────────────────
-
-  'sky-evening-warm': {
-    id: 'sky-evening-warm',
-    category: 'sky',
-    anchor: 'top-center',
-    naturalWidth: 1.0,
-    naturalHeight: 1.0,
-    viewBox: { width: 1536, height: 1024 },
-    notes: 'Warme avondlucht, vult hele achtergrond',
-  },
-
-  'terrain-cobblestone-street': {
-    id: 'terrain-cobblestone-street',
-    category: 'terrain',
-    anchor: 'bottom-center',
-    naturalWidth: 1.0,
-    naturalHeight: 0.45,  // Visueel: onderste ~45% van screen
-    groundLine: 1.0,
-    viewBox: { width: 1536, height: 1024 },
-    notes: 'Keistraat, onderste 45% van canvas (visueel geschat uit referentie)',
-  },
-
-  'struct-pub-exterior': {
-    id: 'struct-pub-exterior',
-    category: 'structure',
-    anchor: 'bottom-center',
-    naturalWidth: 0.58,   // Visueel: ~58% breed (centraal maar niet te groot)
-    naturalHeight: 0.72,  // Visueel: ~72% hoog
-    groundLine: 0.92,     // Staat op de grond, net boven onderkant
-    viewBox: { width: 1536, height: 1024 },
-    notes: 'Pub gebouw, centraal, visueel geschat uit referentie-scene',
-  },
-
-  'prop-street-lamp': {
-    id: 'prop-street-lamp',
-    category: 'prop',
-    anchor: 'bottom-center',
-    naturalWidth: 0.065,  // Visueel: ~6.5% breed (smaller dan eerder gedacht)
-    naturalHeight: 0.68,  // Visueel: ~68% hoog
-    groundLine: 0.92,     // Zelfde grondlijn als pub
-    viewBox: { width: 1024, height: 1536 },
-    notes: 'Victoriaanse lantaarnpaal, portret, visueel geschat uit referentie',
-  },
-
-  'prop-moon-crescent': {
-    id: 'prop-moon-crescent',
-    category: 'prop',
-    anchor: 'center',
-    naturalWidth: 0.09,   // Visueel: ~9% breed
-    naturalHeight: 0.09,  // Visueel: ~9% hoog (square-ish)
-    viewBox: { width: 1536, height: 1024 },
-    notes: 'Wassende maan, rechtsboven, visueel geschat uit referentie',
-  },
+  // ─── Asset metadata wordt hier toegevoegd per scene ───────────────────────────
+  //
+  // Workflow:
+  // 1. Upload referentie-PNG naar ChatGPT
+  // 2. Gebruik docs/chatgpt-metadata-prompt.md
+  // 3. Plak de gegenereerde metadata hier
+  // 4. Claude vult viewBox aan uit SVG-bestanden
+  //
+  // Voorbeeld:
+  // 'sky-example': {
+  //   id: 'sky-example',
+  //   category: 'sky',
+  //   anchor: 'top-center',
+  //   naturalWidth: 1.0,
+  //   naturalHeight: 1.0,
+  //   groundLine: undefined,
+  //   viewBox: { width: 1536, height: 1024 },
+  //   notes: 'Example sky asset',
+  // },
 };
 
 /**
