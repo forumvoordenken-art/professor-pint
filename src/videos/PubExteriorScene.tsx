@@ -300,27 +300,19 @@ export const PubExteriorScene: React.FC = () => {
         </AbsoluteFill>
 
         {/* Layer 8: Ground (sidewalk + street combined)
-             PNG letterbox: content in bottom ~20%, rest white.
-             cover + bottom crops white area, shows ground at correct ratio. */}
+             PNG 1536×942, content in bottom ~29% (planters+sidewalk+cobblestones).
+             backgroundSize 100% 350% + bottom zooms into that strip exactly. */}
         <AbsoluteFill style={{ zIndex: 8 }}>
           <div style={{
             position: 'absolute',
             left: 0, top: GROUND_TOP,
             width: W, height: H - GROUND_TOP,
             backgroundColor: '#3b4470',
-            overflow: 'hidden',
-          }}>
-            <Img
-              src={staticFile('assets/terrain/terrain-ground.png')}
-              style={{
-                position: 'absolute',
-                left: 0, top: 0,
-                width: '100%', height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center bottom',
-              }}
-            />
-          </div>
+            backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.png')})`,
+            backgroundSize: '100% 350%',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+          }} />
         </AbsoluteFill>
 
         {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
