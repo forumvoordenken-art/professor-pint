@@ -220,11 +220,12 @@ function extractElements(svgContent) {
     }
   }
 
-  // Find all top-level elements OUTSIDE the stroke group
-  // We do this by removing the stroke group and then parsing what's left
+  // Find all top-level elements OUTSIDE the stroke group.
+  // IMPORTANT: Extract groups FIRST and remove them, so child paths
+  // aren't double-extracted (which causes them to render black — no fill).
   let remaining = svgContent;
   if (strokeGroupMatch) {
-    remaining = remaining.replace(strokeGroupMatch[0], '<!-- STROKE_GROUP_REMOVED -->');
+    remaining = remaining.replace(strokeGroupMatch[0], '');
   }
 
   // Remove SVG wrapper
@@ -233,32 +234,26 @@ function extractElements(svgContent) {
   remaining = remaining.replace(/<svg[^>]*>/, '');
   remaining = remaining.replace(/<\/svg>/, '');
 
-  // Extract <path .../> (self-closing)
-  for (const match of remaining.matchAll(/<path\s+(?![^>]*<)[^>]*\/>/g)) {
+  // Step 1: Extract <g fill="...">...</g> groups and REMOVE from remaining.
+  // Children inside these groups inherit fill from the <g>, so they must
+  // stay together. If extracted individually, they'd lose fill → black.
+  remaining = remaining.replace(/<g\s+fill="[^"]*"[^>]*>[\s\S]*?<\/g>/g, (match) => {
+    const bounds = computeElementBounds(match);
+    if (bounds) {
+      elements.push({ type: 'fill-group', content: match, bounds });
+    }
+    return ''; // Remove so children aren't re-extracted below
+  });
+
+  // Step 2: Extract remaining paths (only top-level ones now, groups are gone)
+  for (const match of remaining.matchAll(/<path\s[^>]*?(?:\/>|>[\s\S]*?<\/path>)/g)) {
     const bounds = computeElementBounds(match[0]);
     if (bounds) {
       elements.push({ type: 'fill-path', content: match[0], bounds });
     }
   }
 
-  // Extract <path ...>...</path> (with content, for multi-line d attributes)
-  for (const match of remaining.matchAll(/<path\s[^>]*>[\s\S]*?<\/path>/g)) {
-    const bounds = computeElementBounds(match[0]);
-    if (bounds) {
-      elements.push({ type: 'fill-path', content: match[0], bounds });
-    }
-  }
-
-  // Extract <g fill="...">...</g> groups (but NOT the stroke group we already handled)
-  for (const match of remaining.matchAll(/<g\s+fill="[^"]*"[^>]*>[\s\S]*?<\/g>/g)) {
-    if (match[0].includes('STROKE_GROUP_REMOVED')) continue;
-    const bounds = computeElementBounds(match[0]);
-    if (bounds) {
-      elements.push({ type: 'fill-group', content: match[0], bounds });
-    }
-  }
-
-  // Extract standalone <ellipse>, <circle>, <rect> not inside a group
+  // Step 3: Extract remaining standalone <ellipse>, <circle>, <rect>
   for (const match of remaining.matchAll(/<(ellipse|circle|rect)\s[^>]*\/>/g)) {
     const bounds = computeElementBounds(match[0]);
     if (bounds) {
@@ -310,7 +305,7 @@ function buildLayerSvg(viewBoxStr, elements) {
   const lines = [];
   lines.push(`<?xml version="1.0" encoding="UTF-8" standalone="no"?>`);
   lines.push(`<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">`);
-  lines.push(`<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="${viewBoxStr}">`);
+  lines.push(`<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="${viewBoxStr}" preserveAspectRatio="none">`);
   lines.push('');
 
   // Gather stroke paths (they need their own <g> wrapper)
