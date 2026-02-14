@@ -51,6 +51,7 @@ interface SceneLayer {
 }
 
 const SCENE_LAYERS: SceneLayer[] = [
+  { id: 'base',       src: `${SCENE_DIR}/base.svg`,       zIndex: 0 },
   { id: 'sky',        src: `${SCENE_DIR}/sky.svg`,        zIndex: 1 },
   { id: 'pub',        src: `${SCENE_DIR}/pub.svg`,        zIndex: 6 },
   { id: 'sidewalk',   src: `${SCENE_DIR}/sidewalk.svg`,   zIndex: 8 },

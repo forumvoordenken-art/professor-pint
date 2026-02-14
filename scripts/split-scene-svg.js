@@ -274,6 +274,15 @@ function extractElements(svgContent) {
 // ---------------------------------------------------------------------------
 
 function assignToRegion(bounds, regions, viewBox) {
+  const elWidth = bounds.maxX - bounds.minX;
+
+  // Background detection: elements wider than 60% of the viewBox are scene
+  // backgrounds (sky fill, ground color, dark overlays). These get placed in
+  // a dedicated "base" layer so every region-specific layer can paint on top.
+  if (elWidth > viewBox.width * 0.6) {
+    return 'base';
+  }
+
   // Normalize centroid to 0-1 range
   const nx = (bounds.cx - viewBox.x) / viewBox.width;
   const ny = (bounds.cy - viewBox.y) / viewBox.height;
