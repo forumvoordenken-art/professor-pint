@@ -299,19 +299,29 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 8: Ground (sidewalk + street combined)
-             Auto-cropped PNG 1536×216 (7.1:1). objectFit fill stretches
-             to 1920×238 — only ~10% vertical stretch, barely noticeable. */}
+        {/* Layer 8: Ground — built from flat-color bands (no image needed) */}
         <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-ground.png')}
-            style={{
-              position: 'absolute',
-              left: 0, top: GROUND_TOP - 2,
-              width: W, height: H - GROUND_TOP + 2,
-              objectFit: 'fill',
-            }}
-          />
+          {/* Sidewalk */}
+          <div style={{
+            position: 'absolute',
+            left: 0, top: GROUND_TOP,
+            width: W, height: (H - GROUND_TOP) * 0.40,
+            backgroundColor: '#8791b7',
+          }} />
+          {/* Curb edge */}
+          <div style={{
+            position: 'absolute',
+            left: 0, top: GROUND_TOP + (H - GROUND_TOP) * 0.40,
+            width: W, height: 3,
+            backgroundColor: '#111a3f',
+          }} />
+          {/* Cobblestone street */}
+          <div style={{
+            position: 'absolute',
+            left: 0, top: GROUND_TOP + (H - GROUND_TOP) * 0.40 + 3,
+            width: W, height: (H - GROUND_TOP) * 0.60,
+            backgroundColor: '#43538b',
+          }} />
         </AbsoluteFill>
 
         {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
