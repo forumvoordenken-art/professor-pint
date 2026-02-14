@@ -7,22 +7,24 @@
 
 ---
 
-## Current State: Phase 1 — Kwaliteitstools gebouwd, klaar voor visuele evaluatie + vegetation
+## Current State: Phase 1 — Herstart met scene-first workflow
 
 - Specs zijn geschreven (v2.0)
 - Repository is opgeschoond en herstructureerd met Nederlandse mapnamen
 - SceneComposer prototype en test assets zijn gebouwd (stap 0.1 + 0.2)
 - Phase 0 is volledig afgerond (prototype gevalideerd, performance getest, presets gebouwd)
 - **Professor Pint v2.2 is af** — 12 emoties, vest met mouwen, pelvis/hip-connectie, idle+talking animaties
-- **15 sky assets klaar** + SkyEngine + longCycleNoise systeem voor non-repeating animatie
-- **15 terrain assets klaar** + TerrainEngine + TerrainShowcase
+- **15 sky assets klaar** (code-gegenereerd) + SkyEngine + longCycleNoise systeem voor non-repeating animatie
+- **15 terrain assets klaar** (code-gegenereerd) + TerrainEngine + TerrainShowcase
 - **Per-asset painterly post-processing gebouwd** — withAssetPaint HOC wraps alle 31 assets met edge displacement + canvas grain + saturation boost
 - **Kwaliteitstools gebouwd:**
   - `HorizonMatcher` — Atmosferische blending tussen sky en terrain (haze band + light spill + dust particles), 10 mood presets, 15 curated sky+terrain combinaties
   - `CombinedShowcase` compositie — Sky + terrain samen met HorizonMatcher, toont 15 curated combos (75 sec)
   - `ComparisonShowcase` compositie — Raw vs painted side-by-side vergelijking met sliding divider (50 sec)
   - `withAssetPaint` verbeterd — Geanimeerde grain seed (levend canvas) + impasto highlight layer (dikke verf op hoge-contrast randen)
-- Volgende sessie: **Render showcases en evalueer visueel**, daarna **Step 1.3 — Vegetation assets bouwen**
+- **Mozes-scene test uitgevoerd** — Key learning: één monolithische SVG (hele scene als 1 bestand) levert nauwelijks zichtbare animatie op. Alleen subtiele overlays mogelijk. Conclusie: elk scene-element moet een APART SVG/React-component zijn.
+- **Scene-first workflow ontdekt** — Bewezen methode: (1) genereer complete scene in ChatGPT als referentie, (2) genereer elk element apart op witte achtergrond, (3) vectorize apart, (4) animeer apart. Zie "Scene-First Asset Workflow" hieronder.
+- Volgende sessie: **Kies een onderwerp, genereer assets via scene-first workflow, bouw eerste echte geanimeerde scene**
 
 ---
 
@@ -72,14 +74,76 @@ professor-pint/
 9. **Costs acceptable** — ~$8-20 per video, ~$130-230/month for regular production
 10. **Music source TBD** — Still needs to be decided (royalty-free library, AI-generated, etc.)
 11. **Asset creation via ChatGPT + vectorizer.ai** — Assets worden NIET handmatig als SVG getekend. Workflow: ChatGPT genereert flat-color illustratie → vectorizer.ai traceert naar SVG → Claude animeert in Remotion. Doel: 300-500 paden per SVG, max 16 kleuren.
+12. **Scene-first, dan losse elementen** — Genereer EERST een complete scene-PNG in ChatGPT als referentie. Gebruik die als visuele gids. Genereer daarna elk element APART op witte achtergrond. Elk element wordt apart gevectoriseerd en apart geanimeerd. Zie "Scene-First Asset Workflow" hieronder.
+13. **Monolithische SVG = niet animeerbaar** — Eén grote scene-SVG (gegroepeerd op kleur door vectorizer.ai) kan alleen overlay-effecten krijgen. Voor echte animatie (golven, lopen, wapperen) moeten elementen losse SVG-componenten zijn. Dit is een harde les uit de Mozes-scene test.
 
 ---
 
 ## Asset Creation Workflow
 
-### Twee prompt-types
+### BELANGRIJK: Scene-First Asset Workflow (bewezen methode)
 
-Er zijn twee prompts: één voor **objecten** (props, characters, vegetation) en één voor **achtergronden** (skies, terrains).
+De beste aanpak voor het maken van geanimeerde scenes is een **twee-staps proces**:
+
+#### Stap 1: Genereer een complete scene als referentie
+
+Maak één volledige scene-PNG in ChatGPT met ALLE elementen samen. Dit geeft je:
+- Correcte kleuren en kleurharmonie tussen elementen
+- Juiste proporties en verhoudingen
+- Goede compositie en diepte
+- Visuele referentie voor consistentie
+
+**Voorbeeld prompt (Mozes-scene):**
+```
+Create a wide panoramic illustration in the style of Kurzgesagt (In a Nutshell). The scene depicts Moses parting the Red Sea, with the Israelites crossing through. LAYOUT: Two massive walls of water stand on the left and right sides of the image, curving inward at the top. Between them is a wide dry sandy path running from the foreground toward the distant horizon. The path takes up about 40% of the image width. WATER WALLS: Each water wall is made of layered flat-color shapes in different blues: deep navy at the base, ocean blue, teal, and light aqua at the curling tops. Inside the water walls, a few simple flat fish silhouettes (orange, yellow) and seaweed shapes are visible, like looking into an aquarium cross-section. The water walls are tall — about 60% of the image height on each side. At the edges where the water meets the path, small splashes and droplets fly off. THE PATH: Sandy brown sea floor with a few small flat-colored stones and shells. The path narrows toward the horizon (perspective). At the far end, a warm golden glow suggests the distant shore and sunrise. MOSES: Standing on a small rocky elevation on the right side of the path, near the foreground. He is a simple Kurzgesagt-style character — round head, no facial features except maybe simple eyes, long brown robe, white beard, and holding a tall wooden staff raised high above his head with both hands. His robe and beard blow to the left (wind from the sea). He faces the path, watching his people cross. THE ISRAELITES: A long procession of 30-50 small Kurzgesagt-style figures walking along the path from left/foreground toward the distant golden light. They walk in scattered groups of 3-6 people. They wear simple robes in earthy colors (brown, beige, dark red, olive). Some carry bundles on their backs, some lead small donkeys or pull simple wooden carts. Women carry children. The figures closest to the viewer are larger, the ones in the distance are tiny dots. The procession stretches all the way from the foreground to the distant horizon. SKY: Above the water walls, a dramatic sky in warm sunset colors: deep orange near the horizon fading to dark purple at the top. A few simple flat cloud shapes in pink. Rays of golden light beam down from the sky onto the path. ATMOSPHERE: Mist/spray near the base of the water walls. A few birds (simple V-shapes) in the sky. The overall mood is epic, hopeful, and dramatic. STYLE: Kurzgesagt flat-color vector style. Maximum 20 colors. Every element is a solid flat color — ZERO gradients, ZERO textures, ZERO realistic shading, ZERO outlines on characters. Simple geometric shapes. Bold, colorful, and clean. Characters have the typical Kurzgesagt proportions: large round heads, small pill-shaped bodies, stick limbs. OUTPUT: PNG, 1920x1080, landscape orientation.
+```
+
+#### Stap 2: Genereer elk element APART
+
+Gebruik de referentie-scene om per element een aparte PNG te genereren op witte achtergrond. De prompt is kort en verwijst naar de referentie:
+
+```
+Geef alleen de [ELEMENT NAAM] uit de vorige afbeelding. Zelfde stijl, zelfde kleuren. Op een pure witte achtergrond.
+```
+
+Voorbeelden:
+- "Geef alleen de Mozes uit de vorige afbeelding"
+- "Geef alleen de linker watermuur uit de vorige afbeelding"
+- "Geef alleen de menigte groep op de voorgrond uit de vorige afbeelding"
+- "Geef alleen de lucht/sky uit de vorige afbeelding"
+
+#### Stap 3: Vectorize elk element apart via vectorizer.ai
+
+Elk apart element-PNG wordt los gevectoriseerd. Dit geeft schone, goed gestructureerde SVGs per element.
+
+#### Stap 4: Claude animeert elk element als React-component
+
+Omdat elk element nu een aparte SVG is, kan Claude echte animatie toepassen:
+- **Watermuren**: hele muur golft, waterdruppels spatten
+- **Karakters**: ademhaling, mantel wappert, staf beweegt
+- **Menigte**: lopen, wiebelen, parallax-diepte
+- **Vissen**: zwemmen door watermuren
+- **Lucht**: wolken drijven, lichtstralen bewegen
+
+#### Stap 5: SceneComposer composeert alles in 10 lagen
+
+De losse geanimeerde elementen worden samengebracht in de SceneComposer met correcte z-ordering, positie en schaal.
+
+---
+
+### Waarom deze methode werkt
+
+**Het probleem met één grote SVG:**
+vectorizer.ai groepeert paden op kleur, niet op element. Een watermuur en de lucht delen dezelfde blauwtinten → ze worden samengevoegd in dezelfde `<g>` groep. Je kunt de watermuur dan niet los bewegen van de lucht. Het enige wat je kunt doen is subtiele overlays toevoegen (opacity shifts, filters), maar dat geeft nauwelijks zichtbare animatie.
+
+**De oplossing met losse elementen:**
+Elk element is een eigen SVG → eigen React-component → eigen animatie. De watermuur kan golven, Mozes kan ademhalen, de menigte kan lopen. Alles beweegt onafhankelijk.
+
+---
+
+### Prompt-templates voor losse elementen
+
+Er zijn twee prompt-types: één voor **objecten** (props, characters, vegetation) en één voor **achtergronden** (skies, terrains).
 
 ---
 
@@ -202,6 +266,7 @@ Claude wraps de SVG in een React component met:
 | 5 | **Context window limits** — Asset manifest + feedback rules + script might exceed LLM context | MEDIUM | Phased prompts: script generation and scene composition are separate LLM calls with different context |
 | 6 | **Subjective quality gates** — "Does this look good?" is hard to automate | LOW | Asset-level quality is guaranteed (pre-tested). Scene-level gates check structural rules only |
 | 7 | **Large initial time investment** — Building the first ~50 universal assets before producing any video | LOW | User confirmed time is not a problem. Assets are reusable across all future videos |
+| 8 | **Monolithische SVG niet animeerbaar** — vectorizer.ai groepeert op kleur, niet op element. Eén scene-SVG kan niet per element geanimeerd worden | HIGH | OPGELOST: Scene-first workflow. Genereer scene als referentie, dan elk element apart. Elk element wordt apart gevectoriseerd en geanimeerd |
 
 ---
 
@@ -353,7 +418,16 @@ npx remotion render src/index.ts Combined-Showcase out/combined-showcase.mp4
 npx remotion render src/index.ts Comparison-Showcase out/comparison-showcase.mp4
 ```
 
-**Status:** Klaar om te renderen en visueel te evalueren. Volgende sessie: render en evalueer, daarna vegetation.
+**Status:** Gebouwd. Focus verschuift naar scene-first workflow met losse elementen per scene.
+
+### Volgende stappen
+
+1. **Kies een bijbelverhaal/onderwerp** voor de eerste echte scene
+2. **Genereer complete scene-PNG** in ChatGPT (referentie)
+3. **Genereer elk element apart** als PNG op witte achtergrond
+4. **Vectorize elk element** via vectorizer.ai
+5. **Claude animeert** elk element als React-component
+6. **SceneComposer** brengt alles samen
 
 ---
 
@@ -377,6 +451,15 @@ npx remotion render src/index.ts Comparison-Showcase out/comparison-showcase.mp4
 3. The AI reads this file, sees the current state, and picks up from the first ⬜ step
 4. After completing steps, update this file's status indicators
 5. Commit updated PROJECT-STATE.md after each session
+
+### Scene-first workflow per nieuwe scene:
+
+1. **Gebruiker** genereert complete scene-PNG in ChatGPT (alle elementen samen)
+2. **Gebruiker** genereert elk element apart als PNG op witte achtergrond ("Geef alleen de [X] uit de vorige afbeelding")
+3. **Gebruiker** vectoriseert elk element via vectorizer.ai
+4. **Gebruiker** upload SVGs naar `src/assets/` of `public/assets/`
+5. **Claude** animeert elk element als React-component
+6. **Claude** composeert scene via SceneComposer
 
 ### Status Legend
 - ⬜ Not started
