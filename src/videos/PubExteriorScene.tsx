@@ -299,18 +299,20 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 8: Ground (sidewalk + street combined) */}
+        {/* Layer 8: Ground (sidewalk + street combined)
+             SVG viewBox is 1536×1024 but ground content starts at y≈190.
+             backgroundSize 100% 130% + bottom alignment crops out the
+             ~18% white top area from vectorizer.ai */}
         <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-ground.svg')}
-            style={{
-              position: 'absolute',
-              left: 0, top: GROUND_TOP,
-              width: W, height: H - GROUND_TOP,
-              objectFit: 'cover',
-              objectPosition: 'center top',
-            }}
-          />
+          <div style={{
+            position: 'absolute',
+            left: 0, top: GROUND_TOP,
+            width: W, height: H - GROUND_TOP,
+            backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.svg')})`,
+            backgroundSize: '100% 130%',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+          }} />
         </AbsoluteFill>
 
         {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
