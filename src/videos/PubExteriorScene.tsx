@@ -44,27 +44,31 @@ const H = 1080;
 // No metadata system needed. Tweak these constants to adjust.
 // ---------------------------------------------------------------------------
 
-// Sky: fills entire canvas
-const SKY = { x: 0, y: 0, w: W, h: H };
+// ---------------------------------------------------------------------------
+// BELANGRIJK: objectFit werkt NIET op SVGs in Remotion's <Img>.
+// Daarom gebruiken we expliciete pixel dimensies.
+// Alle landscape SVGs hebben viewBox 1536×1024.
+// Bij width=W → height = W * (1024/1536) = 1280px (groter dan canvas = goed)
+// ---------------------------------------------------------------------------
 
-// Moon: upper-right, ~10% of canvas width (zoals eerst — dit was goed)
+const LANDSCAPE_H = W * (1024 / 1536); // 1280 — hoogte bij volle breedte
+
+// Moon: upper-right, ~10% of canvas width
 const MOON_SIZE = W * 0.10;
 const MOON = { x: W * 0.82, y: H * 0.05, w: MOON_SIZE, h: MOON_SIZE };
 
-// Terrain: bottom ~50%, full width + scale voor breedte
+// Terrain start (sky boven, straat onder)
 const TERRAIN_TOP = H * 0.50;
-const TERRAIN = { x: 0, y: TERRAIN_TOP, w: W, h: H - TERRAIN_TOP };
 
-// Foreground: onderste 25% — trottoir + plantenbakken
+// Foreground start (trottoir + plantenbakken)
 const FG_STREET_TOP = H * 0.75;
-const FG_STREET = { x: 0, y: FG_STREET_TOP, w: W, h: H - FG_STREET_TOP };
 
 // Pub: center, height ~95% of canvas, width from aspect ratio (2:3)
 const PUB_H = H * 0.95;
 const PUB_W = PUB_H * (1024 / 1536);
 const PUB = {
   x: (W - PUB_W) / 2,
-  y: H * 0.94 - PUB_H, // bottom at 94% (op de grond)
+  y: H - PUB_H, // bottom op canvas-onderkant
   w: PUB_W,
   h: PUB_H,
 };
@@ -260,14 +264,13 @@ export const PubExteriorScene: React.FC = () => {
     <AbsoluteFill style={{ backgroundColor: '#0a0e1a' }}>
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
-        {/* Layer 1: Sky — fills entire canvas; terrain layers cover bottom */}
-        <AbsoluteFill style={{ zIndex: 1 }}>
+        {/* Layer 1: Sky — explicit W×LANDSCAPE_H, excess cropped by AbsoluteFill */}
+        <AbsoluteFill style={{ zIndex: 1, overflow: 'hidden' }}>
           <Img
             src={staticFile('assets/sky/sky-night.svg')}
             style={{
               position: 'absolute',
-              left: 0, top: 0, width: '100%', height: '100%',
-              objectFit: 'cover',
+              left: 0, top: 0, width: W, height: LANDSCAPE_H,
             }}
           />
         </AbsoluteFill>
@@ -293,19 +296,19 @@ export const PubExteriorScene: React.FC = () => {
           <Stars frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 5: Terrain (bottom portion) — cover fills width, crops top/bottom */}
-        <AbsoluteFill style={{ zIndex: 5 }}>
+        {/* Layer 5: Terrain (bottom portion) — W wide, clipped to bottom half */}
+        <div style={{
+          position: 'absolute', left: 0, top: TERRAIN_TOP, width: W, height: H - TERRAIN_TOP,
+          overflow: 'hidden', zIndex: 5,
+        }}>
           <Img
             src={staticFile('assets/terrain/terrain-street.svg')}
             style={{
               position: 'absolute',
-              left: 0, top: TERRAIN.y,
-              width: '100%', height: H - TERRAIN.y,
-              objectFit: 'cover',
-              objectPosition: 'center top',
+              left: 0, top: 0, width: W, height: LANDSCAPE_H,
             }}
           />
-        </AbsoluteFill>
+        </div>
 
         {/* Layer 6: Horizon blend (soften sky→terrain) */}
         <AbsoluteFill style={{ zIndex: 6 }}>
@@ -333,19 +336,19 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 9: Foreground (onderste 25%) — Trottoir + plantenbakken */}
-        <AbsoluteFill style={{ zIndex: 9 }}>
+        {/* Layer 9: Foreground — trottoir + plantenbakken, anchored to bottom */}
+        <div style={{
+          position: 'absolute', left: 0, top: FG_STREET_TOP, width: W, height: H - FG_STREET_TOP,
+          overflow: 'hidden', zIndex: 9,
+        }}>
           <Img
             src={staticFile('assets/terrain/terrain-sidewalk-foreground.svg')}
             style={{
               position: 'absolute',
-              left: 0, top: FG_STREET.y,
-              width: '100%', height: H - FG_STREET.y,
-              objectFit: 'cover',
-              objectPosition: 'center bottom',
+              left: 0, bottom: 0, width: W, height: LANDSCAPE_H,
             }}
           />
-        </AbsoluteFill>
+        </div>
 
         {/* Layer 10: Man + Dog (op trottoir, rechts) */}
         <AbsoluteFill style={{ zIndex: 10 }}>
