@@ -340,24 +340,24 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 8: Sidewalk */}
-        <AbsoluteFill style={{ zIndex: 8 }}>
+        {/* Layer 8: Sidewalk — 20% wider than canvas, centered, overflow clipped */}
+        <AbsoluteFill style={{ zIndex: 8, overflow: 'hidden' }}>
           <div style={{
             position: 'absolute',
-            left: SIDEWALK.x, top: SIDEWALK.y,
-            width: SIDEWALK.w, height: SIDEWALK.h,
+            left: -W * 0.1, top: SIDEWALK.y,
+            width: W * 1.2, height: SIDEWALK.h,
             backgroundImage: `url(${staticFile('assets/terrain/terrain-sidewalk.svg')})`,
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
           }} />
         </AbsoluteFill>
 
-        {/* Layer 8b: Street */}
-        <AbsoluteFill style={{ zIndex: 8 }}>
+        {/* Layer 8b: Street — 20% wider than canvas, centered, overflow clipped */}
+        <AbsoluteFill style={{ zIndex: 8, overflow: 'hidden' }}>
           <div style={{
             position: 'absolute',
-            left: STREET.x, top: STREET.y,
-            width: STREET.w, height: STREET.h,
+            left: -W * 0.1, top: STREET.y,
+            width: W * 1.2, height: STREET.h,
             backgroundImage: `url(${staticFile('assets/terrain/terrain-street.svg')})`,
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
