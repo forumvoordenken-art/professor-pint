@@ -34,12 +34,12 @@ const H = 1080;
 // ---------------------------------------------------------------------------
 // Scene from top to bottom:
 //   [sky fills entire canvas as background]
-//   Pub bottom on sidewalk, ~75% of canvas height
-//   Sidewalk strip: 83%–90% (thin strip with planters)
-//   Street: bottom 10% (90%–100%)
+//   Pub bottom on sidewalk
+//   Sidewalk strip: 78%–88% (planters + pavement)
+//   Street: bottom 12% (88%–100%)
 
-const SIDEWALK_TOP = H * 0.83;
-const STREET_TOP = H * 0.90;
+const SIDEWALK_TOP = H * 0.78;
+const STREET_TOP = H * 0.88;
 
 // Moon: upper-right, ~12% of canvas width
 // Post-crop viewBox: 761×743 → aspect 1.02:1
@@ -303,13 +303,17 @@ export const PubExteriorScene: React.FC = () => {
         </AbsoluteFill>
 
         {/* Layer 8: Sidewalk strip (between pub and street) */}
-        <div style={{
-          position: 'absolute', left: 0, top: SIDEWALK_TOP, width: W, height: STREET_TOP - SIDEWALK_TOP,
-          zIndex: 8,
-          backgroundImage: `url(${staticFile('assets/terrain/terrain-sidewalk.svg')})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-        }} />
+        <AbsoluteFill style={{ zIndex: 8 }}>
+          <Img
+            src={staticFile('assets/terrain/terrain-sidewalk.svg')}
+            style={{
+              position: 'absolute',
+              left: 0, top: SIDEWALK_TOP,
+              width: W, height: STREET_TOP - SIDEWALK_TOP,
+              objectFit: 'fill',
+            }}
+          />
+        </AbsoluteFill>
 
         {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
         <AbsoluteFill style={{ zIndex: 9 }}>
@@ -349,13 +353,17 @@ export const PubExteriorScene: React.FC = () => {
         </AbsoluteFill>
 
         {/* Layer 11: Cobblestone street (bottom) */}
-        <div style={{
-          position: 'absolute', left: 0, top: STREET_TOP, width: W, height: H - STREET_TOP,
-          zIndex: 11,
-          backgroundImage: `url(${staticFile('assets/terrain/terrain-street.svg')})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center top',
-        }} />
+        <AbsoluteFill style={{ zIndex: 11 }}>
+          <Img
+            src={staticFile('assets/terrain/terrain-street.svg')}
+            style={{
+              position: 'absolute',
+              left: 0, top: STREET_TOP,
+              width: W, height: H - STREET_TOP,
+              objectFit: 'fill',
+            }}
+          />
+        </AbsoluteFill>
 
         {/* Layer 12: Lamp glow halos */}
         <AbsoluteFill style={{ zIndex: 12, mixBlendMode: 'screen' }}>
