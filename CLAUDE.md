@@ -22,8 +22,13 @@
 2. **Elk element apart**: Genereer elk element los op witte achtergrond ("Geef alleen de [X] uit de vorige afbeelding")
 3. **Vectorize**: Via vectorizer.ai → SVG (doel: 300-500 paden, max 16 kleuren)
 4. **Upload**: Naar `public/assets/[categorie]/[naam].svg`
-5. **Cleanup**: `node scripts/clean-svg-backgrounds.js`
-6. **Claude animeert**: React component met animatie overlays
+5. **Cleanup + Crop** (twee scripts, altijd in deze volgorde):
+   ```bash
+   node scripts/clean-svg-backgrounds.js   # verwijdert witte achtergrond-paths
+   node scripts/crop-svg-viewbox.js        # cropped viewBox naar echte content
+   ```
+   **BELANGRIJK**: Zonder crop bevat de viewBox 30-90% lege ruimte → elementen lijken veel kleiner dan bedoeld.
+6. **Claude animeert**: React component met animatie overlays (aspect ratios uit gecropte viewBox)
 
 **Waarom scene-first?** Eén monolithische SVG (hele scene) kan NIET goed geanimeerd worden. Losse elementen WEL.
 
@@ -81,18 +86,21 @@ git checkout origin/main -- pad/naar/bestand.svg
 SVG bestanden die de gebruiker uploadt naar main worden **NIET** gecommit op de feature branch. Dit voorkomt merge conflicts.
 - Claude fetcht SVGs van main om ze te gebruiken (viewBox checken, cleanup testen)
 - Claude commit alleen **code** (.tsx, .ts, .md) op de feature branch
-- Gebruiker runt na de merge: `node scripts/clean-svg-backgrounds.js`
+- Gebruiker runt na de merge: `node scripts/clean-svg-backgrounds.js && node scripts/crop-svg-viewbox.js`
 
 ### Opleverprotocol (VERPLICHT bij elke push)
 Na elke `git push` MOET Claude kant-en-klare commando's geven:
 ```bash
+git pull origin main
 git fetch origin [branch-naam]
 git merge origin/[branch-naam] -m "[korte beschrijving]"
 node scripts/clean-svg-backgrounds.js
-git add -A && git commit -m "SVG cleanup" || true
+node scripts/crop-svg-viewbox.js
+git add -A && git commit -m "SVG cleanup + viewBox crop" || true
 git push origin main
 ```
 Geen uitleg, geen opties, gewoon de regels met ingevulde branch-naam en beschrijving.
+**ALTIJD** `git pull origin main` als eerste stap — voorkomt rejected pushes.
 
 ---
 
@@ -124,13 +132,14 @@ Scenes zijn **gelaagd (z-index)**:
 6. Characters/props (voorgrond)
 7. Atmosphere (fog, dust, glows)
 
-**Hardcoded posities** - geen metadata systeem:
+**Hardcoded posities** — aspect ratios komen uit **gecropte viewBox** (na `crop-svg-viewbox.js`):
 ```ts
-const PUB_H = H * 0.95;
-const PUB_W = PUB_H * (1024 / 1536); // aspect ratio uit viewBox
+// Post-crop viewBox: 977×1024 → aspect 0.95:1
+const PUB_H = H * 0.70;
+const PUB_W = PUB_H * 0.95; // aspect ratio uit GECROPTE viewBox
 const PUB = {
   x: (W - PUB_W) / 2,
-  y: H * 0.94 - PUB_H,
+  y: SIDEWALK_TOP - PUB_H,
   w: PUB_W,
   h: PUB_H,
 };
@@ -150,9 +159,10 @@ const PUB = {
 
 ## Quick Reference
 
-**Huidige scene:** `src/videos/PubExteriorScene.tsx`
+**Huidige scene:** `src/videos/PubExteriorScene.tsx` (v6)
 - Pub exterior night
-- Assets: sky-night.svg, terrain-street.svg, terrain-sidewalk-foreground.svg, struct-pub.svg, prop-lamp.svg, prop-moon.svg, prop-dog+man.svg
-- 17 layers, animaties: stars twinkle, moon glow, lamp glow, window light, dust motes, fog
+- Assets: sky-night.svg, terrain-street.svg, terrain-sidewalk.svg, struct-pub.svg, prop-lamp.svg, prop-moon.svg, prop-man-dog.svg
+- 16 layers, animaties: stars twinkle, moon glow, lamp glow, window light, dust motes, fog
+- Layout: sky (full) → pub (3%-75%) → sidewalk (75%-85%) → street (85%-100%)
 
 **Volgende stappen:** Zie `docs/PROJECT-STATE.md`

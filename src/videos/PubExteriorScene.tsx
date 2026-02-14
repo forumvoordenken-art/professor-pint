@@ -1,4 +1,5 @@
 /**
+<<<<<<< HEAD
  * PubExteriorScene — Night pub exterior (v5 — proportional assets)
  *
  * All assets regenerated with a shared reference scene so proportions
@@ -32,6 +33,24 @@
  * 14. Ground fog
  * 15. Vignette
  * 16. Color grade
+=======
+ * PubExteriorScene — Night pub exterior (v6 — cropped viewBox assets)
+ *
+ * Assets are auto-cropped via `node scripts/crop-svg-viewbox.js` so
+ * viewBox matches actual content. Aspect ratios below are POST-CROP.
+ *
+ * Layout top → bottom:
+ *   Sky (full canvas) → Pub → Sidewalk (75%-85%) → Street (85%-100%)
+ *
+ * Assets (public/assets/) — aspect ratios after viewBox crop:
+ *  - sky/sky-night.svg            1536×1024  (1.50:1, no crop needed)
+ *  - props/prop-moon.svg           761×743   (1.02:1)
+ *  - structures/struct-pub.svg     977×1024  (0.95:1)
+ *  - terrain/terrain-sidewalk.svg 1536×1024  (1.50:1, no crop needed)
+ *  - terrain/terrain-street.svg   1536×1024  (1.50:1, no crop needed)
+ *  - props/prop-man-dog.svg        713×972   (0.73:1)
+ *  - props/prop-lamp.svg           177×741   (0.24:1)
+>>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
  */
 
 import React from 'react';
@@ -47,21 +66,32 @@ const W = 1920;
 const H = 1080;
 
 // ---------------------------------------------------------------------------
+<<<<<<< HEAD
 // Layout — vertical zones
 // ---------------------------------------------------------------------------
 // Scene from top to bottom:
 //   [sky fills entire canvas as background]
 //   Pub sits from ~5% to ~85% height (center aligned)
 //   Sidewalk strip: 75%–85% of canvas height
+=======
+// Layout — vertical zones (all aspect ratios are POST-CROP from viewBox)
+// ---------------------------------------------------------------------------
+// Scene from top to bottom:
+//   [sky fills entire canvas as background]
+//   Pub bottom on sidewalk, ~70% of canvas height
+//   Sidewalk strip: 75%–85%
+>>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
 //   Street: bottom 15% (85%–100%)
 
 const SIDEWALK_TOP = H * 0.75;
 const STREET_TOP = H * 0.85;
 
-// Moon: upper-right, ~10% of canvas width
-const MOON_SIZE = W * 0.10;
-const MOON = { x: W * 0.82, y: H * 0.05, w: MOON_SIZE, h: MOON_SIZE };
+// Moon: upper-right, ~12% of canvas width
+// Post-crop viewBox: 761×743 → aspect 1.02:1
+const MOON_SIZE = W * 0.12;
+const MOON = { x: W * 0.80, y: H * 0.04, w: MOON_SIZE, h: MOON_SIZE / 1.02 };
 
+<<<<<<< HEAD
 // Pub: center, bottom aligned to sidewalk top, height ~70% of canvas
 // viewBox 1024×1536 → aspect 2:3
 const PUB_H = H * 0.72;
@@ -69,10 +99,20 @@ const PUB_W = PUB_H * (1024 / 1536);
 const PUB = {
   x: (W - PUB_W) / 2,
   y: SIDEWALK_TOP - PUB_H, // pub bottom sits on top of sidewalk
+=======
+// Pub: center, bottom on sidewalk, height ~70% canvas
+// Post-crop viewBox: 977×1024 → aspect 0.95:1
+const PUB_H = H * 0.70;
+const PUB_W = PUB_H * 0.95;
+const PUB = {
+  x: (W - PUB_W) / 2,
+  y: SIDEWALK_TOP - PUB_H,
+>>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
   w: PUB_W,
   h: PUB_H,
 };
 
+<<<<<<< HEAD
 // Lamps: height ~45% of canvas, flanking the pub
 // viewBox 1024×1536 → aspect 2:3
 const LAMP_H = H * 0.45;
@@ -80,12 +120,25 @@ const LAMP_W = LAMP_H * (1024 / 1536);
 const LAMP_BOTTOM = SIDEWALK_TOP; // lamps stand on the sidewalk edge
 const LAMP_LEFT = {
   x: PUB.x - LAMP_W * 0.8,
+=======
+// Lamps: height ~40% of canvas, flanking the pub
+// Post-crop viewBox: 177×741 → aspect 0.24:1
+const LAMP_H = H * 0.40;
+const LAMP_W = LAMP_H * 0.24;
+const LAMP_BOTTOM = SIDEWALK_TOP;
+const LAMP_LEFT = {
+  x: PUB.x - LAMP_W - W * 0.02,
+>>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
   y: LAMP_BOTTOM - LAMP_H,
   w: LAMP_W,
   h: LAMP_H,
 };
 const LAMP_RIGHT = {
+<<<<<<< HEAD
   x: PUB.x + PUB.w - LAMP_W * 0.2,
+=======
+  x: PUB.x + PUB.w + W * 0.02,
+>>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
   y: LAMP_BOTTOM - LAMP_H,
   w: LAMP_W,
   h: LAMP_H,
@@ -99,12 +152,21 @@ const GLOW_RIGHT = { cx: LAMP_RIGHT.x + LAMP_W / 2, cy: LAMP_RIGHT.y + LAMP_H * 
 const PUB_CENTER = { cx: PUB.x + PUB.w / 2, cy: PUB.y + PUB.h * 0.5 };
 
 // Man + Dog: on the sidewalk, right of pub
+<<<<<<< HEAD
 // viewBox 1024×1536 → aspect 2:3
 const MAN_DOG_H = H * 0.22;
 const MAN_DOG_W = MAN_DOG_H * (1024 / 1536);
 const MAN_DOG = {
   x: PUB.x + PUB.w + W * 0.04,
   y: STREET_TOP - MAN_DOG_H, // feet at street top
+=======
+// Post-crop viewBox: 713×972 → aspect 0.73:1
+const MAN_DOG_H = H * 0.25;
+const MAN_DOG_W = MAN_DOG_H * 0.73;
+const MAN_DOG = {
+  x: LAMP_RIGHT.x + LAMP_W + W * 0.02,
+  y: STREET_TOP - MAN_DOG_H,
+>>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
   w: MAN_DOG_W,
   h: MAN_DOG_H,
 };
