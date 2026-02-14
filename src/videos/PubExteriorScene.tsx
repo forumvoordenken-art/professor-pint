@@ -309,7 +309,7 @@ export const PubExteriorScene: React.FC = () => {
             width: W, height: H - GROUND_TOP,
             backgroundColor: '#3b4470',
             backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.png')})`,
-            backgroundSize: '100% 350%',
+            backgroundSize: '100% 400%',
             backgroundPosition: 'center bottom',
             backgroundRepeat: 'no-repeat',
           }} />
