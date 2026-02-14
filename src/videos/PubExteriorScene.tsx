@@ -11,7 +11,7 @@
  *  - sky/sky-night.svg            1536×1024  (1.50:1, no crop needed)
  *  - props/prop-moon.svg           761×743   (1.02:1)
  *  - structures/struct-pub.svg     977×1024  (0.95:1)
- *  - terrain/terrain-ground.svg   generated as 1920×400 panoramic strip
+ *  - terrain/terrain-ground.png   1536×1024  (PNG direct, skip vectorizer)
  *  - props/prop-man-dog.svg        713×972   (0.73:1)
  *  - props/prop-lamp.svg           177×741   (0.24:1)
  */
@@ -300,15 +300,17 @@ export const PubExteriorScene: React.FC = () => {
         </AbsoluteFill>
 
         {/* Layer 8: Ground (sidewalk + street combined)
-             Force-fill: vectorizer.ai outputs 1536×1024 regardless of input,
-             so we stretch to fill the thin ground strip. */}
+             PNG used directly (skip vectorizer.ai to avoid aspect ratio issues).
+             Image is 1536×1024. Rendered at 1920×500 with bottom-align so only
+             the sidewalk + cobblestones are visible (white top area cropped). */}
         <AbsoluteFill style={{ zIndex: 8 }}>
           <div style={{
             position: 'absolute',
             left: 0, top: GROUND_TOP,
             width: W, height: H - GROUND_TOP,
-            backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.svg')})`,
-            backgroundSize: '100% 100%',
+            backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.png')})`,
+            backgroundSize: `${W}px ${(H - GROUND_TOP) * 2.1}px`,
+            backgroundPosition: 'center bottom',
             backgroundRepeat: 'no-repeat',
           }} />
         </AbsoluteFill>
