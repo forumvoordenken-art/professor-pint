@@ -51,7 +51,11 @@ const H = 1080;
 // Bij width=W → height = W * (1024/1536) = 1280px (groter dan canvas = goed)
 // ---------------------------------------------------------------------------
 
-const LANDSCAPE_H = W * (1024 / 1536); // 1280 — hoogte bij volle breedte
+// Oversized zodat SVG content gegarandeerd het hele canvas bedekt.
+// SVG viewBox-content vult niet altijd de randen — dus ruim groter maken.
+const BG_W = 2400;
+const BG_H = BG_W * (1024 / 1536); // 1600
+const BG_LEFT = -(BG_W - W) / 2; // -240, gecentreerd
 
 // Moon: upper-right, ~10% of canvas width
 const MOON_SIZE = W * 0.10;
@@ -264,13 +268,13 @@ export const PubExteriorScene: React.FC = () => {
     <AbsoluteFill style={{ backgroundColor: '#0a0e1a' }}>
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
-        {/* Layer 1: Sky — explicit W×LANDSCAPE_H, excess cropped by AbsoluteFill */}
+        {/* Layer 1: Sky — oversized en gecentreerd, overflow hidden */}
         <AbsoluteFill style={{ zIndex: 1, overflow: 'hidden' }}>
           <Img
             src={staticFile('assets/sky/sky-night.svg')}
             style={{
               position: 'absolute',
-              left: 0, top: 0, width: W, height: LANDSCAPE_H,
+              left: BG_LEFT, top: 0, width: BG_W, height: BG_H,
             }}
           />
         </AbsoluteFill>
@@ -296,7 +300,7 @@ export const PubExteriorScene: React.FC = () => {
           <Stars frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 5: Terrain (bottom portion) — W wide, clipped to bottom half */}
+        {/* Layer 5: Terrain (bottom portion) — oversized, clipped to bottom half */}
         <div style={{
           position: 'absolute', left: 0, top: TERRAIN_TOP, width: W, height: H - TERRAIN_TOP,
           overflow: 'hidden', zIndex: 5,
@@ -305,7 +309,7 @@ export const PubExteriorScene: React.FC = () => {
             src={staticFile('assets/terrain/terrain-street.svg')}
             style={{
               position: 'absolute',
-              left: 0, top: 0, width: W, height: LANDSCAPE_H,
+              left: BG_LEFT, top: 0, width: BG_W, height: BG_H,
             }}
           />
         </div>
@@ -345,7 +349,7 @@ export const PubExteriorScene: React.FC = () => {
             src={staticFile('assets/terrain/terrain-sidewalk-foreground.svg')}
             style={{
               position: 'absolute',
-              left: 0, bottom: 0, width: W, height: LANDSCAPE_H,
+              left: BG_LEFT, bottom: 0, width: BG_W, height: BG_H,
             }}
           />
         </div>
