@@ -190,8 +190,11 @@ function computeElementBounds(elementStr) {
  *   </g>
  */
 function extractAndRemoveGroups(content, elements) {
-  const openTagRegex = /<g\s/g;
-  const groupRanges = []; // { start, end } of each top-level group
+  // ONLY match <g fill="..."> groups (not <g transform>, <g opacity>, etc.)
+  // The fill attribute means children inherit color from the group.
+  // Extracting non-fill groups would break document order and lose context.
+  const openTagRegex = /<g\s+fill="(?!none)[^"]*"/g;
+  const groupRanges = []; // { start, end } of each top-level fill group
 
   let match;
   while ((match = openTagRegex.exec(content)) !== null) {
