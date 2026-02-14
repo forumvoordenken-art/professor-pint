@@ -243,16 +243,22 @@ export const PubExteriorScene: React.FC = () => {
     <AbsoluteFill style={{ backgroundColor: '#0a0e1a' }}>
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
-        {/* Layer 1: Sky (full background) */}
+        {/* Layer 1: Sky (only top portion, stops at terrain line) */}
         <AbsoluteFill style={{ zIndex: 1 }}>
-          <Img
-            src={staticFile('assets/sky/sky-night.svg')}
-            style={{
-              position: 'absolute',
-              left: SKY.x, top: SKY.y, width: SKY.w, height: SKY.h,
-              objectFit: 'cover',
-            }}
-          />
+          <div style={{
+            position: 'absolute',
+            left: 0, top: 0, width: W, height: TERRAIN_TOP,
+            overflow: 'hidden',
+          }}>
+            <Img
+              src={staticFile('assets/sky/sky-night.svg')}
+              style={{
+                position: 'absolute',
+                left: 0, top: 0, width: W, height: TERRAIN_TOP,
+                objectFit: 'cover',
+              }}
+            />
+          </div>
         </AbsoluteFill>
 
         {/* Layer 2: Moon */}
@@ -283,7 +289,8 @@ export const PubExteriorScene: React.FC = () => {
             style={{
               position: 'absolute',
               left: TERRAIN.x, top: TERRAIN.y, width: TERRAIN.w, height: TERRAIN.h,
-              objectFit: 'fill', // NIET cover — we willen de hele straat zien
+              objectFit: 'cover', // cover zorgt dat hij de volledige breedte + hoogte vult
+              objectPosition: 'center center',
             }}
           />
         </AbsoluteFill>
