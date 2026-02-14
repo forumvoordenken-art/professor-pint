@@ -53,9 +53,10 @@ const H = 1080;
 
 // Oversized zodat SVG content gegarandeerd het hele canvas bedekt.
 // SVG viewBox-content vult niet altijd de randen — dus ruim groter maken.
-const BG_W = 2400;
-const BG_H = BG_W * (1024 / 1536); // 1600
-const BG_LEFT = -(BG_W - W) / 2; // -240, gecentreerd
+const BG_W = 2150;
+const BG_H = 1800;
+const BG_LEFT = -(BG_W - W) / 2; // -115, gecentreerd
+const BG_TOP = -150; // sky iets hoger trekken
 
 // Moon: upper-right, ~10% of canvas width
 const MOON_SIZE = W * 0.10;
@@ -274,7 +275,7 @@ export const PubExteriorScene: React.FC = () => {
             src={staticFile('assets/sky/sky-night.svg')}
             style={{
               position: 'absolute',
-              left: BG_LEFT, top: 0, width: BG_W, height: BG_H,
+              left: BG_LEFT, top: BG_TOP, width: BG_W, height: BG_H,
             }}
           />
         </AbsoluteFill>
