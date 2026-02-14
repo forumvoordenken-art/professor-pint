@@ -340,30 +340,6 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-<<<<<<< HEAD
-        {/* Layer 8: Sidewalk — 20% wider than canvas, centered, overflow clipped */}
-        <AbsoluteFill style={{ zIndex: 8, overflow: 'hidden' }}>
-          <div style={{
-            position: 'absolute',
-            left: -W * 0.1, top: SIDEWALK.y,
-            width: W * 1.2, height: SIDEWALK.h,
-            backgroundImage: `url(${staticFile('assets/terrain/terrain-sidewalk.svg')})`,
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-          }} />
-        </AbsoluteFill>
-
-        {/* Layer 8b: Street — 20% wider than canvas, centered, overflow clipped */}
-        <AbsoluteFill style={{ zIndex: 8, overflow: 'hidden' }}>
-          <div style={{
-            position: 'absolute',
-            left: -W * 0.1, top: STREET.y,
-            width: W * 1.2, height: STREET.h,
-            backgroundImage: `url(${staticFile('assets/terrain/terrain-street.svg')})`,
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-          }} />
-=======
         {/* Layer 8: Sidewalk (full width, SVG has preserveAspectRatio="none") */}
         <AbsoluteFill style={{ zIndex: 8 }}>
           <Img
@@ -386,7 +362,6 @@ export const PubExteriorScene: React.FC = () => {
               width: W, height: STREET.h,
             }}
           />
->>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
         </AbsoluteFill>
 
         {/* Layer 8c: Planters on sidewalk */}
