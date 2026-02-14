@@ -80,7 +80,12 @@ De gebruiker wil kritisch meedenken. Geef hem de informatie om dat te kunnen doe
 Bij het opleveren van werk, geef ALTIJD deze instructies:
 
 1. **Op welke branch het werk staat** — noem de exacte branch naam
-2. **Hoe te mergen naar main** — exacte commando's die de gebruiker in zijn Codespace terminal moet draaien.
+2. **Pre-push cleanup** — voordat je pusht, ALTIJD dit draaien als er nieuwe SVG assets zijn toegevoegd:
+   ```bash
+   node scripts/clean-svg-backgrounds.js
+   ```
+   Dit verwijdert automatisch witte achtergronden uit alle SVGs in `public/assets/`.
+3. **Hoe te mergen naar main** — exacte commando's die de gebruiker in zijn Codespace terminal moet draaien.
    Voeg ALTIJD een merge-bericht toe van max 4 woorden in het Nederlands:
    ```bash
    git fetch origin [branch-naam]
@@ -89,7 +94,7 @@ Bij het opleveren van werk, geef ALTIJD deze instructies:
    git stash pop
    git push origin main
    ```
-3. **Hoe te testen** — exacte commando's:
+4. **Hoe te testen** — exacte commando's:
    ```bash
    # Type check
    npx tsc --noEmit
@@ -114,6 +119,67 @@ Bij het opleveren van werk, geef ALTIJD deze instructies:
 9. **Asset creation via ChatGPT + vectorizer.ai** — Assets worden via ChatGPT (flat-color, max 16 kleuren, Kurzgesagt-stijl) gegenereerd als PNG, dan via vectorizer.ai naar SVG getraceerd (doel: 300-500 paden). Claude animeert de SVG in Remotion. Zie docs/PROJECT-STATE.md voor de volledige prompt en workflow.
 10. **Scene-first workflow** — Genereer EERST een complete scene als referentie-PNG in ChatGPT (alle elementen samen). Gebruik die als visuele gids voor kleuren, proporties en compositie. Genereer daarna elk element APART als losse PNG op witte achtergrond. Elk element wordt apart gevectoriseerd en apart geanimeerd. Dit is essentieel: één monolithische SVG kan NIET goed geanimeerd worden — losse elementen wel.
 11. **Animatie vereist losse elementen** — Een enkele grote SVG (gegroepeerd op kleur door vectorizer.ai) kan alleen overlay-effecten krijgen (opacity shifts, filters). Voor echte animatie (golven, lopen, wapperen, zwemmen) moeten elementen als aparte SVG-componenten bestaan die onafhankelijk getransformeerd kunnen worden.
+12. **Asset Metadata Systeem** — Elk asset heeft metadata (anchor point, natural size, groundLine) in `src/motor/AssetMetadata.ts`. Dit voorkomt "erbij geplakt" effect en zorgt voor correcte verhoudingen. Gebruik `positionOnGround()` helper om elementen op dezelfde grondlijn te plaatsen. NOOIT handmatig x/y/width/height raden — altijd via metadata.
+
+---
+
+## STAP 2A: Scene-First Workflow met Metadata
+
+**Probleem:** Losse assets hebben geen gedeelde schaal. Elementen lijken "erbij geplakt" zonder context.
+
+**Oplossing:** Scene-first workflow + metadata systeem.
+
+### Workflow per scene:
+
+1. **Genereer complete scene-PNG in ChatGPT**
+   - Alle elementen samen in één beeld
+   - Dit is de visuele referentie voor verhoudingen en kleuren
+   - Bewaar als `[scene-name]-reference.png` in `docs/videos/`
+
+2. **Visuele analyse van referentie** (GEEN handmatig meten!)
+   - Kijk naar de referentie en schat verhoudingen visueel:
+     - Hoe breed is het gebouw? (~60-70% van scherm?)
+     - Hoe hoog staan de lantaarns? (~70-80% van scherm?)
+     - Waar raken elementen de grond? (~90-95% van scherm?)
+   - Deze schattingen zijn genoeg — exacte pixels niet nodig
+
+3. **Genereer elk element apart**
+   - Elk element op witte achtergrond via ChatGPT
+   - Vectoriseer via vectorizer.ai
+   - Plaats in `public/assets/[categorie]/`
+
+4. **Cleanup witte achtergronden**
+   ```bash
+   node scripts/clean-svg-backgrounds.js
+   ```
+
+5. **Voeg metadata toe** in `src/motor/AssetMetadata.ts`
+   - Gebruik je visuele schattingen uit stap 2
+   - Voorbeeld:
+     ```ts
+     'struct-pub-exterior': {
+       id: 'struct-pub-exterior',
+       category: 'structure',
+       anchor: 'bottom-center',     // waar element "staat"
+       naturalWidth: 0.65,           // 65% van canvas
+       naturalHeight: 0.75,          // 75% van canvas
+       groundLine: 0.92,             // raakt grond op 92%
+       viewBox: { width: 1536, height: 1024 },
+     }
+     ```
+
+6. **Gebruik metadata in scene compositie**
+   ```ts
+   const pubPos = positionOnGround(pubMeta, CANVAS_W, CANVAS_H, 0.5);
+   const lampPos = positionOnGround(lampMeta, CANVAS_W, CANVAS_H, 0.15);
+   ```
+
+7. **Itereer op basis van visueel resultaat**
+   - Render de scene, vergelijk met referentie-PNG
+   - Tweak metadata als verhoudingen niet kloppen
+   - Geen handmatig meten — gewoon visueel vergelijken en aanpassen
+
+**Geen meten, geen handmatig werk — alleen visueel schatten en itereren.**
 
 ---
 

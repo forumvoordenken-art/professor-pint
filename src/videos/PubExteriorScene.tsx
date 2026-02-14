@@ -76,13 +76,13 @@ const lampLeftMeta = positionOnGround(
   getAssetMetadata('prop-street-lamp')!,
   CANVAS_W,
   CANVAS_H,
-  0.12, // 12% van links
+  0.10, // 10% van links (visueel uit referentie)
 );
 const lampRightMeta = positionOnGround(
   getAssetMetadata('prop-street-lamp')!,
   CANVAS_W,
   CANVAS_H,
-  0.88, // 88% van links (12% van rechts)
+  0.90, // 90% van links (visueel uit referentie)
 );
 
 // Dust motes in lamp light
@@ -340,9 +340,9 @@ export const PubExteriorScene: React.FC = () => {
   const skyPos = calculateAssetPosition(skyMeta, CANVAS_W, CANVAS_H);
   const terrainPos = calculateAssetPosition(terrainMeta, CANVAS_W, CANVAS_H);
   const pubPos = positionOnGround(pubMeta, CANVAS_W, CANVAS_H, 0.5); // center
-  const lampLeftPos = positionOnGround(lampMeta, CANVAS_W, CANVAS_H, 0.12);
-  const lampRightPos = positionOnGround(lampMeta, CANVAS_W, CANVAS_H, 0.88);
-  const moonPos = calculateAssetPosition(moonMeta, CANVAS_W, CANVAS_H, { x: 0.83, y: 0.13 });
+  const lampLeftPos = positionOnGround(lampMeta, CANVAS_W, CANVAS_H, 0.10);  // visueel uit referentie
+  const lampRightPos = positionOnGround(lampMeta, CANVAS_W, CANVAS_H, 0.90); // visueel uit referentie
+  const moonPos = calculateAssetPosition(moonMeta, CANVAS_W, CANVAS_H, { x: 0.85, y: 0.11 }); // rechtsboven
 
   // Lamp glow centers (near top of lamp)
   const lampLeftGlowY = lampLeftPos.y + lampLeftPos.height * 0.2;

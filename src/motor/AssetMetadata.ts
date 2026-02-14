@@ -108,42 +108,42 @@ export const ASSET_METADATA: Record<string, AssetMetadata> = {
     category: 'terrain',
     anchor: 'bottom-center',
     naturalWidth: 1.0,
-    naturalHeight: 0.55,
+    naturalHeight: 0.45,  // Visueel: onderste ~45% van screen
     groundLine: 1.0,
     viewBox: { width: 1536, height: 1024 },
-    notes: 'Keistraat, onderste 55% van canvas',
+    notes: 'Keistraat, onderste 45% van canvas (visueel geschat uit referentie)',
   },
 
   'struct-pub-exterior': {
     id: 'struct-pub-exterior',
     category: 'structure',
     anchor: 'bottom-center',
-    naturalWidth: 0.7,
-    naturalHeight: 0.85,
-    groundLine: 0.92,
+    naturalWidth: 0.58,   // Visueel: ~58% breed (centraal maar niet te groot)
+    naturalHeight: 0.72,  // Visueel: ~72% hoog
+    groundLine: 0.92,     // Staat op de grond, net boven onderkant
     viewBox: { width: 1536, height: 1024 },
-    notes: 'Pub gebouw, centraal gepositioneerd',
+    notes: 'Pub gebouw, centraal, visueel geschat uit referentie-scene',
   },
 
   'prop-street-lamp': {
     id: 'prop-street-lamp',
     category: 'prop',
     anchor: 'bottom-center',
-    naturalWidth: 0.08,  // 8% canvas breedte
-    naturalHeight: 0.78, // 78% canvas hoogte
-    groundLine: 0.92,
+    naturalWidth: 0.065,  // Visueel: ~6.5% breed (smaller dan eerder gedacht)
+    naturalHeight: 0.68,  // Visueel: ~68% hoog
+    groundLine: 0.92,     // Zelfde grondlijn als pub
     viewBox: { width: 1024, height: 1536 },
-    notes: 'Victoriaanse lantaarnpaal, portret-orientatie',
+    notes: 'Victoriaanse lantaarnpaal, portret, visueel geschat uit referentie',
   },
 
   'prop-moon-crescent': {
     id: 'prop-moon-crescent',
     category: 'prop',
     anchor: 'center',
-    naturalWidth: 0.12,
-    naturalHeight: 0.12,
+    naturalWidth: 0.09,   // Visueel: ~9% breed
+    naturalHeight: 0.09,  // Visueel: ~9% hoog (square-ish)
     viewBox: { width: 1536, height: 1024 },
-    notes: 'Wassende maan, rechtsboven in de lucht',
+    notes: 'Wassende maan, rechtsboven, visueel geschat uit referentie',
   },
 };
 
