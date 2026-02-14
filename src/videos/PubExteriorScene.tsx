@@ -93,12 +93,14 @@ const GLOW_RIGHT = { cx: LAMP_RIGHT.x + LAMP_W / 2, cy: LAMP_RIGHT.y + LAMP_H * 
 // Pub center (for window light)
 const PUB_CENTER = { cx: PUB.x + PUB.w / 2, cy: PUB.y + PUB.h * 0.5 };
 
-// Man + Dog: op het trottoir (foreground rechts), hoogte ~35% van canvas
-const MAN_DOG_H = H * 0.35;
-const MAN_DOG_W = MAN_DOG_H * (1536 / 1024); // viewBox 1536x1024 = landscape
-const MAN_DOG_BOTTOM = H * 0.98;
+// Man + Dog: op het trottoir (foreground rechts)
+// viewBox is 1536x1024 (landscape) maar het figuur zelf is portrait-achtig.
+// We gebruiken de viewBox ratio zodat de SVG niet vervormt, maar maken het groter.
+const MAN_DOG_H = H * 0.45;
+const MAN_DOG_W = MAN_DOG_H * (1536 / 1024); // behoud viewBox ratio
+const MAN_DOG_BOTTOM = H * 0.96;
 const MAN_DOG = {
-  x: W * 0.75 - MAN_DOG_W / 2,
+  x: W * 0.72 - MAN_DOG_W / 2,
   y: MAN_DOG_BOTTOM - MAN_DOG_H,
   w: MAN_DOG_W,
   h: MAN_DOG_H,
@@ -297,16 +299,15 @@ export const PubExteriorScene: React.FC = () => {
           <Stars frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 5: Terrain (bottom portion) — scaled wider to fill frame */}
-        <AbsoluteFill style={{ zIndex: 5, overflow: 'hidden' }}>
+        {/* Layer 5: Terrain (bottom portion) — 130% width, centered to fill frame */}
+        <AbsoluteFill style={{ zIndex: 5 }}>
           <Img
             src={staticFile('assets/terrain/terrain-street.svg')}
             style={{
               position: 'absolute',
-              left: TERRAIN.x, top: TERRAIN.y, width: TERRAIN.w, height: TERRAIN.h,
+              left: -(W * 0.15), top: TERRAIN.y,
+              width: W * 1.3, height: TERRAIN.h,
               objectFit: 'fill',
-              transform: 'scaleX(1.3)', // wider zodat geen zwarte randen
-              transformOrigin: 'center center',
             }}
           />
         </AbsoluteFill>
@@ -337,13 +338,14 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 9: Foreground (onderste 25%) — Trottoir + plantenbakken */}
+        {/* Layer 9: Foreground (onderste 25%) — Trottoir + plantenbakken, 130% width centered */}
         <AbsoluteFill style={{ zIndex: 9 }}>
           <Img
             src={staticFile('assets/terrain/terrain-sidewalk-foreground.svg')}
             style={{
               position: 'absolute',
-              left: FG_STREET.x, top: FG_STREET.y, width: FG_STREET.w, height: FG_STREET.h,
+              left: -(W * 0.15), top: FG_STREET.y,
+              width: W * 1.3, height: FG_STREET.h,
               objectFit: 'fill',
             }}
           />

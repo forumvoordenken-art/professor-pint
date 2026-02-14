@@ -19,32 +19,56 @@ const path = require('path');
 const ASSETS_DIR = path.join(__dirname, '..', 'public', 'assets');
 const DRY_RUN = process.argv.includes('--dry-run');
 
-// Kleuren die als "wit" gelden (case-insensitive hex)
-const WHITE_COLORS = [
-  '#ffffff',
-  '#fefefe',
-  '#fdfdfd',
-  '#fcfcfc',
-  '#fcfdfe',
-  '#feffff',
-  '#fffeff',
-];
-
 /**
- * Check of een kleur bijna-wit is
+ * Check of een kleur bijna-wit is.
+ * Parst de hex-kleur en checkt of R, G en B elk >= 248 (0xF8) zijn.
+ * Dat vangt #ffffff, #fefefe, #fcfdfe, #fafafa, enz.
  */
 function isWhite(color) {
   if (!color) return false;
-  const normalized = color.toLowerCase().trim();
-  return WHITE_COLORS.includes(normalized);
+  const hex = color.toLowerCase().trim();
+  if (hex === 'white') return true;
+
+  const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/);
+  if (!m) return false;
+
+  const r = parseInt(m[1], 16);
+  const g = parseInt(m[2], 16);
+  const b = parseInt(m[3], 16);
+  return r >= 248 && g >= 248 && b >= 248;
 }
 
 /**
- * Verwijder eerste witte <path> uit SVG string
+ * Verwijder witte achtergrond-elementen uit SVG string.
+ *
+ * Detecteert:
+ *  - <path fill="white-ish" ...>...</path>  en  <path fill="white-ish" ... />
+ *  - <rect fill="white-ish" ...>...</rect>  en  <rect fill="white-ish" ... />
+ *  - <g fill="white-ish">...</g>  (hele groep)
+ *
+ * Verwijdert alleen het EERSTE witte element dat het tegenkomt.
+ * Run het script meerdere keren als er meerdere zijn.
+ *
  * Returns { cleaned: string, removed: boolean, color: string|null }
  */
 function removeWhiteBackground(svgContent) {
-  // Match de eerste <path fill="..."> tag
+  // 1. Check for <g fill="white"> ... </g> (greedy: outermost closing tag)
+  const gRegex = /<g\s+fill="([^"]+)"\s*>[\s\S]*?<\/g>/;
+  const gMatch = svgContent.match(gRegex);
+  if (gMatch && isWhite(gMatch[1])) {
+    const cleaned = svgContent.replace(gMatch[0], '');
+    return { cleaned, removed: true, color: gMatch[1] };
+  }
+
+  // 2. Check for <rect fill="white"> (self-closing or with closing tag)
+  const rectRegex = /<rect\s+[^>]*fill="([^"]+)"[^>]*\/?>(?:<\/rect>)?/;
+  const rectMatch = svgContent.match(rectRegex);
+  if (rectMatch && isWhite(rectMatch[1])) {
+    const cleaned = svgContent.replace(rectMatch[0], '');
+    return { cleaned, removed: true, color: rectMatch[1] };
+  }
+
+  // 3. Check for <path fill="white"> (original logic)
   const pathRegex = /<path\s+fill="([^"]+)"[^>]*>[\s\S]*?<\/path>|<path\s+fill="([^"]+)"[^>]*\/>/;
   const match = svgContent.match(pathRegex);
 
@@ -58,9 +82,7 @@ function removeWhiteBackground(svgContent) {
     return { cleaned: svgContent, removed: false, color: fillColor };
   }
 
-  // Verwijder de eerste path
   const cleaned = svgContent.replace(pathRegex, '');
-
   return { cleaned, removed: true, color: fillColor };
 }
 
@@ -85,30 +107,34 @@ function findSvgFiles(dir) {
 }
 
 /**
- * Process één SVG bestand
+ * Process één SVG bestand — herhaalt tot er geen witte elementen meer zijn
  */
 function processSvg(filePath) {
-  const content = fs.readFileSync(filePath, 'utf8');
-  const result = removeWhiteBackground(content);
-
+  let content = fs.readFileSync(filePath, 'utf8');
   const relativePath = path.relative(ASSETS_DIR, filePath);
 
-  if (result.removed) {
+  let removedAny = false;
+
+  // Loop: verwijder witte elementen tot er geen meer zijn
+  while (true) {
+    const result = removeWhiteBackground(content);
+    if (!result.removed) break;
+
+    removedAny = true;
+    content = result.cleaned;
     console.log(`✅ ${relativePath}`);
     console.log(`   Removed white background: ${result.color}`);
+  }
 
+  if (removedAny) {
     if (!DRY_RUN) {
-      fs.writeFileSync(filePath, result.cleaned, 'utf8');
+      fs.writeFileSync(filePath, content, 'utf8');
       console.log(`   Written cleaned SVG`);
     }
     return { processed: true, changed: true };
   } else {
     console.log(`⏭️  ${relativePath}`);
-    if (result.color) {
-      console.log(`   First path is not white: ${result.color}`);
-    } else {
-      console.log(`   No <path> tags found`);
-    }
+    console.log(`   No white backgrounds found`);
     return { processed: true, changed: false };
   }
 }
