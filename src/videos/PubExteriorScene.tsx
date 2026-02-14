@@ -300,19 +300,19 @@ export const PubExteriorScene: React.FC = () => {
         </AbsoluteFill>
 
         {/* Layer 8: Ground (sidewalk + street combined)
-             PNG used directly (skip vectorizer.ai to avoid aspect ratio issues).
-             Image is 1536×1024. Rendered at 1920×500 with bottom-align so only
-             the sidewalk + cobblestones are visible (white top area cropped). */}
+             PNG letterbox: content in bottom ~20%, rest white.
+             cover + bottom crops white area, shows ground at correct ratio. */}
         <AbsoluteFill style={{ zIndex: 8 }}>
-          <div style={{
-            position: 'absolute',
-            left: 0, top: GROUND_TOP,
-            width: W, height: H - GROUND_TOP,
-            backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.png')})`,
-            backgroundSize: `${W}px ${(H - GROUND_TOP) * 2.1}px`,
-            backgroundPosition: 'center bottom',
-            backgroundRepeat: 'no-repeat',
-          }} />
+          <Img
+            src={staticFile('assets/terrain/terrain-ground.png')}
+            style={{
+              position: 'absolute',
+              left: 0, top: GROUND_TOP,
+              width: W, height: H - GROUND_TOP,
+              objectFit: 'cover',
+              objectPosition: 'center bottom',
+            }}
+          />
         </AbsoluteFill>
 
         {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
