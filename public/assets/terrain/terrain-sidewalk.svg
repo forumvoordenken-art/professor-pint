@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0.00 0.00 1536.00 1024.00">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0.00 634.39 1556.00 101.06">
 <g stroke-width="2.00" fill="none" stroke-linecap="butt">
 <path stroke="#b5b8cb" vector-effect="non-scaling-stroke" d="
   M 1536.00 644.39
@@ -200,45 +200,7 @@
   L 1535.73 713.78"
 />
 </g>
-<g fill="#ffffff">
-<path d="
-  M 1536.00 0.00
-  L 1536.00 644.39
-  L 0.00 644.42
-  L 0.00 0.00
-  L 1536.00 0.00
-  Z"
-/>
-<path d="
-  M 1536.00 646.50
-  L 1536.00 666.08
-  L 1535.80 647.18
-  Q 1535.69 646.56 1536.00 646.50
-  Z"
-/>
-<path d="
-  M 0.19 713.43
-  Q 0.38 713.49 0.00 713.60
-  L 0.00 712.37
-  Q 0.00 712.93 0.19 713.43
-  Z"
-/>
-<path d="
-  M 1536.00 712.72
-  L 1536.00 713.72
-  Q 1535.86 713.75 1535.73 713.78
-  L 1536.00 712.72
-  Z"
-/>
-<path d="
-  M 1536.00 725.44
-  L 1536.00 1024.00
-  L 0.00 1024.00
-  L 0.00 725.45
-  L 1536.00 725.44
-  Z"
-/>
-</g>
+
 <path fill="#3a405c" d="
   M 155.03 697.91
   L 161.54 697.93

@@ -1,19 +1,30 @@
 /**
- * PubExteriorScene — Night pub exterior (v7 — combined ground layer)
+ * PubExteriorScene — Night pub exterior (v8 — separate ground layers)
  *
  * Assets are auto-cropped via `node scripts/crop-svg-viewbox.js` so
  * viewBox matches actual content. Aspect ratios below are POST-CROP.
  *
  * Layout top → bottom:
- *   Sky (full canvas) → Pub → Ground (78%-100%: sidewalk + street combined)
+ *   Sky (full canvas) → Pub → Sidewalk (78%-87%) → Street (87%-100%)
  *
  * Assets (public/assets/) — aspect ratios after viewBox crop:
+<<<<<<< HEAD
  *  - sky/sky-night.svg            1536×1024  (1.50:1, no crop needed)
  *  - props/prop-moon.svg           761×743   (1.02:1)
  *  - structures/struct-pub.svg     977×1024  (0.95:1)
  *  - terrain/terrain-ground.png   1536×216   (auto-cropped via sharp trim)
  *  - props/prop-man-dog.svg        713×972   (0.73:1)
  *  - props/prop-lamp.svg           177×741   (0.24:1)
+=======
+ *  - sky/sky-night.svg              1536×1024   (1.50:1, no crop needed)
+ *  - props/prop-moon.svg             902×878    (1.03:1)
+ *  - structures/struct-pub.svg        880×1113   (0.79:1)
+ *  - terrain/terrain-sidewalk.svg    1556×101    (15.40:1)
+ *  - terrain/terrain-street.svg      1556×145    (10.72:1)
+ *  - props/prop-planter.svg          1137×661    (1.72:1)
+ *  - props/prop-man-dog.svg          1138×915    (1.24:1)
+ *  - props/prop-lamp.svg              612×1331   (0.46:1)
+>>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
  */
 
 import React from 'react';
@@ -33,32 +44,54 @@ const H = 1080;
 // ---------------------------------------------------------------------------
 // Scene from top to bottom:
 //   [sky fills entire canvas as background]
-//   Pub bottom on ground
-//   Ground: 78%–100% (sidewalk + street combined in one asset)
+//   Pub bottom on sidewalk
+//   Sidewalk: 78%–87% of canvas
+//   Street: 87%–100% of canvas
 
-const GROUND_TOP = H * 0.78;
+const SIDEWALK_TOP = H * 0.78;
+const STREET_TOP = H * 0.87;
+
+// Sidewalk: full width, from 78% to 87%
+// Post-crop viewBox: 1556×101 → aspect 15.40:1
+const SIDEWALK_H = STREET_TOP - SIDEWALK_TOP; // ~97px
+const SIDEWALK = {
+  x: 0,
+  y: SIDEWALK_TOP,
+  w: W,
+  h: SIDEWALK_H,
+};
+
+// Street: full width, from 87% to 100%
+// Post-crop viewBox: 1556×145 → aspect 10.72:1
+const STREET_H = H - STREET_TOP; // ~140px
+const STREET = {
+  x: 0,
+  y: STREET_TOP,
+  w: W,
+  h: STREET_H,
+};
 
 // Moon: upper-right, ~12% of canvas width
-// Post-crop viewBox: 761×743 → aspect 1.02:1
+// Post-crop viewBox: 902×878 → aspect 1.03:1
 const MOON_SIZE = W * 0.12;
-const MOON = { x: W * 0.80, y: H * 0.04, w: MOON_SIZE, h: MOON_SIZE / 1.02 };
+const MOON = { x: W * 0.80, y: H * 0.04, w: MOON_SIZE, h: MOON_SIZE / 1.03 };
 
 // Pub: center, bottom on sidewalk, height ~78% canvas
-// Post-crop viewBox: 977×1024 → aspect 0.95:1
+// Post-crop viewBox: 880×1113 → aspect 0.79:1
 const PUB_H = H * 0.78;
-const PUB_W = PUB_H * 0.95;
+const PUB_W = PUB_H * 0.79;
 const PUB = {
   x: (W - PUB_W) / 2,
-  y: GROUND_TOP - PUB_H,
+  y: SIDEWALK_TOP - PUB_H,
   w: PUB_W,
   h: PUB_H,
 };
 
 // Lamps: height ~40% of canvas, flanking the pub
-// Post-crop viewBox: 177×741 → aspect 0.24:1
+// Post-crop viewBox: 612×1331 → aspect 0.46:1
 const LAMP_H = H * 0.40;
-const LAMP_W = LAMP_H * 0.24;
-const LAMP_BOTTOM = GROUND_TOP;
+const LAMP_W = LAMP_H * 0.46;
+const LAMP_BOTTOM = SIDEWALK_TOP;
 const LAMP_LEFT = {
   x: PUB.x - LAMP_W - W * 0.02,
   y: LAMP_BOTTOM - LAMP_H,
@@ -79,13 +112,30 @@ const GLOW_RIGHT = { cx: LAMP_RIGHT.x + LAMP_W / 2, cy: LAMP_RIGHT.y + LAMP_H * 
 // Pub center (for window light)
 const PUB_CENTER = { cx: PUB.x + PUB.w / 2, cy: PUB.y + PUB.h * 0.5 };
 
+// Planters: on sidewalk, flanking pub entrance
+// Post-crop viewBox: 1137×661 → aspect 1.72:1
+const PLANTER_H = SIDEWALK_H * 1.2;
+const PLANTER_W = PLANTER_H * 1.72;
+const PLANTER_LEFT = {
+  x: PUB.x + PUB.w * 0.08,
+  y: SIDEWALK_TOP - PLANTER_H * 0.5,
+  w: PLANTER_W,
+  h: PLANTER_H,
+};
+const PLANTER_RIGHT = {
+  x: PUB.x + PUB.w * 0.75,
+  y: SIDEWALK_TOP - PLANTER_H * 0.5,
+  w: PLANTER_W,
+  h: PLANTER_H,
+};
+
 // Man + Dog: on the sidewalk, right of pub
-// Post-crop viewBox: 713×972 → aspect 0.73:1
+// Post-crop viewBox: 1138×915 → aspect 1.24:1
 const MAN_DOG_H = H * 0.28;
-const MAN_DOG_W = MAN_DOG_H * 0.73;
+const MAN_DOG_W = MAN_DOG_H * 1.24;
 const MAN_DOG = {
   x: LAMP_RIGHT.x + LAMP_W + W * 0.02,
-  y: GROUND_TOP + (H - GROUND_TOP) * 0.4 - MAN_DOG_H,
+  y: SIDEWALK_TOP + SIDEWALK_H * 0.4 - MAN_DOG_H,
   w: MAN_DOG_W,
   h: MAN_DOG_H,
 };
@@ -131,7 +181,7 @@ const dustRight = makeParticles(15, 20, {
   x1: GLOW_RIGHT.cx - 80, y1: GLOW_RIGHT.cy - 20,
   x2: GLOW_RIGHT.cx + 80, y2: GLOW_RIGHT.cy + 250,
 });
-const fogParticles = makeParticles(25, 30, { x1: 0, y1: H * 0.78, x2: W, y2: H });
+const fogParticles = makeParticles(25, 30, { x1: 0, y1: SIDEWALK_TOP, x2: W, y2: H });
 const stars = Array.from({ length: 40 }, (_, i) => ({
   cx: 40 + rand(100 + i) * (W - 80),
   cy: 15 + rand(200 + i) * (H * 0.45),
@@ -202,7 +252,7 @@ const WindowLight: React.FC<{ frame: number }> = ({ frame }) => {
         </radialGradient>
       </defs>
       <ellipse cx={PUB_CENTER.cx} cy={PUB_CENTER.cy + 50} rx={280} ry={200} fill="url(#wl-v5)" />
-      <ellipse cx={PUB_CENTER.cx} cy={GROUND_TOP} rx={320} ry={70} fill="#FFD060" opacity={0.1 * f} />
+      <ellipse cx={PUB_CENTER.cx} cy={SIDEWALK_TOP} rx={320} ry={70} fill="#FFD060" opacity={0.1 * f} />
     </svg>
   );
 };
@@ -277,7 +327,7 @@ export const PubExteriorScene: React.FC = () => {
         <AbsoluteFill style={{ zIndex: 5 }}>
           <div style={{
             position: 'absolute', left: 0, right: 0,
-            top: GROUND_TOP - 80, height: 120,
+            top: SIDEWALK_TOP - 80, height: 120,
             background: 'linear-gradient(to bottom, transparent 0%, rgba(20,24,43,0.6) 45%, rgba(20,24,43,0.6) 55%, transparent 100%)',
             pointerEvents: 'none',
           }} />
@@ -299,6 +349,7 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
+<<<<<<< HEAD
         {/* Layer 8: Ground (sidewalk + street combined)
              Auto-cropped PNG 1536×216 (7.1:1). objectFit fill stretches
              to 1920×238 — only ~10% vertical stretch, barely noticeable. */}
@@ -310,6 +361,49 @@ export const PubExteriorScene: React.FC = () => {
               left: 0, top: GROUND_TOP - 2,
               width: W, height: H - GROUND_TOP + 2,
               objectFit: 'fill',
+=======
+        {/* Layer 8: Sidewalk */}
+        <AbsoluteFill style={{ zIndex: 8 }}>
+          <Img
+            src={staticFile('assets/terrain/terrain-sidewalk.svg')}
+            style={{
+              position: 'absolute',
+              left: SIDEWALK.x, top: SIDEWALK.y,
+              width: SIDEWALK.w, height: SIDEWALK.h,
+            }}
+          />
+        </AbsoluteFill>
+
+        {/* Layer 8b: Street */}
+        <AbsoluteFill style={{ zIndex: 8 }}>
+          <Img
+            src={staticFile('assets/terrain/terrain-street.svg')}
+            style={{
+              position: 'absolute',
+              left: STREET.x, top: STREET.y,
+              width: STREET.w, height: STREET.h,
+            }}
+          />
+        </AbsoluteFill>
+
+        {/* Layer 8c: Planters on sidewalk */}
+        <AbsoluteFill style={{ zIndex: 8 }}>
+          <Img
+            src={staticFile('assets/props/prop-planter.svg')}
+            style={{
+              position: 'absolute',
+              left: PLANTER_LEFT.x, top: PLANTER_LEFT.y,
+              width: PLANTER_LEFT.w, height: PLANTER_LEFT.h,
+            }}
+          />
+          <Img
+            src={staticFile('assets/props/prop-planter.svg')}
+            style={{
+              position: 'absolute',
+              left: PLANTER_RIGHT.x, top: PLANTER_RIGHT.y,
+              width: PLANTER_RIGHT.w, height: PLANTER_RIGHT.h,
+              transform: 'scaleX(-1)',
+>>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
             }}
           />
         </AbsoluteFill>
