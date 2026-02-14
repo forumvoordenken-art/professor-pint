@@ -307,8 +307,8 @@ export const PubExteriorScene: React.FC = () => {
             src={staticFile('assets/terrain/terrain-ground.png')}
             style={{
               position: 'absolute',
-              left: 0, top: GROUND_TOP,
-              width: W, height: H - GROUND_TOP,
+              left: 0, top: GROUND_TOP - 2,
+              width: W, height: H - GROUND_TOP + 2,
               objectFit: 'fill',
             }}
           />
