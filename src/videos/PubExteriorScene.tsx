@@ -1,21 +1,28 @@
 /**
- * PubExteriorScene — Night pub exterior (v8 — separate ground layers)
+ * PubExteriorScene — Night pub exterior (v9 — split-scene layers)
  *
- * Assets are auto-cropped via `node scripts/crop-svg-viewbox.js` so
- * viewBox matches actual content. Aspect ratios below are POST-CROP.
+ * NEW APPROACH: Eén scene-PNG → vectorizer.ai → split-scene-svg.js → aparte lagen.
+ * Alle lagen hebben DEZELFDE viewBox → perfect uitgelijn met inset: 0.
+ * Geen handmatige positionering meer.
  *
- * Layout top → bottom:
- *   Sky (full canvas) → Pub → Sidewalk (78%-87%) → Street (87%-100%)
+ * Workflow:
+ *   1. Genereer volledige scene als PNG (ChatGPT)
+ *   2. Vectorize (vectorizer.ai)
+ *   3. node scripts/clean-svg-backgrounds.js
+ *   4. node scripts/split-scene-svg.js <input.svg> --config scenes/pub-exterior-regions.json
+ *   5. Output → public/assets/scenes/pub-exterior/*.svg
  *
- * Assets (public/assets/) — aspect ratios after viewBox crop:
- *  - sky/sky-night.svg              1536×1024   (1.50:1, no crop needed)
- *  - props/prop-moon.svg             902×878    (1.03:1)
- *  - structures/struct-pub.svg        880×1113   (0.79:1)
- *  - terrain/terrain-sidewalk.svg    1556×101    (15.40:1)
- *  - terrain/terrain-street.svg      1556×145    (10.72:1)
- *  - props/prop-planter.svg          1137×661    (1.72:1)
- *  - props/prop-man-dog.svg          1138×915    (1.24:1)
- *  - props/prop-lamp.svg              612×1331   (0.46:1)
+ * Animation overlays (stars, glow, fog) worden procedureel gegenereerd
+ * op basis van anchor points die per scene worden ingesteld.
+ *
+ * Assets (public/assets/scenes/pub-exterior/):
+ *   - sky.svg         Lucht, maan, sterren
+ *   - pub.svg         Pub gebouw
+ *   - lamp-left.svg   Linker lantaarnpaal
+ *   - lamp-right.svg  Rechter lantaarnpaal
+ *   - characters.svg  Man + hond
+ *   - sidewalk.svg    Stoep
+ *   - street.svg      Straat (cobblestone)
  */
 
 import React from 'react';
@@ -31,100 +38,55 @@ const W = 1920;
 const H = 1080;
 
 // ---------------------------------------------------------------------------
-// Layout — vertical zones (all aspect ratios are POST-CROP from viewBox)
+// Scene layers — alle SVGs hebben dezelfde viewBox, dus inset: 0 = perfect align
 // ---------------------------------------------------------------------------
-// Scene from top to bottom:
-//   [sky fills entire canvas as background]
-//   Pub bottom on sidewalk
-//   Sidewalk: 78%–87% of canvas
-//   Street: 87%–100% of canvas
 
-const SIDEWALK_TOP = H * 0.73;
+const SCENE_DIR = 'assets/scenes/pub-exterior';
 
-// Sidewalk: full width, thick band (12% of canvas = ~130px)
-const SIDEWALK_H = H * 0.12;
-const SIDEWALK = {
-  x: 0,
-  y: SIDEWALK_TOP,
-  w: W,
-  h: SIDEWALK_H,
+/** Scene layer definition — rendered in z-index order */
+interface SceneLayer {
+  id: string;
+  src: string;
+  zIndex: number;
+}
+
+const SCENE_LAYERS: SceneLayer[] = [
+  { id: 'sky',        src: `${SCENE_DIR}/sky.svg`,        zIndex: 1 },
+  { id: 'pub',        src: `${SCENE_DIR}/pub.svg`,        zIndex: 6 },
+  { id: 'sidewalk',   src: `${SCENE_DIR}/sidewalk.svg`,   zIndex: 8 },
+  { id: 'street',     src: `${SCENE_DIR}/street.svg`,     zIndex: 9 },
+  { id: 'characters', src: `${SCENE_DIR}/characters.svg`, zIndex: 10 },
+  { id: 'lamp-left',  src: `${SCENE_DIR}/lamp-left.svg`,  zIndex: 11 },
+  { id: 'lamp-right', src: `${SCENE_DIR}/lamp-right.svg`, zIndex: 11 },
+];
+
+// Full-canvas style for scene layers (shared viewBox = no positioning needed)
+const LAYER_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  width: '100%',
+  height: '100%',
 };
 
-// Street: overlaps sidewalk by 5px, extends 15px past canvas bottom (no gaps)
-const STREET = {
-  x: 0,
-  y: SIDEWALK_TOP + SIDEWALK_H - 5,
-  w: W,
-  h: H - (SIDEWALK_TOP + SIDEWALK_H) + 20,
-};
+// ---------------------------------------------------------------------------
+// Animation anchor points (fracties van canvas, aanpassen per scene)
+// Deze komen overeen met waar elementen in de scene staan.
+// Na eerste render → check posities en pas aan.
+// ---------------------------------------------------------------------------
 
-// Moon: upper-right, ~12% of canvas width
-// Post-crop viewBox: 902×878 → aspect 1.03:1
-const MOON_SIZE = W * 0.12;
-const MOON = { x: W * 0.80, y: H * 0.04, w: MOON_SIZE, h: MOON_SIZE / 1.03 };
+const ANCHORS = {
+  // Moon: upper-right area
+  moon: { x: W * 0.82, y: H * 0.12 },
 
-// Pub: center, bottom sinks 40px into sidewalk so building sits on ground
-// Post-crop viewBox: 880×1113 → aspect 0.79:1
-const PUB_H = H * 0.65;
-const PUB_W = PUB_H * 0.79;
-const PUB = {
-  x: (W - PUB_W) / 2,
-  y: SIDEWALK_TOP - PUB_H + 40,
-  w: PUB_W,
-  h: PUB_H,
-};
+  // Pub center: for window light glow
+  pubCenter: { x: W * 0.50, y: H * 0.45 },
 
-// Lamps: height ~32% of canvas (smaller than pub), feet sink 20px into sidewalk
-// Post-crop viewBox: 612×1331 → aspect 0.46:1
-const LAMP_H = H * 0.32;
-const LAMP_W = LAMP_H * 0.46;
-const LAMP_BOTTOM = SIDEWALK_TOP + 20;
-const LAMP_LEFT = {
-  x: PUB.x - LAMP_W - W * 0.02,
-  y: LAMP_BOTTOM - LAMP_H,
-  w: LAMP_W,
-  h: LAMP_H,
-};
-const LAMP_RIGHT = {
-  x: PUB.x + PUB.w + W * 0.02,
-  y: LAMP_BOTTOM - LAMP_H,
-  w: LAMP_W,
-  h: LAMP_H,
-};
+  // Ground line: where sidewalk starts (for fog, horizon blend)
+  groundLine: H * 0.73,
 
-// Glow positions (near top of lamps)
-const GLOW_LEFT = { cx: LAMP_LEFT.x + LAMP_W / 2, cy: LAMP_LEFT.y + LAMP_H * 0.12 };
-const GLOW_RIGHT = { cx: LAMP_RIGHT.x + LAMP_W / 2, cy: LAMP_RIGHT.y + LAMP_H * 0.12 };
-
-// Pub center (for window light)
-const PUB_CENTER = { cx: PUB.x + PUB.w / 2, cy: PUB.y + PUB.h * 0.5 };
-
-// Planters: on sidewalk, flanking pub entrance
-// Post-crop viewBox: 1137×661 → aspect 1.72:1
-const PLANTER_H = SIDEWALK_H * 1.2;
-const PLANTER_W = PLANTER_H * 1.72;
-const PLANTER_LEFT = {
-  x: PUB.x + PUB.w * 0.08,
-  y: SIDEWALK_TOP - PLANTER_H * 0.5,
-  w: PLANTER_W,
-  h: PLANTER_H,
-};
-const PLANTER_RIGHT = {
-  x: PUB.x + PUB.w * 0.75,
-  y: SIDEWALK_TOP - PLANTER_H * 0.5,
-  w: PLANTER_W,
-  h: PLANTER_H,
-};
-
-// Man + Dog: on the sidewalk, right of pub
-// Post-crop viewBox: 1138×915 → aspect 1.24:1
-const MAN_DOG_H = H * 0.28;
-const MAN_DOG_W = MAN_DOG_H * 1.24;
-const MAN_DOG = {
-  x: LAMP_RIGHT.x + LAMP_W + W * 0.02,
-  y: SIDEWALK_TOP + SIDEWALK_H * 0.4 - MAN_DOG_H,
-  w: MAN_DOG_W,
-  h: MAN_DOG_H,
+  // Lamp tops: where glow emanates from
+  lampLeft: { x: W * 0.22, y: H * 0.35 },
+  lampRight: { x: W * 0.78, y: H * 0.35 },
 };
 
 // ---------------------------------------------------------------------------
@@ -161,14 +123,16 @@ const makeParticles = (
   }));
 
 const dustLeft = makeParticles(15, 10, {
-  x1: GLOW_LEFT.cx - 80, y1: GLOW_LEFT.cy - 20,
-  x2: GLOW_LEFT.cx + 80, y2: GLOW_LEFT.cy + 250,
+  x1: ANCHORS.lampLeft.x - 80, y1: ANCHORS.lampLeft.y - 20,
+  x2: ANCHORS.lampLeft.x + 80, y2: ANCHORS.lampLeft.y + 250,
 });
 const dustRight = makeParticles(15, 20, {
-  x1: GLOW_RIGHT.cx - 80, y1: GLOW_RIGHT.cy - 20,
-  x2: GLOW_RIGHT.cx + 80, y2: GLOW_RIGHT.cy + 250,
+  x1: ANCHORS.lampRight.x - 80, y1: ANCHORS.lampRight.y - 20,
+  x2: ANCHORS.lampRight.x + 80, y2: ANCHORS.lampRight.y + 250,
 });
-const fogParticles = makeParticles(25, 30, { x1: 0, y1: SIDEWALK_TOP, x2: W, y2: H });
+const fogParticles = makeParticles(25, 30, {
+  x1: 0, y1: ANCHORS.groundLine, x2: W, y2: H,
+});
 const stars = Array.from({ length: 40 }, (_, i) => ({
   cx: 40 + rand(100 + i) * (W - 80),
   cy: 15 + rand(200 + i) * (H * 0.45),
@@ -193,18 +157,16 @@ const Stars: React.FC<{ frame: number }> = ({ frame }) => (
 
 const MoonGlow: React.FC<{ frame: number }> = ({ frame }) => {
   const pulse = 0.9 + sin(frame, 0.008, 0) * 0.1;
-  const cx = MOON.x + MOON.w / 2;
-  const cy = MOON.y + MOON.h / 2;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}>
       <defs>
-        <radialGradient id="moon-halo-v5" cx="50%" cy="50%" r="50%">
+        <radialGradient id="moon-halo" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#FFFFF0" stopOpacity={0.2 * pulse} />
           <stop offset="30%" stopColor="#E8E0D0" stopOpacity={0.12 * pulse} />
           <stop offset="100%" stopColor="#8070AA" stopOpacity={0} />
         </radialGradient>
       </defs>
-      <ellipse cx={cx} cy={cy} rx={180} ry={170} fill="url(#moon-halo-v5)" />
+      <ellipse cx={ANCHORS.moon.x} cy={ANCHORS.moon.y} rx={180} ry={170} fill="url(#moon-halo)" />
     </svg>
   );
 };
@@ -232,14 +194,14 @@ const WindowLight: React.FC<{ frame: number }> = ({ frame }) => {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}>
       <defs>
-        <radialGradient id="wl-v5" cx="50%" cy="30%" r="50%">
+        <radialGradient id="wl" cx="50%" cy="30%" r="50%">
           <stop offset="0%" stopColor="#FFD060" stopOpacity={0.3 * f} />
           <stop offset="50%" stopColor="#FFAA30" stopOpacity={0.12 * f} />
           <stop offset="100%" stopColor="#FF8800" stopOpacity={0} />
         </radialGradient>
       </defs>
-      <ellipse cx={PUB_CENTER.cx} cy={PUB_CENTER.cy + 50} rx={280} ry={200} fill="url(#wl-v5)" />
-      <ellipse cx={PUB_CENTER.cx} cy={SIDEWALK_TOP} rx={320} ry={70} fill="#FFD060" opacity={0.1 * f} />
+      <ellipse cx={ANCHORS.pubCenter.x} cy={ANCHORS.pubCenter.y + 50} rx={280} ry={200} fill="url(#wl)" />
+      <ellipse cx={ANCHORS.pubCenter.x} cy={ANCHORS.groundLine} rx={320} ry={70} fill="#FFD060" opacity={0.1 * f} />
     </svg>
   );
 };
@@ -281,161 +243,62 @@ export const PubExteriorScene: React.FC = () => {
     <AbsoluteFill style={{ backgroundColor: '#0a0e1a' }}>
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
-        {/* Layer 1: Sky — fills entire canvas */}
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 1,
-          backgroundImage: `url(${staticFile('assets/sky/sky-night.svg')})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-        }} />
+        {/* ─── Scene layers (from split-scene-svg.js) ─── */}
+        {/* Alle lagen hebben dezelfde viewBox → inset: 0 = perfect align */}
+        {SCENE_LAYERS.map((layer) => (
+          <AbsoluteFill key={layer.id} style={{ zIndex: layer.zIndex }}>
+            <Img
+              src={staticFile(layer.src)}
+              style={LAYER_STYLE}
+            />
+          </AbsoluteFill>
+        ))}
 
-        {/* Layer 2: Moon */}
-        <AbsoluteFill style={{ zIndex: 2 }}>
-          <Img
-            src={staticFile('assets/props/prop-moon.svg')}
-            style={{
-              position: 'absolute',
-              left: MOON.x, top: MOON.y, width: MOON.w, height: MOON.h,
-            }}
-          />
-        </AbsoluteFill>
+        {/* ─── Animation overlays ─── */}
 
-        {/* Layer 3: Moon glow */}
+        {/* Moon glow */}
         <AbsoluteFill style={{ zIndex: 3, mixBlendMode: 'screen' }}>
           <MoonGlow frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 4: Twinkling stars */}
+        {/* Twinkling stars */}
         <AbsoluteFill style={{ zIndex: 4 }}>
           <Stars frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 5: Horizon blend (soften sky→terrain transition) */}
+        {/* Horizon blend (soften sky→ground transition) */}
         <AbsoluteFill style={{ zIndex: 5 }}>
           <div style={{
             position: 'absolute', left: 0, right: 0,
-            top: SIDEWALK_TOP - 80, height: 120,
+            top: ANCHORS.groundLine - 80, height: 120,
             background: 'linear-gradient(to bottom, transparent 0%, rgba(20,24,43,0.6) 45%, rgba(20,24,43,0.6) 55%, transparent 100%)',
             pointerEvents: 'none',
           }} />
         </AbsoluteFill>
 
-        {/* Layer 6: Pub building (center, bottom on sidewalk) */}
-        <AbsoluteFill style={{ zIndex: 6 }}>
-          <Img
-            src={staticFile('assets/structures/struct-pub.svg')}
-            style={{
-              position: 'absolute',
-              left: PUB.x, top: PUB.y, width: PUB.w, height: PUB.h,
-            }}
-          />
-        </AbsoluteFill>
-
-        {/* Layer 7: Window light glow */}
+        {/* Window light glow */}
         <AbsoluteFill style={{ zIndex: 7, mixBlendMode: 'screen' }}>
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 8: Sidewalk (full width, SVG has preserveAspectRatio="none") */}
-        <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-sidewalk.svg')}
-            style={{
-              position: 'absolute',
-              left: 0, top: SIDEWALK.y,
-              width: W, height: SIDEWALK.h,
-            }}
-          />
-        </AbsoluteFill>
-
-        {/* Layer 8b: Street (full width, SVG has preserveAspectRatio="none") */}
-        <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-street.svg')}
-            style={{
-              position: 'absolute',
-              left: 0, top: STREET.y,
-              width: W, height: STREET.h,
-            }}
-          />
-        </AbsoluteFill>
-
-        {/* Layer 8c: Planters on sidewalk */}
-        <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/props/prop-planter.svg')}
-            style={{
-              position: 'absolute',
-              left: PLANTER_LEFT.x, top: PLANTER_LEFT.y,
-              width: PLANTER_LEFT.w, height: PLANTER_LEFT.h,
-            }}
-          />
-          <Img
-            src={staticFile('assets/props/prop-planter.svg')}
-            style={{
-              position: 'absolute',
-              left: PLANTER_RIGHT.x, top: PLANTER_RIGHT.y,
-              width: PLANTER_RIGHT.w, height: PLANTER_RIGHT.h,
-              transform: 'scaleX(-1)',
-            }}
-          />
-        </AbsoluteFill>
-
-        {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
-        <AbsoluteFill style={{ zIndex: 9 }}>
-          <Img
-            src={staticFile('assets/props/prop-man-dog.svg')}
-            style={{
-              position: 'absolute',
-              left: MAN_DOG.x, top: MAN_DOG.y,
-              width: MAN_DOG.w, height: MAN_DOG.h,
-            }}
-          />
-        </AbsoluteFill>
-
-        {/* Layer 10: Street lamp LEFT */}
-        <AbsoluteFill style={{ zIndex: 10 }}>
-          <Img
-            src={staticFile('assets/props/prop-lamp.svg')}
-            style={{
-              position: 'absolute',
-              left: LAMP_LEFT.x, top: LAMP_LEFT.y,
-              width: LAMP_LEFT.w, height: LAMP_LEFT.h,
-            }}
-          />
-        </AbsoluteFill>
-
-        {/* Layer 10: Street lamp RIGHT (mirrored) */}
-        <AbsoluteFill style={{ zIndex: 10 }}>
-          <Img
-            src={staticFile('assets/props/prop-lamp.svg')}
-            style={{
-              position: 'absolute',
-              left: LAMP_RIGHT.x, top: LAMP_RIGHT.y,
-              width: LAMP_RIGHT.w, height: LAMP_RIGHT.h,
-              transform: 'scaleX(-1)',
-            }}
-          />
-        </AbsoluteFill>
-
-        {/* Layer 12: Lamp glow halos */}
+        {/* Lamp glow halos */}
         <AbsoluteFill style={{ zIndex: 12, mixBlendMode: 'screen' }}>
-          <LampGlow frame={frame} cx={GLOW_LEFT.cx} cy={GLOW_LEFT.cy} id="left" />
-          <LampGlow frame={frame} cx={GLOW_RIGHT.cx} cy={GLOW_RIGHT.cy} id="right" />
+          <LampGlow frame={frame} cx={ANCHORS.lampLeft.x} cy={ANCHORS.lampLeft.y} id="left" />
+          <LampGlow frame={frame} cx={ANCHORS.lampRight.x} cy={ANCHORS.lampRight.y} id="right" />
         </AbsoluteFill>
 
-        {/* Layer 13: Dust motes */}
+        {/* Dust motes */}
         <AbsoluteFill style={{ zIndex: 13, mixBlendMode: 'screen', opacity: 0.7 }}>
           <DustMotes frame={frame} particles={dustLeft} id="dl" />
           <DustMotes frame={frame} particles={dustRight} id="dr" />
         </AbsoluteFill>
 
-        {/* Layer 14: Ground fog */}
+        {/* Ground fog */}
         <AbsoluteFill style={{ zIndex: 14, opacity: 0.5 }}>
           <GroundFog frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 15: Vignette */}
+        {/* Vignette */}
         <AbsoluteFill style={{ zIndex: 15 }}>
           <div style={{
             position: 'absolute', inset: 0,
@@ -444,7 +307,7 @@ export const PubExteriorScene: React.FC = () => {
           }} />
         </AbsoluteFill>
 
-        {/* Layer 16: Color grade (warm tint) */}
+        {/* Color grade (warm tint) */}
         <AbsoluteFill style={{
           zIndex: 16,
           backgroundColor: 'rgba(255, 180, 100, 0.05)',
