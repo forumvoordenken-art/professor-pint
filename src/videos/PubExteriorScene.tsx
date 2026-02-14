@@ -40,11 +40,11 @@ const H = 1080;
 //   Street: 87%–100% of canvas
 
 const SIDEWALK_TOP = H * 0.78;
-const STREET_TOP = H * 0.87;
+const STREET_TOP = H * 0.855; // overlap 2px with sidewalk bottom
 
-// Sidewalk: full width, from 78% to 87%
+// Sidewalk: full width, from 78% to ~85.5%
 // Post-crop viewBox: 1556×101 → aspect 15.40:1
-const SIDEWALK_H = STREET_TOP - SIDEWALK_TOP; // ~97px
+const SIDEWALK_H = STREET_TOP - SIDEWALK_TOP; // ~81px
 const SIDEWALK = {
   x: 0,
   y: SIDEWALK_TOP,
@@ -52,12 +52,12 @@ const SIDEWALK = {
   h: SIDEWALK_H,
 };
 
-// Street: full width, from 87% to 100%
+// Street: full width, from ~85.5% to 100%
 // Post-crop viewBox: 1556×145 → aspect 10.72:1
-const STREET_H = H - STREET_TOP; // ~140px
+const STREET_H = H - STREET_TOP + 2; // +2 overlap
 const STREET = {
   x: 0,
-  y: STREET_TOP,
+  y: STREET_TOP - 2,
   w: W,
   h: STREET_H,
 };
@@ -67,22 +67,22 @@ const STREET = {
 const MOON_SIZE = W * 0.12;
 const MOON = { x: W * 0.80, y: H * 0.04, w: MOON_SIZE, h: MOON_SIZE / 1.03 };
 
-// Pub: center, bottom on sidewalk, height ~78% canvas
+// Pub: center, bottom overlaps sidewalk by 15px, height ~85% canvas
 // Post-crop viewBox: 880×1113 → aspect 0.79:1
-const PUB_H = H * 0.78;
+const PUB_H = H * 0.85;
 const PUB_W = PUB_H * 0.79;
 const PUB = {
   x: (W - PUB_W) / 2,
-  y: SIDEWALK_TOP - PUB_H,
+  y: SIDEWALK_TOP - PUB_H + 15,
   w: PUB_W,
   h: PUB_H,
 };
 
-// Lamps: height ~40% of canvas, flanking the pub
+// Lamps: height ~32% of canvas (smaller than pub), flanking the pub
 // Post-crop viewBox: 612×1331 → aspect 0.46:1
-const LAMP_H = H * 0.40;
+const LAMP_H = H * 0.32;
 const LAMP_W = LAMP_H * 0.46;
-const LAMP_BOTTOM = SIDEWALK_TOP;
+const LAMP_BOTTOM = SIDEWALK_TOP + 10; // feet overlap sidewalk
 const LAMP_LEFT = {
   x: PUB.x - LAMP_W - W * 0.02,
   y: LAMP_BOTTOM - LAMP_H,
