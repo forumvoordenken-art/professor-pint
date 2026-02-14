@@ -1,29 +1,36 @@
 /**
- * PubExteriorScene — Geanimeerde avond-pub scene
+ * PubExteriorScene — Geanimeerde avond-pub scene (v2 met metadata)
+ *
+ * Gebruikt AssetMetadata systeem voor correcte verhoudingen en positionering.
  *
  * Lagen:
  * 1. Sky: sky-evening-warm (warme avondlucht)
- * 2. Moon: prop-moon-crescent (rechtsboven, zachte gloed)
- * 3. Terrain: terrain-cobblestone-street (keistraat)
- * 4. Structure: struct-pub-exterior (pub gebouw, centraal)
- * 5. Props: prop-street-lamp (links + rechts, gespiegeld)
- * 6. Animatie-overlays:
- *    - Lantaarn warm licht (flikkerende gloed)
- *    - Maan-gloed halo
- *    - Raam-licht (warm uit pub-ramen)
- *    - Sfeerdeeltjes (stofmoten in het licht)
- *    - Lichte nevel aan de grond
- *    - Sterren twinkel
+ * 2. Sterren (twinkelend)
+ * 3. Moon: prop-moon-crescent (rechtsboven, zachte gloed)
+ * 4. Horizon blend
+ * 5. Terrain: terrain-cobblestone-street (keistraat)
+ * 6. Structure: struct-pub-exterior (pub gebouw, centraal)
+ * 7. Raamlicht
+ * 8. Props: prop-street-lamp (links + rechts)
+ * 9. Lantaarn gloed
+ * 10. Stofdeeltjes
+ * 11. Grondnevel
+ * 12. Vignette
+ * 13. Color grade
  */
 
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, Img, staticFile, interpolate } from 'remotion';
+import { getAssetMetadata, calculateAssetPosition, positionOnGround } from '../motor/AssetMetadata';
 
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
 
 export const PUB_EXTERIOR_FRAMES = 300; // 10 seconden @ 30fps
+
+const CANVAS_W = 1920;
+const CANVAS_H = 1080;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -64,15 +71,41 @@ const makeParticles = (
     phase: rand(seed + i * 6.3) * Math.PI * 2,
   }));
 
-// Dust motes floating in lamp light (left lamp area)
-const dustLeft = makeParticles(15, 10, { x1: 150, y1: 300, x2: 380, y2: 650 });
-// Dust motes floating in lamp light (right lamp area)
-const dustRight = makeParticles(15, 20, { x1: 1150, y1: 300, x2: 1380, y2: 650 });
-// Ground fog particles
-const fogParticles = makeParticles(25, 30, { x1: 0, y1: 750, x2: 1536, y2: 1024 });
+// Metadata-driven particle bounds (aangepast aan echte lantaarnposities)
+const lampLeftMeta = positionOnGround(
+  getAssetMetadata('prop-street-lamp')!,
+  CANVAS_W,
+  CANVAS_H,
+  0.12, // 12% van links
+);
+const lampRightMeta = positionOnGround(
+  getAssetMetadata('prop-street-lamp')!,
+  CANVAS_W,
+  CANVAS_H,
+  0.88, // 88% van links (12% van rechts)
+);
+
+// Dust motes in lamp light
+const dustLeft = makeParticles(15, 10, {
+  x1: lampLeftMeta.x - 50,
+  y1: lampLeftMeta.y + 150,
+  x2: lampLeftMeta.x + lampLeftMeta.width + 50,
+  y2: lampLeftMeta.y + lampLeftMeta.height - 100,
+});
+
+const dustRight = makeParticles(15, 20, {
+  x1: lampRightMeta.x - 50,
+  y1: lampRightMeta.y + 150,
+  x2: lampRightMeta.x + lampRightMeta.width + 50,
+  y2: lampRightMeta.y + lampRightMeta.height - 100,
+});
+
+// Ground fog
+const fogParticles = makeParticles(25, 30, { x1: 0, y1: CANVAS_H * 0.75, x2: CANVAS_W, y2: CANVAS_H });
+
 // Stars
 const stars = Array.from({ length: 30 }, (_, i) => ({
-  x: 50 + rand(100 + i) * 1436,
+  x: 50 + rand(100 + i) * (CANVAS_W - 100),
   y: 20 + rand(200 + i) * 250,
   size: 1 + rand(300 + i) * 3,
   twinkleSpeed: 0.02 + rand(400 + i) * 0.06,
@@ -91,7 +124,6 @@ const LampGlow: React.FC<{ frame: number; cx: number; cy: number; id: string }> 
   cy,
   id,
 }) => {
-  // Flicker: base brightness with subtle random variation
   const flicker =
     0.85 +
     sineWave(frame, 0.03, 0) * 0.06 +
@@ -102,7 +134,7 @@ const LampGlow: React.FC<{ frame: number; cx: number; cy: number; id: string }> 
 
   return (
     <svg
-      viewBox="0 0 1536 1024"
+      viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
       style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}
     >
       <defs>
@@ -125,11 +157,11 @@ const LampGlow: React.FC<{ frame: number; cx: number; cy: number; id: string }> 
 };
 
 /** Moon halo — soft ethereal glow */
-const MoonGlow: React.FC<{ frame: number }> = ({ frame }) => {
+const MoonGlow: React.FC<{ frame: number; moonX: number; moonY: number }> = ({ frame, moonX, moonY }) => {
   const pulse = 0.9 + sineWave(frame, 0.008, 0) * 0.1;
   return (
     <svg
-      viewBox="0 0 1536 1024"
+      viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
       style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}
     >
       <defs>
@@ -139,13 +171,13 @@ const MoonGlow: React.FC<{ frame: number }> = ({ frame }) => {
           <stop offset="100%" stopColor="#8070CC" stopOpacity={0} />
         </radialGradient>
       </defs>
-      <ellipse cx={1200} cy={140} rx={200} ry={180} fill="url(#moon-halo)" />
+      <ellipse cx={moonX} cy={moonY} rx={200} ry={180} fill="url(#moon-halo)" />
     </svg>
   );
 };
 
 /** Warm light spilling from pub windows */
-const WindowLight: React.FC<{ frame: number }> = ({ frame }) => {
+const WindowLight: React.FC<{ frame: number; pubX: number; pubY: number }> = ({ frame, pubX, pubY }) => {
   const flicker =
     0.9 +
     sineWave(frame, 0.04, 0.8) * 0.05 +
@@ -153,7 +185,7 @@ const WindowLight: React.FC<{ frame: number }> = ({ frame }) => {
 
   return (
     <svg
-      viewBox="0 0 1536 1024"
+      viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
       style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}
     >
       <defs>
@@ -163,12 +195,12 @@ const WindowLight: React.FC<{ frame: number }> = ({ frame }) => {
           <stop offset="100%" stopColor="#FF8800" stopOpacity={0} />
         </radialGradient>
       </defs>
-      {/* Central glow from the pub entrance/windows area */}
-      <ellipse cx={768} cy={520} rx={250} ry={180} fill="url(#window-light-1)" />
-      {/* Light spill on the ground in front */}
+      {/* Central glow from the pub */}
+      <ellipse cx={pubX} cy={pubY + 50} rx={250} ry={180} fill="url(#window-light-1)" />
+      {/* Light spill on the ground */}
       <ellipse
-        cx={768}
-        cy={780}
+        cx={pubX}
+        cy={CANVAS_H * 0.85}
         rx={300}
         ry={80}
         fill="#FFD060"
@@ -178,21 +210,20 @@ const WindowLight: React.FC<{ frame: number }> = ({ frame }) => {
   );
 };
 
-/** Animated dust/pollen motes floating in lamp light */
+/** Animated dust motes */
 const DustMotes: React.FC<{ frame: number; particles: Particle[]; id: string }> = ({
   frame,
   particles,
   id,
 }) => (
   <svg
-    viewBox="0 0 1536 1024"
+    viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
     style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}
   >
     {particles.map((p, i) => {
       const t = frame * 0.02 * p.speed;
       const px = p.x + Math.sin(t + p.phase) * 25;
       const py = p.y + Math.cos(t * 0.7 + p.phase) * 15 - frame * p.speed * 0.15;
-      // Wrap vertically
       const wrappedY = ((py % 400) + 400) % 400 + p.y - 100;
       const opacity = p.opacity * (0.6 + sineWave(frame, p.speed * 0.02, p.phase) * 0.4);
 
@@ -210,15 +241,15 @@ const DustMotes: React.FC<{ frame: number; particles: Particle[]; id: string }> 
   </svg>
 );
 
-/** Ground fog — drifting low mist */
+/** Ground fog */
 const GroundFog: React.FC<{ frame: number }> = ({ frame }) => (
   <svg
-    viewBox="0 0 1536 1024"
+    viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
     style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}
   >
     {fogParticles.map((p, i) => {
       const drift = frame * 0.3 * p.speed;
-      const px = ((p.x + drift) % 1636) - 50;
+      const px = ((p.x + drift) % (CANVAS_W + 100)) - 50;
       const py = p.y + sineWave(frame, 0.01, p.phase) * 8;
       const opacity = p.opacity * 0.4 * (0.5 + sineWave(frame, 0.015, p.phase) * 0.5);
 
@@ -240,7 +271,7 @@ const GroundFog: React.FC<{ frame: number }> = ({ frame }) => (
 /** Twinkling stars */
 const Stars: React.FC<{ frame: number }> = ({ frame }) => (
   <svg
-    viewBox="0 0 1536 1024"
+    viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
     style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}
   >
     {stars.map((s, i) => {
@@ -259,7 +290,7 @@ const Stars: React.FC<{ frame: number }> = ({ frame }) => (
   </svg>
 );
 
-/** Horizon haze — blends sky into terrain */
+/** Horizon haze */
 const HorizonHaze: React.FC = () => (
   <div
     style={{
@@ -275,7 +306,7 @@ const HorizonHaze: React.FC = () => (
   />
 );
 
-/** Vignette — dark edges for atmosphere */
+/** Vignette */
 const Vignette: React.FC = () => (
   <div
     style={{
@@ -298,6 +329,33 @@ export const PubExteriorScene: React.FC = () => {
   // Fade in
   const fadeIn = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: 'clamp' });
 
+  // Load metadata
+  const skyMeta = getAssetMetadata('sky-evening-warm')!;
+  const terrainMeta = getAssetMetadata('terrain-cobblestone-street')!;
+  const pubMeta = getAssetMetadata('struct-pub-exterior')!;
+  const lampMeta = getAssetMetadata('prop-street-lamp')!;
+  const moonMeta = getAssetMetadata('prop-moon-crescent')!;
+
+  // Calculate positions
+  const skyPos = calculateAssetPosition(skyMeta, CANVAS_W, CANVAS_H);
+  const terrainPos = calculateAssetPosition(terrainMeta, CANVAS_W, CANVAS_H);
+  const pubPos = positionOnGround(pubMeta, CANVAS_W, CANVAS_H, 0.5); // center
+  const lampLeftPos = positionOnGround(lampMeta, CANVAS_W, CANVAS_H, 0.12);
+  const lampRightPos = positionOnGround(lampMeta, CANVAS_W, CANVAS_H, 0.88);
+  const moonPos = calculateAssetPosition(moonMeta, CANVAS_W, CANVAS_H, { x: 0.83, y: 0.13 });
+
+  // Lamp glow centers (near top of lamp)
+  const lampLeftGlowY = lampLeftPos.y + lampLeftPos.height * 0.2;
+  const lampRightGlowY = lampRightPos.y + lampRightPos.height * 0.2;
+
+  // Moon center
+  const moonCenterX = moonPos.x + moonPos.width / 2;
+  const moonCenterY = moonPos.y + moonPos.height / 2;
+
+  // Pub center voor window light
+  const pubCenterX = pubPos.x + pubPos.width / 2;
+  const pubCenterY = pubPos.y + pubPos.height * 0.5;
+
   return (
     <AbsoluteFill style={{ backgroundColor: '#1a0e2e' }}>
       <AbsoluteFill style={{ opacity: fadeIn }}>
@@ -305,116 +363,125 @@ export const PubExteriorScene: React.FC = () => {
         <AbsoluteFill>
           <Img
             src={staticFile('assets/skies/sky-evening-warm.svg')}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{
+              position: 'absolute',
+              left: skyPos.x,
+              top: skyPos.y,
+              width: skyPos.width,
+              height: skyPos.height,
+              objectFit: 'fill',
+            }}
           />
         </AbsoluteFill>
 
-        {/* Layer 2: Stars twinkling in the sky */}
+        {/* Layer 2: Stars */}
         <AbsoluteFill style={{ zIndex: 2 }}>
           <Stars frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 3: Moon (top right area) */}
+        {/* Layer 3: Moon */}
         <AbsoluteFill style={{ zIndex: 3 }}>
-          <div
+          <Img
+            src={staticFile('assets/props/prop-moon-crescent.svg')}
             style={{
               position: 'absolute',
-              right: '12%',
-              top: '3%',
-              width: '12%',
+              left: moonPos.x,
+              top: moonPos.y,
+              width: moonPos.width,
+              height: moonPos.height,
               opacity: 0.95,
             }}
-          >
-            <Img
-              src={staticFile('assets/props/prop-moon-crescent.svg')}
-              style={{ width: '100%', height: 'auto' }}
-            />
-          </div>
-        </AbsoluteFill>
-
-        {/* Layer 4: Moon glow halo */}
-        <AbsoluteFill style={{ zIndex: 4, mixBlendMode: 'screen' }}>
-          <MoonGlow frame={frame} />
-        </AbsoluteFill>
-
-        {/* Layer 5: Horizon haze blend */}
-        <HorizonHaze />
-
-        {/* Layer 6: Terrain — bottom 55% */}
-        <AbsoluteFill style={{ zIndex: 6, top: '45%' }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-cobblestone-street.svg')}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </AbsoluteFill>
 
-        {/* Layer 7: Pub building — center */}
-        <AbsoluteFill style={{ zIndex: 7 }}>
-          <div
-            style={{
-              position: 'absolute',
-              left: '15%',
-              top: '8%',
-              width: '70%',
-              height: '85%',
-            }}
-          >
-            <Img
-              src={staticFile('assets/structures/struct-pub-exterior.svg')}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-          </div>
+        {/* Layer 4: Moon glow */}
+        <AbsoluteFill style={{ zIndex: 4, mixBlendMode: 'screen' }}>
+          <MoonGlow frame={frame} moonX={moonCenterX} moonY={moonCenterY} />
         </AbsoluteFill>
 
-        {/* Layer 8: Window light glow (behind lamps, in front of building) */}
+        {/* Layer 5: Horizon haze */}
+        <HorizonHaze />
+
+        {/* Layer 6: Terrain */}
+        <AbsoluteFill style={{ zIndex: 6 }}>
+          <Img
+            src={staticFile('assets/terrain/terrain-cobblestone-street.svg')}
+            style={{
+              position: 'absolute',
+              left: terrainPos.x,
+              top: terrainPos.y,
+              width: terrainPos.width,
+              height: terrainPos.height,
+              objectFit: 'fill',
+            }}
+          />
+        </AbsoluteFill>
+
+        {/* Layer 7: Pub building */}
+        <AbsoluteFill style={{ zIndex: 7 }}>
+          <Img
+            src={staticFile('assets/structures/struct-pub-exterior.svg')}
+            style={{
+              position: 'absolute',
+              left: pubPos.x,
+              top: pubPos.y,
+              width: pubPos.width,
+              height: pubPos.height,
+            }}
+          />
+        </AbsoluteFill>
+
+        {/* Layer 8: Window light */}
         <AbsoluteFill style={{ zIndex: 8, mixBlendMode: 'screen' }}>
-          <WindowLight frame={frame} />
+          <WindowLight frame={frame} pubX={pubCenterX} pubY={pubCenterY} />
         </AbsoluteFill>
 
         {/* Layer 9: Street lamp LEFT */}
         <AbsoluteFill style={{ zIndex: 9 }}>
-          <div
+          <Img
+            src={staticFile('assets/props/prop-street-lamp.svg')}
             style={{
               position: 'absolute',
-              left: '5%',
-              top: '10%',
-              width: '14%',
-              height: '82%',
+              left: lampLeftPos.x,
+              top: lampLeftPos.y,
+              width: lampLeftPos.width,
+              height: lampLeftPos.height,
             }}
-          >
-            <Img
-              src={staticFile('assets/props/prop-street-lamp.svg')}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-          </div>
+          />
         </AbsoluteFill>
 
         {/* Layer 10: Street lamp RIGHT (mirrored) */}
         <AbsoluteFill style={{ zIndex: 10 }}>
-          <div
+          <Img
+            src={staticFile('assets/props/prop-street-lamp.svg')}
             style={{
               position: 'absolute',
-              right: '5%',
-              top: '10%',
-              width: '14%',
-              height: '82%',
+              left: lampRightPos.x,
+              top: lampRightPos.y,
+              width: lampRightPos.width,
+              height: lampRightPos.height,
               transform: 'scaleX(-1)',
             }}
-          >
-            <Img
-              src={staticFile('assets/props/prop-street-lamp.svg')}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-          </div>
+          />
         </AbsoluteFill>
 
         {/* Layer 11: Lamp glows */}
         <AbsoluteFill style={{ zIndex: 11, mixBlendMode: 'screen' }}>
-          <LampGlow frame={frame} cx={260} cy={350} id="left" />
-          <LampGlow frame={frame} cx={1276} cy={350} id="right" />
+          <LampGlow
+            frame={frame}
+            cx={lampLeftPos.x + lampLeftPos.width / 2}
+            cy={lampLeftGlowY}
+            id="left"
+          />
+          <LampGlow
+            frame={frame}
+            cx={lampRightPos.x + lampRightPos.width / 2}
+            cy={lampRightGlowY}
+            id="right"
+          />
         </AbsoluteFill>
 
-        {/* Layer 12: Dust motes in lamp light */}
+        {/* Layer 12: Dust motes */}
         <AbsoluteFill style={{ zIndex: 12, mixBlendMode: 'screen', opacity: 0.7 }}>
           <DustMotes frame={frame} particles={dustLeft} id="dust-l" />
           <DustMotes frame={frame} particles={dustRight} id="dust-r" />
@@ -430,7 +497,7 @@ export const PubExteriorScene: React.FC = () => {
           <Vignette />
         </AbsoluteFill>
 
-        {/* Layer 15: Color grade — warm evening tint */}
+        {/* Layer 15: Color grade */}
         <AbsoluteFill
           style={{
             zIndex: 15,

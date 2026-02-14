@@ -20,3 +20,7 @@ export type { AssetPaintCategory } from './withAssetPaint';
 // ── Rive Character Integration ──────────────────────────
 export { RiveCharacter, shouldBlink, breathCycle, DEFAULT_EMOTION_MAP } from './RiveIntegration';
 export type { RiveCharacterProps, RiveCharacterInputs } from './RiveIntegration';
+
+// ── Asset Metadata System ───────────────────────────────
+export { getAssetMetadata, calculateAssetPosition, positionOnGround, ASSET_METADATA } from './AssetMetadata';
+export type { AssetMetadata, AnchorPoint, AssetCategory } from './AssetMetadata';
