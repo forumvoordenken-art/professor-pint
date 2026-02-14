@@ -8,14 +8,6 @@
  *   Sky (full canvas) → Pub → Sidewalk (78%-87%) → Street (87%-100%)
  *
  * Assets (public/assets/) — aspect ratios after viewBox crop:
-<<<<<<< HEAD
- *  - sky/sky-night.svg            1536×1024  (1.50:1, no crop needed)
- *  - props/prop-moon.svg           761×743   (1.02:1)
- *  - structures/struct-pub.svg     977×1024  (0.95:1)
- *  - terrain/terrain-ground.png   1536×216   (auto-cropped via sharp trim)
- *  - props/prop-man-dog.svg        713×972   (0.73:1)
- *  - props/prop-lamp.svg           177×741   (0.24:1)
-=======
  *  - sky/sky-night.svg              1536×1024   (1.50:1, no crop needed)
  *  - props/prop-moon.svg             902×878    (1.03:1)
  *  - structures/struct-pub.svg        880×1113   (0.79:1)
@@ -24,7 +16,6 @@
  *  - props/prop-planter.svg          1137×661    (1.72:1)
  *  - props/prop-man-dog.svg          1138×915    (1.24:1)
  *  - props/prop-lamp.svg              612×1331   (0.46:1)
->>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
  */
 
 import React from 'react';
@@ -349,19 +340,6 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-<<<<<<< HEAD
-        {/* Layer 8: Ground (sidewalk + street combined)
-             Auto-cropped PNG 1536×216 (7.1:1). objectFit fill stretches
-             to 1920×238 — only ~10% vertical stretch, barely noticeable. */}
-        <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-ground.png')}
-            style={{
-              position: 'absolute',
-              left: 0, top: GROUND_TOP - 2,
-              width: W, height: H - GROUND_TOP + 2,
-              objectFit: 'fill',
-=======
         {/* Layer 8: Sidewalk */}
         <AbsoluteFill style={{ zIndex: 8 }}>
           <Img
@@ -403,7 +381,6 @@ export const PubExteriorScene: React.FC = () => {
               left: PLANTER_RIGHT.x, top: PLANTER_RIGHT.y,
               width: PLANTER_RIGHT.w, height: PLANTER_RIGHT.h,
               transform: 'scaleX(-1)',
->>>>>>> origin/claude/fix-pub-exterior-bugs-424JE
             }}
           />
         </AbsoluteFill>
