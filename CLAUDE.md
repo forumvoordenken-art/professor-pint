@@ -77,18 +77,22 @@ git checkout origin/main -- pad/naar/bestand.svg
 ```
 **NIET** vragen "waar staan ze?" — ze staan op main. Altijd.
 
+### SVG assets: NOOIT committen op feature branch
+SVG bestanden die de gebruiker uploadt naar main worden **NIET** gecommit op de feature branch. Dit voorkomt merge conflicts.
+- Claude fetcht SVGs van main om ze te gebruiken (viewBox checken, cleanup testen)
+- Claude commit alleen **code** (.tsx, .ts, .md) op de feature branch
+- Gebruiker runt na de merge: `node scripts/clean-svg-backgrounds.js`
+
 ### Opleverprotocol (VERPLICHT bij elke push)
-Na elke `git push` MOET Claude kant-en-klare merge-commando's geven:
+Na elke `git push` MOET Claude kant-en-klare commando's geven:
 ```bash
 git fetch origin [branch-naam]
 git merge origin/[branch-naam] -m "[korte beschrijving]"
+node scripts/clean-svg-backgrounds.js
+git add -A && git commit -m "SVG cleanup" || true
 git push origin main
 ```
-Geen uitleg, geen opties, gewoon de drie regels met ingevulde branch-naam en beschrijving.
-
-### Als SVG assets zijn toegevoegd
-Claude draait `node scripts/clean-svg-backgrounds.js` VOORDAT hij commit.
-Gebruiker hoeft dit niet handmatig te doen.
+Geen uitleg, geen opties, gewoon de regels met ingevulde branch-naam en beschrijving.
 
 ---
 
