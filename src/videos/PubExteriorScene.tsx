@@ -342,26 +342,26 @@ export const PubExteriorScene: React.FC = () => {
 
         {/* Layer 8: Sidewalk */}
         <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-sidewalk.svg')}
-            style={{
-              position: 'absolute',
-              left: SIDEWALK.x, top: SIDEWALK.y,
-              width: SIDEWALK.w, height: SIDEWALK.h,
-            }}
-          />
+          <div style={{
+            position: 'absolute',
+            left: SIDEWALK.x, top: SIDEWALK.y,
+            width: SIDEWALK.w, height: SIDEWALK.h,
+            backgroundImage: `url(${staticFile('assets/terrain/terrain-sidewalk.svg')})`,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+          }} />
         </AbsoluteFill>
 
         {/* Layer 8b: Street */}
         <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-street.svg')}
-            style={{
-              position: 'absolute',
-              left: STREET.x, top: STREET.y,
-              width: STREET.w, height: STREET.h,
-            }}
-          />
+          <div style={{
+            position: 'absolute',
+            left: STREET.x, top: STREET.y,
+            width: STREET.w, height: STREET.h,
+            backgroundImage: `url(${staticFile('assets/terrain/terrain-street.svg')})`,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+          }} />
         </AbsoluteFill>
 
         {/* Layer 8c: Planters on sidewalk */}
