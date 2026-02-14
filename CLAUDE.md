@@ -89,17 +89,24 @@ SVG bestanden die de gebruiker uploadt naar main worden **NIET** gecommit op de 
 - Gebruiker runt na de merge: `node scripts/clean-svg-backgrounds.js && node scripts/crop-svg-viewbox.js`
 
 ### Opleverprotocol (VERPLICHT bij elke push)
-Na elke `git push` MOET Claude kant-en-klare commando's geven:
+Na elke `git push` MOET Claude kant-en-klare commando's geven.
+
+**NOOIT `git merge` gebruiken** — dit veroorzaakt merge conflicts omdat main en feature branch dezelfde bestanden wijzigen. Gebruik ALTIJD `git checkout` om specifieke bestanden van de branch te pakken:
+
 ```bash
 git pull origin main
 git fetch origin [branch-naam]
-git merge origin/[branch-naam] -m "[korte beschrijving]"
-node scripts/clean-svg-backgrounds.js
-node scripts/crop-svg-viewbox.js
-git add -A && git commit -m "SVG cleanup + viewBox crop" || true
+git checkout origin/[branch-naam] -- [lijst van gewijzigde bestanden]
+git add -A && git commit -m "[korte beschrijving]"
 git push origin main
 ```
-Geen uitleg, geen opties, gewoon de regels met ingevulde branch-naam en beschrijving.
+
+Claude MOET de exacte bestandspaden meegeven (niet `-- .`). Voorbeeld:
+```bash
+git checkout origin/claude/my-branch-123 -- src/videos/PubExteriorScene.tsx scripts/split-scene-svg.js
+```
+
+Geen uitleg, geen opties, gewoon de regels met ingevulde branch-naam, bestanden en beschrijving.
 **ALTIJD** `git pull origin main` als eerste stap — voorkomt rejected pushes.
 
 ---
