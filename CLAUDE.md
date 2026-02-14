@@ -86,6 +86,7 @@ SVG bestanden die de gebruiker uploadt naar main worden **NIET** gecommit op de 
 ### Opleverprotocol (VERPLICHT bij elke push)
 Na elke `git push` MOET Claude kant-en-klare commando's geven:
 ```bash
+git pull origin main
 git fetch origin [branch-naam]
 git merge origin/[branch-naam] -m "[korte beschrijving]"
 node scripts/clean-svg-backgrounds.js
@@ -93,6 +94,7 @@ git add -A && git commit -m "SVG cleanup" || true
 git push origin main
 ```
 Geen uitleg, geen opties, gewoon de regels met ingevulde branch-naam en beschrijving.
+**ALTIJD** `git pull origin main` als eerste stap — voorkomt rejected pushes.
 
 ---
 
@@ -150,9 +152,10 @@ const PUB = {
 
 ## Quick Reference
 
-**Huidige scene:** `src/videos/PubExteriorScene.tsx`
+**Huidige scene:** `src/videos/PubExteriorScene.tsx` (v5)
 - Pub exterior night
-- Assets: sky-night.svg, terrain-street.svg, terrain-sidewalk-foreground.svg, struct-pub.svg, prop-lamp.svg, prop-moon.svg, prop-dog+man.svg
-- 17 layers, animaties: stars twinkle, moon glow, lamp glow, window light, dust motes, fog
+- Assets: sky-night.svg, terrain-street.svg, terrain-sidewalk.svg, struct-pub.svg, prop-lamp.svg, prop-moon.svg, prop-man-dog.svg
+- 16 layers, animaties: stars twinkle, moon glow, lamp glow, window light, dust motes, fog
+- Layout: sky (full) → pub (3%-75%) → sidewalk (75%-85%) → street (85%-100%)
 
 **Volgende stappen:** Zie `docs/PROJECT-STATE.md`
