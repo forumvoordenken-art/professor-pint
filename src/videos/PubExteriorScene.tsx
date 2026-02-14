@@ -51,11 +51,9 @@ const H = 1080;
 // Bij width=W → height = W * (1024/1536) = 1280px (groter dan canvas = goed)
 // ---------------------------------------------------------------------------
 
-// Oversized zodat SVG content gegarandeerd het hele canvas bedekt.
-// SVG viewBox-content vult niet altijd de randen — dus ruim groter maken.
-const BG_W = 2400;
-const BG_H = BG_W * (1024 / 1536); // 1600
-const BG_LEFT = -(BG_W - W) / 2; // -240, gecentreerd
+// AANPAK: background-image + background-size:cover ipv Remotion <Img>.
+// <Img> + objectFit werkt NIET betrouwbaar op SVGs in Remotion.
+// CSS background-image + cover werkt altijd, ook met SVGs.
 
 // Moon: upper-right, ~10% of canvas width
 const MOON_SIZE = W * 0.10;
@@ -268,16 +266,13 @@ export const PubExteriorScene: React.FC = () => {
     <AbsoluteFill style={{ backgroundColor: '#0a0e1a' }}>
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
-        {/* Layer 1: Sky — oversized en gecentreerd, overflow hidden */}
-        <AbsoluteFill style={{ zIndex: 1, overflow: 'hidden' }}>
-          <Img
-            src={staticFile('assets/sky/sky-night.svg')}
-            style={{
-              position: 'absolute',
-              left: BG_LEFT, top: 0, width: BG_W, height: BG_H,
-            }}
-          />
-        </AbsoluteFill>
+        {/* Layer 1: Sky — background-image cover (vult gegarandeerd het canvas) */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          backgroundImage: `url(${staticFile('assets/sky/sky-night.svg')})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+        }} />
 
         {/* Layer 2: Moon */}
         <AbsoluteFill style={{ zIndex: 2 }}>
@@ -300,19 +295,14 @@ export const PubExteriorScene: React.FC = () => {
           <Stars frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 5: Terrain (bottom portion) — oversized, clipped to bottom half */}
+        {/* Layer 5: Terrain (bottom portion) — background-image cover */}
         <div style={{
           position: 'absolute', left: 0, top: TERRAIN_TOP, width: W, height: H - TERRAIN_TOP,
-          overflow: 'hidden', zIndex: 5,
-        }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-street.svg')}
-            style={{
-              position: 'absolute',
-              left: BG_LEFT, top: 0, width: BG_W, height: BG_H,
-            }}
-          />
-        </div>
+          zIndex: 5,
+          backgroundImage: `url(${staticFile('assets/terrain/terrain-street.svg')})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+        }} />
 
         {/* Layer 6: Horizon blend (soften sky→terrain) */}
         <AbsoluteFill style={{ zIndex: 6 }}>
@@ -340,19 +330,14 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 9: Foreground — trottoir + plantenbakken, anchored to bottom */}
+        {/* Layer 9: Foreground — trottoir + plantenbakken, background-image cover */}
         <div style={{
           position: 'absolute', left: 0, top: FG_STREET_TOP, width: W, height: H - FG_STREET_TOP,
-          overflow: 'hidden', zIndex: 9,
-        }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-sidewalk-foreground.svg')}
-            style={{
-              position: 'absolute',
-              left: BG_LEFT, bottom: 0, width: BG_W, height: BG_H,
-            }}
-          />
-        </div>
+          zIndex: 9,
+          backgroundImage: `url(${staticFile('assets/terrain/terrain-sidewalk-foreground.svg')})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+        }} />
 
         {/* Layer 10: Man + Dog (op trottoir, rechts) */}
         <AbsoluteFill style={{ zIndex: 10 }}>
