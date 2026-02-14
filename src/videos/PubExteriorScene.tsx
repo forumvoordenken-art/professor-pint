@@ -300,8 +300,8 @@ export const PubExteriorScene: React.FC = () => {
         </AbsoluteFill>
 
         {/* Layer 8: Ground (sidewalk + street combined)
-             PNG 1536×942, content in bottom ~29% (planters+sidewalk+cobblestones).
-             backgroundSize 100% 350% + bottom zooms into that strip exactly. */}
+             PNG 1536×942 letterbox. Show all content (bottom ~29%) using 250%
+             height, then fade the white top into the night sky via gradient. */}
         <AbsoluteFill style={{ zIndex: 8 }}>
           <div style={{
             position: 'absolute',
@@ -309,10 +309,19 @@ export const PubExteriorScene: React.FC = () => {
             width: W, height: H - GROUND_TOP,
             backgroundColor: '#3b4470',
             backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.png')})`,
-            backgroundSize: '100% 400%',
+            backgroundSize: '100% 250%',
             backgroundPosition: 'center bottom',
             backgroundRepeat: 'no-repeat',
-          }} />
+          }}>
+            {/* Gradient overlay: fades white top of PNG into night sky */}
+            <div style={{
+              position: 'absolute',
+              left: 0, top: 0,
+              width: '100%', height: '40%',
+              background: 'linear-gradient(to bottom, rgba(10,14,26,1) 0%, rgba(10,14,26,0) 100%)',
+              pointerEvents: 'none',
+            }} />
+          </div>
         </AbsoluteFill>
 
         {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
