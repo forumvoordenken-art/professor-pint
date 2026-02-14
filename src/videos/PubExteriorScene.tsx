@@ -348,6 +348,7 @@ export const PubExteriorScene: React.FC = () => {
               position: 'absolute',
               left: SIDEWALK.x, top: SIDEWALK.y,
               width: SIDEWALK.w, height: SIDEWALK.h,
+              objectFit: 'fill',
             }}
           />
         </AbsoluteFill>
@@ -360,6 +361,7 @@ export const PubExteriorScene: React.FC = () => {
               position: 'absolute',
               left: STREET.x, top: STREET.y,
               width: STREET.w, height: STREET.h,
+              objectFit: 'fill',
             }}
           />
         </AbsoluteFill>
