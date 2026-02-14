@@ -1,191 +1,128 @@
-# Professor Pint — Project Instructions
+# Professor Pint — Claude Instructions
 
 > **STOP. Lees dit bestand volledig voordat je iets doet.**
 
 ---
 
-## STAP 1: Lees docs/PROJECT-STATE.md
+## Wat we bouwen
 
-**docs/PROJECT-STATE.md is de ENIGE bron van waarheid voor wat er gedaan is en wat er nog moet gebeuren.**
+**Professor Pint** — Educational YouTube videos (10-20 min) over filosofie, geschiedenis, wetenschap. Stijl: casual pub-sfeer, Nederlandse communicatie, Engelse content.
 
-Lees dat bestand EERST. Daarin staat:
-- Huidige project status
-- Alle genomen beslissingen
-- Geïdentificeerde risico's
-- Het complete stappenplan (Phase 0-6) met status per stap
-- Welke bestanden aangemaakt moeten worden
+**Huidige status:** Eerste test scene werkend (Pub Exterior Night met man+dog).
 
-**Doe NIETS voordat je docs/PROJECT-STATE.md hebt gelezen en begrepen.**
+**Volgende:** Meer scenes maken → complete video samenstellen → audio toevoegen → YouTube upload.
 
 ---
 
-## STAP 2: Begrijp de project-structuur
+## Huidige Workflow (bewezen methode)
 
-### Mappenstructuur
+### Assets maken via ChatGPT + vectorizer.ai
+
+1. **Scene-first**: Genereer EERST complete scene-PNG in ChatGPT (alle elementen samen als referentie)
+2. **Elk element apart**: Genereer elk element los op witte achtergrond ("Geef alleen de [X] uit de vorige afbeelding")
+3. **Vectorize**: Via vectorizer.ai → SVG (doel: 300-500 paden, max 16 kleuren)
+4. **Upload**: Naar `public/assets/[categorie]/[naam].svg`
+5. **Cleanup**: `node scripts/clean-svg-backgrounds.js`
+6. **Claude animeert**: React component met animatie overlays
+
+**Waarom scene-first?** Eén monolithische SVG (hele scene) kan NIET goed geanimeerd worden. Losse elementen WEL.
+
+---
+
+## ChatGPT Prompts
+
+### Voor objecten (props, characters, structures)
 
 ```
-professor-pint/
-├── docs/                    ← Spec-documenten (plan & specs)
-│   ├── PROJECT-STATE.md     ← Waar we staan + stappenplan
-│   ├── VIDEO-SPEC.md        ← Alle regels voor video output
-│   ├── PIPELINE-ARCHITECTURE.md  ← End-to-end pipeline spec
-│   └── FEEDBACK-SYSTEM.md   ← Self-learning feedback spec
-│
-├── src/                     ← Alle broncode
-│   ├── personages/          ← Character SVG-componenten
-│   ├── videos/              ← Video compositions
-│   ├── motor/               ← Render engine + post-processing (SceneComposer, withAssetPaint, OilPaintFilter, etc.)
-│   ├── animaties/           ← Animatie helpers (emotions, idle, talking)
-│   └── assets/              ← Sky, terrain, test assets (index-bestanden wrappen met paint effects)
-│
-├── CLAUDE.md                ← Dit bestand
-└── [config bestanden]       ← package.json, tsconfig.json, etc.
+Create a [OBJECT] as a centered illustration on pure white background.
+
+Style (STRICT):
+- Flat colors only — NO gradients, NO shadows, NO texture
+- Max 16 colors
+- Bold clean outlines, simple shapes
+- Kurzgesagt/TED-Ed style
+
+Output: PNG, centered on white
 ```
 
-### Bestaande code = REFERENTIEMATERIAAL
+### Voor achtergronden (sky, terrain)
 
-De bestanden in `src/` zijn **voorbeelden en referentie**. Ze tonen:
-- SVG-kwaliteit en stijl (oil painting look)
-- Animatie-patronen (emotions, lip sync, idle)
-- Architectuur-patronen (SceneRenderer, CameraPath, etc.)
+```
+Create a wide 16:9 background showing [SCENE].
 
-**Gebruik deze code als inspiratie, NIET als iets dat "gefixed" of "verbeterd" moet worden.**
+Style (STRICT):
+- Flat colors only — NO gradients, NO shadows, NO texture
+- Max 24 colors
+- Fill entire frame edge-to-edge
+- Kurzgesagt/TED-Ed style
 
----
-
-## STAP 3: Wat je NIET moet doen
-
-- **NIET** de bestaande code gaan "fixen" (tsconfig, dependencies, bugs)
-- **NIET** de bestaande compositions gaan verbeteren
-- **NIET** een eigen roadmap verzinnen — het stappenplan staat in docs/PROJECT-STATE.md
-- **NIET** aannemen dat het project "80% klaar" is — de implementatie is nog niet gestart
-- **NIET** bestanden lezen/analyseren tenzij het relevant is voor de huidige stap
-- **NOOIT** servers starten (geen `npx remotion studio`, geen dev servers). Dit werkt niet in deze omgeving.
+Output: PNG, 1920x1080
+```
 
 ---
 
-## STAP 4: Hoe je werkt
+## Git Workflow
 
-### Elke stap moet uitgelegd worden
+**BELANGRIJK:**
+- **Gebruiker werkt ALTIJD op main** (niet op branch)
+- **Claude werkt op feature branch** (kan niet naar main pushen)
+- **Opleverprotocol**: Claude geeft ALTIJD coderegels voor gebruiker om naar main te pushen
 
-Voordat je een stap uit het stappenplan uitvoert, leg je ALTIJD uit:
-1. **WAAROM** we deze stap doen — wat is het nut, welk probleem lost het op?
-2. **WAT** je gaat bouwen — concreet, geen vage beschrijvingen
-3. **HOE** het past in het grotere geheel — welke stappen komen erna en hoe hangt het samen?
+**Merge instructies voor gebruiker:**
+```bash
+# In Codespace terminal
+git fetch origin [branch-naam]
+git merge origin/[branch-naam] -m "[korte beschrijving]"
+git push origin main
+```
 
-De gebruiker wil kritisch meedenken. Geef hem de informatie om dat te kunnen doen.
-
-### Branch & merge workflow
-
-Bij het opleveren van werk, geef ALTIJD deze instructies:
-
-1. **Op welke branch het werk staat** — noem de exacte branch naam
-2. **Pre-push cleanup** — voordat je pusht, ALTIJD dit draaien als er nieuwe SVG assets zijn toegevoegd:
-   ```bash
-   node scripts/clean-svg-backgrounds.js
-   ```
-   Dit verwijdert automatisch witte achtergronden uit alle SVGs in `public/assets/`.
-3. **Hoe te mergen naar main** — exacte commando's die de gebruiker in zijn Codespace terminal moet draaien.
-   Voeg ALTIJD een merge-bericht toe van max 4 woorden in het Nederlands:
-   ```bash
-   git fetch origin [branch-naam]
-   git stash
-   git merge origin/[branch-naam] -m "[max 4 woorden NL]"
-   git stash pop
-   git push origin main
-   ```
-4. **Hoe te testen** — exacte commando's:
-   ```bash
-   # Type check
-   npx tsc --noEmit
-   # Preview in browser
-   npx remotion studio
-   # Render naar bestand
-   npx remotion render src/index.ts [CompositionId] out/output.mp4
-   ```
+**Als SVG assets toegevoegd:**
+```bash
+node scripts/clean-svg-backgrounds.js
+git add -A
+git commit -m "Cleanup SVG backgrounds"
+```
 
 ---
 
-## Kernbeslissingen (samenvatting)
+## Testing (ALLEEN in Codespace)
 
-1. **Asset Library** — LLM composeert scenes uit pre-gebouwde SVG-componenten (genereert NIET from scratch)
-2. **10-laags compositie** — sky → terrain → water → structures → vegetation → characters → props → foreground → atmosphere → lighting
-3. **Position presets** — Voorgedefinieerde x/y/scale posities zodat LLM geen coördinaten raadt
-4. **Bestaande code = referentie** — Niet productie, niet fixen
-5. **English only** — Alle video content in het Engels
-6. **n8n-only feedback** — Geen dashboard, alleen approve/feedback/reject buttons
-7. **Per-asset post-processing** — Painterly effecten zitten op asset-niveau (via `withAssetPaint` HOC in index-bestanden), NIET op scene-niveau. Dit voorkomt dubbele filters en maakt per-asset tuning mogelijk.
-8. **Geen vignette op showcases** — Showcases tonen assets puur, zonder extra scene-level effecten
-9. **Asset creation via ChatGPT + vectorizer.ai** — Assets worden via ChatGPT (flat-color, max 16 kleuren, Kurzgesagt-stijl) gegenereerd als PNG, dan via vectorizer.ai naar SVG getraceerd (doel: 300-500 paden). Claude animeert de SVG in Remotion. Zie docs/PROJECT-STATE.md voor de volledige prompt en workflow.
-10. **Scene-first workflow** — Genereer EERST een complete scene als referentie-PNG in ChatGPT (alle elementen samen). Gebruik die als visuele gids voor kleuren, proporties en compositie. Genereer daarna elk element APART als losse PNG op witte achtergrond. Elk element wordt apart gevectoriseerd en apart geanimeerd. Dit is essentieel: één monolithische SVG kan NIET goed geanimeerd worden — losse elementen wel.
-11. **Animatie vereist losse elementen** — Een enkele grote SVG (gegroepeerd op kleur door vectorizer.ai) kan alleen overlay-effecten krijgen (opacity shifts, filters). Voor echte animatie (golven, lopen, wapperen, zwemmen) moeten elementen als aparte SVG-componenten bestaan die onafhankelijk getransformeerd kunnen worden.
-12. **Asset Metadata Systeem** — Elk asset heeft metadata (anchor point, natural size, groundLine) in `src/motor/AssetMetadata.ts`. Dit voorkomt "erbij geplakt" effect en zorgt voor correcte verhoudingen. Gebruik `positionOnGround()` helper om elementen op dezelfde grondlijn te plaatsen. NOOIT handmatig x/y/width/height raden — altijd via metadata.
-
----
-
-## STAP 2A: Scene-First Workflow met Metadata
-
-**Probleem:** Losse assets hebben geen gedeelde schaal. Elementen lijken "erbij geplakt" zonder context.
-
-**Oplossing:** Scene-first workflow + metadata systeem.
-
-### Workflow per scene:
-
-1. **Genereer complete scene-PNG in ChatGPT**
-   - Alle elementen samen in één beeld
-   - Dit is de visuele referentie voor verhoudingen en kleuren
-   - Bewaar als `[scene-name]-reference.png` in `docs/videos/`
-
-2. **Metadata genereren via ChatGPT** (GEAUTOMATISEERD!)
-   - Upload de referentie-PNG naar ChatGPT
-   - Gebruik de prompt in `docs/chatgpt-metadata-prompt.md`
-   - ChatGPT analyseert de scene visueel en genereert metadata
-   - Kopieer de output en plak naar Claude
-   - Claude voegt het toe aan `AssetMetadata.ts`
-   - **Geen handmatig meten, geen gokken — ChatGPT doet de visuele analyse**
-
-3. **Genereer elk element apart**
-   - Elk element op witte achtergrond via ChatGPT
-   - Vectoriseer via vectorizer.ai
-   - Plaats in `public/assets/[categorie]/`
-
-4. **Cleanup witte achtergronden**
-   ```bash
-   node scripts/clean-svg-backgrounds.js
-   ```
-
-5. **Plak ChatGPT metadata naar Claude**
-   - Gebruiker plakt de ChatGPT output
-   - Claude voegt het toe aan `src/motor/AssetMetadata.ts`
-   - Eventueel viewBox aanvullen uit SVG-bestanden
-   - **Volledig geautomatiseerd — geen handmatig typen**
-
-6. **Gebruik metadata in scene compositie**
-   ```ts
-   const pubPos = positionOnGround(pubMeta, CANVAS_W, CANVAS_H, 0.5);
-   const lampPos = positionOnGround(lampMeta, CANVAS_W, CANVAS_H, 0.15);
-   ```
-
-7. **Itereer op basis van visueel resultaat**
-   - Render de scene, vergelijk met referentie-PNG
-   - Tweak metadata als verhoudingen niet kloppen
-   - Geen handmatig meten — gewoon visueel vergelijken en aanpassen
-
-**Geen meten, geen handmatig werk — alleen visueel schatten en itereren.**
-
----
-
-## How to Run
+**NOOIT lokale servers draaien in Claude chat.** Altijd coderegels geven voor gebruiker.
 
 ```bash
 # Type check
 npx tsc --noEmit
 
-# Preview in browser (alleen in Codespace, niet in Claude omgeving)
+# Preview in browser (in Codespace)
 npx remotion studio
 
-# Render a specific composition
-npx remotion render src/index.ts [CompositionId] out/output.mp4
+# Render naar bestand
+npx remotion render src/index.ts Pub-Exterior out/pub-exterior.mp4
+```
+
+---
+
+## Scene Compositie
+
+Scenes zijn **gelaagd (z-index)**:
+1. Sky (achtergrond)
+2. Moon/Sun (decoratie)
+3. Stars/clouds (animatie)
+4. Terrain (midden)
+5. Structures (pub, buildings)
+6. Characters/props (voorgrond)
+7. Atmosphere (fog, dust, glows)
+
+**Hardcoded posities** - geen metadata systeem:
+```ts
+const PUB_H = H * 0.95;
+const PUB_W = PUB_H * (1024 / 1536); // aspect ratio uit viewBox
+const PUB = {
+  x: (W - PUB_W) / 2,
+  y: H * 0.94 - PUB_H,
+  w: PUB_W,
+  h: PUB_H,
+};
 ```
 
 ---
@@ -194,7 +131,17 @@ npx remotion render src/index.ts [CompositionId] out/output.mp4
 
 - **Communicatie**: Nederlands
 - **Video content**: Engels
-- **Stijl**: Casual, pub-sfeer, bier-metaforen, straattaal gemixed met academisch
-- **Visueel**: Gedetailleerd, levendig, veel geanimeerde figuren — niet minimalistisch
-- **Aanpak**: Eerst plan, dan bouwen. Geen tokens verspillen aan werk zonder richting.
-- **Kritisch meedenken**: Leg bij elke stap uit WAAROM we het doen, zodat de gebruiker kan challengen.
+- **Stijl**: Casual, pub-sfeer, bier-metaforen, mix van straattaal en academisch
+- **Visueel**: Gedetailleerd, levendig, veel figuren — niet minimalistisch
+- **Aanpak**: Eerst plan, dan bouwen. Leg WAAROM uit zodat gebruiker kan challengen.
+
+---
+
+## Quick Reference
+
+**Huidige scene:** `src/videos/PubExteriorScene.tsx`
+- Pub exterior night
+- Assets: sky-night.svg, terrain-street.svg, terrain-sidewalk-foreground.svg, struct-pub.svg, prop-lamp.svg, prop-moon.svg, prop-dog+man.svg
+- 17 layers, animaties: stars twinkle, moon glow, lamp glow, window light, dust motes, fog
+
+**Volgende stappen:** Zie `docs/PROJECT-STATE.md`
