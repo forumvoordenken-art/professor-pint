@@ -63,25 +63,36 @@ Output: PNG, 1920x1080
 
 ## Git Workflow
 
-**BELANGRIJK:**
-- **Gebruiker werkt ALTIJD op main** (niet op branch)
-- **Claude werkt op feature branch** (kan niet naar main pushen)
-- **Opleverprotocol**: Claude geeft ALTIJD coderegels voor gebruiker om naar main te pushen
+**BELANGRIJK — LEES DIT GOED:**
 
-**Merge instructies voor gebruiker:**
+### Rollen
+- **Gebruiker werkt ALTIJD op `main`** via GitHub Codespace. Upload assets via GitHub web UI → die staan dan op `origin/main`.
+- **Claude werkt op feature branch** (kan NIET naar main pushen).
+
+### Hoe Claude nieuwe assets van main ophaalt
+Als gebruiker zegt dat er nieuwe bestanden op main staan:
 ```bash
-# In Codespace terminal
+git fetch origin main
+git checkout origin/main -- pad/naar/bestand.svg
+```
+**NIET** vragen "waar staan ze?" — ze staan op main. Altijd.
+
+### SVG assets: NOOIT committen op feature branch
+SVG bestanden die de gebruiker uploadt naar main worden **NIET** gecommit op de feature branch. Dit voorkomt merge conflicts.
+- Claude fetcht SVGs van main om ze te gebruiken (viewBox checken, cleanup testen)
+- Claude commit alleen **code** (.tsx, .ts, .md) op de feature branch
+- Gebruiker runt na de merge: `node scripts/clean-svg-backgrounds.js`
+
+### Opleverprotocol (VERPLICHT bij elke push)
+Na elke `git push` MOET Claude kant-en-klare commando's geven:
+```bash
 git fetch origin [branch-naam]
 git merge origin/[branch-naam] -m "[korte beschrijving]"
+node scripts/clean-svg-backgrounds.js
+git add -A && git commit -m "SVG cleanup" || true
 git push origin main
 ```
-
-**Als SVG assets toegevoegd:**
-```bash
-node scripts/clean-svg-backgrounds.js
-git add -A
-git commit -m "Cleanup SVG backgrounds"
-```
+Geen uitleg, geen opties, gewoon de regels met ingevulde branch-naam en beschrijving.
 
 ---
 
