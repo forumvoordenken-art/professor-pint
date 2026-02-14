@@ -93,6 +93,17 @@ const GLOW_RIGHT = { cx: LAMP_RIGHT.x + LAMP_W / 2, cy: LAMP_RIGHT.y + LAMP_H * 
 // Pub center (for window light)
 const PUB_CENTER = { cx: PUB.x + PUB.w / 2, cy: PUB.y + PUB.h * 0.5 };
 
+// Man + Dog: op het trottoir (foreground rechts), hoogte ~35% van canvas
+const MAN_DOG_H = H * 0.35;
+const MAN_DOG_W = MAN_DOG_H * 0.6; // assume aspect ratio ~0.6 (portrait)
+const MAN_DOG_BOTTOM = H * 0.98; // bijna onderaan (op het trottoir)
+const MAN_DOG = {
+  x: W * 0.75 - MAN_DOG_W / 2, // rechts op het trottoir
+  y: MAN_DOG_BOTTOM - MAN_DOG_H,
+  w: MAN_DOG_W,
+  h: MAN_DOG_H,
+};
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -300,20 +311,6 @@ export const PubExteriorScene: React.FC = () => {
           />
         </AbsoluteFill>
 
-        {/* Layer 5b: Foreground (onderste 25%) — PLACEHOLDER */}
-        {/* USER MOET NIEUWE SVG MAKEN: public/assets/terrain/terrain-sidewalk-foreground.svg */}
-        {/* Trottoir + plantenbakken, close-up perspectief, stedelijk groen */}
-        {/* <AbsoluteFill style={{ zIndex: 5 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-sidewalk-foreground.svg')}
-            style={{
-              position: 'absolute',
-              left: FG_STREET.x, top: FG_STREET.y, width: FG_STREET.w, height: FG_STREET.h,
-              objectFit: 'fill',
-            }}
-          />
-        </AbsoluteFill> */}
-
         {/* Layer 6: Horizon blend (soften sky→terrain) */}
         <AbsoluteFill style={{ zIndex: 6 }}>
           <div style={{
@@ -340,8 +337,32 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 9: Street lamp LEFT */}
+        {/* Layer 9: Foreground (onderste 25%) — Trottoir + plantenbakken */}
         <AbsoluteFill style={{ zIndex: 9 }}>
+          <Img
+            src={staticFile('assets/terrain/terrain-sidewalk-foreground.svg')}
+            style={{
+              position: 'absolute',
+              left: FG_STREET.x, top: FG_STREET.y, width: FG_STREET.w, height: FG_STREET.h,
+              objectFit: 'fill',
+            }}
+          />
+        </AbsoluteFill>
+
+        {/* Layer 10: Man + Dog (op trottoir, rechts) */}
+        <AbsoluteFill style={{ zIndex: 10 }}>
+          <Img
+            src={staticFile('assets/props/prop-dog+man.svg')}
+            style={{
+              position: 'absolute',
+              left: MAN_DOG.x, top: MAN_DOG.y,
+              width: MAN_DOG.w, height: MAN_DOG.h,
+            }}
+          />
+        </AbsoluteFill>
+
+        {/* Layer 11: Street lamp LEFT */}
+        <AbsoluteFill style={{ zIndex: 11 }}>
           <Img
             src={staticFile('assets/props/prop-lamp.svg')}
             style={{
@@ -352,8 +373,8 @@ export const PubExteriorScene: React.FC = () => {
           />
         </AbsoluteFill>
 
-        {/* Layer 10: Street lamp RIGHT (mirrored) */}
-        <AbsoluteFill style={{ zIndex: 10 }}>
+        {/* Layer 12: Street lamp RIGHT (mirrored) */}
+        <AbsoluteFill style={{ zIndex: 12 }}>
           <Img
             src={staticFile('assets/props/prop-lamp.svg')}
             style={{
@@ -365,25 +386,25 @@ export const PubExteriorScene: React.FC = () => {
           />
         </AbsoluteFill>
 
-        {/* Layer 11: Lamp glow halos */}
-        <AbsoluteFill style={{ zIndex: 11, mixBlendMode: 'screen' }}>
+        {/* Layer 13: Lamp glow halos */}
+        <AbsoluteFill style={{ zIndex: 13, mixBlendMode: 'screen' }}>
           <LampGlow frame={frame} cx={GLOW_LEFT.cx} cy={GLOW_LEFT.cy} id="left" />
           <LampGlow frame={frame} cx={GLOW_RIGHT.cx} cy={GLOW_RIGHT.cy} id="right" />
         </AbsoluteFill>
 
-        {/* Layer 12: Dust motes */}
-        <AbsoluteFill style={{ zIndex: 12, mixBlendMode: 'screen', opacity: 0.7 }}>
+        {/* Layer 14: Dust motes */}
+        <AbsoluteFill style={{ zIndex: 14, mixBlendMode: 'screen', opacity: 0.7 }}>
           <DustMotes frame={frame} particles={dustLeft} id="dl" />
           <DustMotes frame={frame} particles={dustRight} id="dr" />
         </AbsoluteFill>
 
-        {/* Layer 13: Ground fog */}
-        <AbsoluteFill style={{ zIndex: 13, opacity: 0.5 }}>
+        {/* Layer 15: Ground fog */}
+        <AbsoluteFill style={{ zIndex: 15, opacity: 0.5 }}>
           <GroundFog frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 14: Vignette */}
-        <AbsoluteFill style={{ zIndex: 14 }}>
+        {/* Layer 16: Vignette */}
+        <AbsoluteFill style={{ zIndex: 16 }}>
           <div style={{
             position: 'absolute', inset: 0,
             background: 'radial-gradient(ellipse 70% 65% at 50% 50%, transparent 50%, rgba(8,4,16,0.6) 100%)',
@@ -391,9 +412,9 @@ export const PubExteriorScene: React.FC = () => {
           }} />
         </AbsoluteFill>
 
-        {/* Layer 15: Color grade (warm tint) */}
+        {/* Layer 17: Color grade (warm tint) */}
         <AbsoluteFill style={{
-          zIndex: 15,
+          zIndex: 17,
           backgroundColor: 'rgba(255, 180, 100, 0.05)',
           mixBlendMode: 'multiply',
           pointerEvents: 'none',
