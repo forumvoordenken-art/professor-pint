@@ -44,16 +44,9 @@ const H = 1080;
 // No metadata system needed. Tweak these constants to adjust.
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// BELANGRIJK: objectFit werkt NIET op SVGs in Remotion's <Img>.
-// Daarom gebruiken we expliciete pixel dimensies.
-// Alle landscape SVGs hebben viewBox 1536×1024.
-// Bij width=W → height = W * (1024/1536) = 1280px (groter dan canvas = goed)
-// ---------------------------------------------------------------------------
-
-// AANPAK: background-image + background-size:cover ipv Remotion <Img>.
-// <Img> + objectFit werkt NIET betrouwbaar op SVGs in Remotion.
-// CSS background-image + cover werkt altijd, ook met SVGs.
+// Background SVGs: viewBox gecropped naar 16:9 (1536×864) zodat ze exact
+// matchen met de 1920×1080 compositie. Geen scaling hacks nodig.
+// Rendered via CSS background-image + background-size:cover.
 
 // Moon: upper-right, ~10% of canvas width
 const MOON_SIZE = W * 0.10;
