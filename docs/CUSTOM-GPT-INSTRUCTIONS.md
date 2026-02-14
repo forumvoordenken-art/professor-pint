@@ -177,13 +177,3 @@ Geef na elke illustratie een korte samenvatting:
 4. "Maak een terrain voor een [tijdperk] scene"
 5. "Maak een character: [beschrijving]"
 
----
-
-## Custom GPT Instellingen
-
-- **Naam**: Professor Pint Asset Generator
-- **Beschrijving**: Genereert illustraties in Kurzgesagt-stijl voor het Professor Pint YouTube-kanaal. Scene-first workflow: eerst complete scene als referentie, dan individuele elementen extraheren voor SVG-vectorisatie en Remotion-animatie.
-- **Instructions**: Kopieer de tekst uit "Systeem Instructies" hierboven
-- **Conversation starters**: Zie hierboven
-- **Capabilities**: DALL-E Image Generation (rest uit)
-- **Knowledge**: Niet nodig
