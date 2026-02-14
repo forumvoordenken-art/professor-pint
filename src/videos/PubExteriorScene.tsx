@@ -5,7 +5,7 @@
  * viewBox matches actual content. Aspect ratios below are POST-CROP.
  *
  * Layout top → bottom:
- *   Sky (full canvas) → Pub → Sidewalk (75%-85%) → Street (85%-100%)
+ *   Sky (full canvas) → Pub → Sidewalk (83%-90%) → Street (90%-100%)
  *
  * Assets (public/assets/) — aspect ratios after viewBox crop:
  *  - sky/sky-night.svg            1536×1024  (1.50:1, no crop needed)
@@ -34,21 +34,21 @@ const H = 1080;
 // ---------------------------------------------------------------------------
 // Scene from top to bottom:
 //   [sky fills entire canvas as background]
-//   Pub bottom on sidewalk, ~70% of canvas height
-//   Sidewalk strip: 75%–85%
-//   Street: bottom 15% (85%–100%)
+//   Pub bottom on sidewalk, ~75% of canvas height
+//   Sidewalk strip: 83%–90% (thin strip with planters)
+//   Street: bottom 10% (90%–100%)
 
-const SIDEWALK_TOP = H * 0.75;
-const STREET_TOP = H * 0.85;
+const SIDEWALK_TOP = H * 0.83;
+const STREET_TOP = H * 0.90;
 
 // Moon: upper-right, ~12% of canvas width
 // Post-crop viewBox: 761×743 → aspect 1.02:1
 const MOON_SIZE = W * 0.12;
 const MOON = { x: W * 0.80, y: H * 0.04, w: MOON_SIZE, h: MOON_SIZE / 1.02 };
 
-// Pub: center, bottom on sidewalk, height ~70% canvas
+// Pub: center, bottom on sidewalk, height ~78% canvas
 // Post-crop viewBox: 977×1024 → aspect 0.95:1
-const PUB_H = H * 0.70;
+const PUB_H = H * 0.78;
 const PUB_W = PUB_H * 0.95;
 const PUB = {
   x: (W - PUB_W) / 2,
@@ -84,7 +84,7 @@ const PUB_CENTER = { cx: PUB.x + PUB.w / 2, cy: PUB.y + PUB.h * 0.5 };
 
 // Man + Dog: on the sidewalk, right of pub
 // Post-crop viewBox: 713×972 → aspect 0.73:1
-const MAN_DOG_H = H * 0.25;
+const MAN_DOG_H = H * 0.28;
 const MAN_DOG_W = MAN_DOG_H * 0.73;
 const MAN_DOG = {
   x: LAMP_RIGHT.x + LAMP_W + W * 0.02,
