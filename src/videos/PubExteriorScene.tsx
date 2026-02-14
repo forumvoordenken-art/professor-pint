@@ -55,7 +55,7 @@ const MOON = { x: W * 0.82, y: H * 0.05, w: MOON_SIZE, h: MOON_SIZE };
 const TERRAIN_TOP = H * 0.50;
 const TERRAIN = { x: 0, y: TERRAIN_TOP, w: W, h: H - TERRAIN_TOP };
 
-// Foreground street: onderste 25% — USER MOET NIEUWE SVG MAKEN (terrain-street-foreground.svg)
+// Foreground: onderste 25% — Trottoir + plantenbakken (USER MOET NIEUWE SVG MAKEN)
 const FG_STREET_TOP = H * 0.75;
 const FG_STREET = { x: 0, y: FG_STREET_TOP, w: W, h: H - FG_STREET_TOP };
 
@@ -300,12 +300,12 @@ export const PubExteriorScene: React.FC = () => {
           />
         </AbsoluteFill>
 
-        {/* Layer 5b: Foreground street (onderste 25%) — PLACEHOLDER */}
-        {/* USER MOET NIEUWE SVG MAKEN: public/assets/terrain/terrain-street-foreground.svg */}
-        {/* Dit is de straat VOOR de pub, close-up cobblestones */}
+        {/* Layer 5b: Foreground (onderste 25%) — PLACEHOLDER */}
+        {/* USER MOET NIEUWE SVG MAKEN: public/assets/terrain/terrain-sidewalk-foreground.svg */}
+        {/* Trottoir + plantenbakken, close-up perspectief, stedelijk groen */}
         {/* <AbsoluteFill style={{ zIndex: 5 }}>
           <Img
-            src={staticFile('assets/terrain/terrain-street-foreground.svg')}
+            src={staticFile('assets/terrain/terrain-sidewalk-foreground.svg')}
             style={{
               position: 'absolute',
               left: FG_STREET.x, top: FG_STREET.y, width: FG_STREET.w, height: FG_STREET.h,
