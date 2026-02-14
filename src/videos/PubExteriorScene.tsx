@@ -1,18 +1,17 @@
 /**
- * PubExteriorScene — Night pub exterior (v6 — cropped viewBox assets)
+ * PubExteriorScene — Night pub exterior (v7 — combined ground layer)
  *
  * Assets are auto-cropped via `node scripts/crop-svg-viewbox.js` so
  * viewBox matches actual content. Aspect ratios below are POST-CROP.
  *
  * Layout top → bottom:
- *   Sky (full canvas) → Pub → Sidewalk (83%-90%) → Street (90%-100%)
+ *   Sky (full canvas) → Pub → Ground (78%-100%: sidewalk + street combined)
  *
  * Assets (public/assets/) — aspect ratios after viewBox crop:
  *  - sky/sky-night.svg            1536×1024  (1.50:1, no crop needed)
  *  - props/prop-moon.svg           761×743   (1.02:1)
  *  - structures/struct-pub.svg     977×1024  (0.95:1)
- *  - terrain/terrain-sidewalk.svg 1536×1024  (1.50:1, no crop needed)
- *  - terrain/terrain-street.svg   1536×1024  (1.50:1, no crop needed)
+ *  - terrain/terrain-ground.svg   generated as 1920×400 panoramic strip
  *  - props/prop-man-dog.svg        713×972   (0.73:1)
  *  - props/prop-lamp.svg           177×741   (0.24:1)
  */
@@ -34,12 +33,10 @@ const H = 1080;
 // ---------------------------------------------------------------------------
 // Scene from top to bottom:
 //   [sky fills entire canvas as background]
-//   Pub bottom on sidewalk
-//   Sidewalk strip: 78%–88% (planters + pavement)
-//   Street: bottom 12% (88%–100%)
+//   Pub bottom on ground
+//   Ground: 78%–100% (sidewalk + street combined in one asset)
 
-const SIDEWALK_TOP = H * 0.78;
-const STREET_TOP = H * 0.88;
+const GROUND_TOP = H * 0.78;
 
 // Moon: upper-right, ~12% of canvas width
 // Post-crop viewBox: 761×743 → aspect 1.02:1
@@ -52,7 +49,7 @@ const PUB_H = H * 0.78;
 const PUB_W = PUB_H * 0.95;
 const PUB = {
   x: (W - PUB_W) / 2,
-  y: SIDEWALK_TOP - PUB_H,
+  y: GROUND_TOP - PUB_H,
   w: PUB_W,
   h: PUB_H,
 };
@@ -61,7 +58,7 @@ const PUB = {
 // Post-crop viewBox: 177×741 → aspect 0.24:1
 const LAMP_H = H * 0.40;
 const LAMP_W = LAMP_H * 0.24;
-const LAMP_BOTTOM = SIDEWALK_TOP;
+const LAMP_BOTTOM = GROUND_TOP;
 const LAMP_LEFT = {
   x: PUB.x - LAMP_W - W * 0.02,
   y: LAMP_BOTTOM - LAMP_H,
@@ -88,7 +85,7 @@ const MAN_DOG_H = H * 0.28;
 const MAN_DOG_W = MAN_DOG_H * 0.73;
 const MAN_DOG = {
   x: LAMP_RIGHT.x + LAMP_W + W * 0.02,
-  y: STREET_TOP - MAN_DOG_H,
+  y: GROUND_TOP + (H - GROUND_TOP) * 0.4 - MAN_DOG_H,
   w: MAN_DOG_W,
   h: MAN_DOG_H,
 };
@@ -205,7 +202,7 @@ const WindowLight: React.FC<{ frame: number }> = ({ frame }) => {
         </radialGradient>
       </defs>
       <ellipse cx={PUB_CENTER.cx} cy={PUB_CENTER.cy + 50} rx={280} ry={200} fill="url(#wl-v5)" />
-      <ellipse cx={PUB_CENTER.cx} cy={SIDEWALK_TOP} rx={320} ry={70} fill="#FFD060" opacity={0.1 * f} />
+      <ellipse cx={PUB_CENTER.cx} cy={GROUND_TOP} rx={320} ry={70} fill="#FFD060" opacity={0.1 * f} />
     </svg>
   );
 };
@@ -280,7 +277,7 @@ export const PubExteriorScene: React.FC = () => {
         <AbsoluteFill style={{ zIndex: 5 }}>
           <div style={{
             position: 'absolute', left: 0, right: 0,
-            top: SIDEWALK_TOP - 80, height: 120,
+            top: GROUND_TOP - 80, height: 120,
             background: 'linear-gradient(to bottom, transparent 0%, rgba(20,24,43,0.6) 45%, rgba(20,24,43,0.6) 55%, transparent 100%)',
             pointerEvents: 'none',
           }} />
@@ -302,15 +299,16 @@ export const PubExteriorScene: React.FC = () => {
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Layer 8: Sidewalk strip (between pub and street) */}
+        {/* Layer 8: Ground (sidewalk + street combined) */}
         <AbsoluteFill style={{ zIndex: 8 }}>
           <Img
-            src={staticFile('assets/terrain/terrain-sidewalk.svg')}
+            src={staticFile('assets/terrain/terrain-ground.svg')}
             style={{
               position: 'absolute',
-              left: 0, top: SIDEWALK_TOP,
-              width: W, height: STREET_TOP - SIDEWALK_TOP,
-              objectFit: 'fill',
+              left: 0, top: GROUND_TOP,
+              width: W, height: H - GROUND_TOP,
+              objectFit: 'cover',
+              objectPosition: 'center top',
             }}
           />
         </AbsoluteFill>
@@ -348,19 +346,6 @@ export const PubExteriorScene: React.FC = () => {
               left: LAMP_RIGHT.x, top: LAMP_RIGHT.y,
               width: LAMP_RIGHT.w, height: LAMP_RIGHT.h,
               transform: 'scaleX(-1)',
-            }}
-          />
-        </AbsoluteFill>
-
-        {/* Layer 11: Cobblestone street (bottom) */}
-        <AbsoluteFill style={{ zIndex: 11 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-street.svg')}
-            style={{
-              position: 'absolute',
-              left: 0, top: STREET_TOP,
-              width: W, height: H - STREET_TOP,
-              objectFit: 'fill',
             }}
           />
         </AbsoluteFill>
