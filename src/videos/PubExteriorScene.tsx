@@ -11,7 +11,7 @@
  *  - sky/sky-night.svg            1536×1024  (1.50:1, no crop needed)
  *  - props/prop-moon.svg           761×743   (1.02:1)
  *  - structures/struct-pub.svg     977×1024  (0.95:1)
- *  - terrain/terrain-ground.png   1536×1024  (PNG direct, skip vectorizer)
+ *  - terrain/terrain-ground.png   1536×216   (auto-cropped via sharp trim)
  *  - props/prop-man-dog.svg        713×972   (0.73:1)
  *  - props/prop-lamp.svg           177×741   (0.24:1)
  */
@@ -300,28 +300,18 @@ export const PubExteriorScene: React.FC = () => {
         </AbsoluteFill>
 
         {/* Layer 8: Ground (sidewalk + street combined)
-             PNG 1536×942 letterbox. Show all content (bottom ~29%) using 250%
-             height, then fade the white top into the night sky via gradient. */}
+             Auto-cropped PNG 1536×216 (7.1:1). objectFit fill stretches
+             to 1920×238 — only ~10% vertical stretch, barely noticeable. */}
         <AbsoluteFill style={{ zIndex: 8 }}>
-          <div style={{
-            position: 'absolute',
-            left: 0, top: GROUND_TOP,
-            width: W, height: H - GROUND_TOP,
-            backgroundColor: '#3b4470',
-            backgroundImage: `url(${staticFile('assets/terrain/terrain-ground.png')})`,
-            backgroundSize: '100% 250%',
-            backgroundPosition: 'center bottom',
-            backgroundRepeat: 'no-repeat',
-          }}>
-            {/* Gradient overlay: fades white top of PNG into night sky */}
-            <div style={{
+          <Img
+            src={staticFile('assets/terrain/terrain-ground.png')}
+            style={{
               position: 'absolute',
-              left: 0, top: 0,
-              width: '100%', height: '40%',
-              background: 'linear-gradient(to bottom, rgba(10,14,26,1) 0%, rgba(10,14,26,0) 100%)',
-              pointerEvents: 'none',
-            }} />
-          </div>
+              left: 0, top: GROUND_TOP,
+              width: W, height: H - GROUND_TOP,
+              objectFit: 'fill',
+            }}
+          />
         </AbsoluteFill>
 
         {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
