@@ -47,9 +47,9 @@ const H = 1080;
 // Sky: fills entire canvas
 const SKY = { x: 0, y: 0, w: W, h: H };
 
-// Moon: upper-right, ~6% of canvas width (kleiner)
-const MOON_SIZE = W * 0.06;
-const MOON = { x: W * 0.88, y: H * 0.08, w: MOON_SIZE, h: MOON_SIZE };
+// Moon: upper-right, ~10% of canvas width (zoals eerst — dit was goed)
+const MOON_SIZE = W * 0.10;
+const MOON = { x: W * 0.82, y: H * 0.05, w: MOON_SIZE, h: MOON_SIZE };
 
 // Terrain: bottom ~50%, full width (meer zichtbaar)
 const TERRAIN_TOP = H * 0.50;
