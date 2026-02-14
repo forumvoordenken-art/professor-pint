@@ -303,16 +303,24 @@ export const PubExteriorScene: React.FC = () => {
              PNG letterbox: content in bottom ~20%, rest white.
              cover + bottom crops white area, shows ground at correct ratio. */}
         <AbsoluteFill style={{ zIndex: 8 }}>
-          <Img
-            src={staticFile('assets/terrain/terrain-ground.png')}
-            style={{
-              position: 'absolute',
-              left: 0, top: GROUND_TOP,
-              width: W, height: H - GROUND_TOP,
-              objectFit: 'cover',
-              objectPosition: 'center bottom',
-            }}
-          />
+          <div style={{
+            position: 'absolute',
+            left: 0, top: GROUND_TOP,
+            width: W, height: H - GROUND_TOP,
+            backgroundColor: '#3b4470',
+            overflow: 'hidden',
+          }}>
+            <Img
+              src={staticFile('assets/terrain/terrain-ground.png')}
+              style={{
+                position: 'absolute',
+                left: 0, top: 0,
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center bottom',
+              }}
+            />
+          </div>
         </AbsoluteFill>
 
         {/* Layer 9: Man + Dog (on sidewalk, right of pub) */}
