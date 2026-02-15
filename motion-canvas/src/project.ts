@@ -1,7 +1,7 @@
 import {makeProject} from '@motion-canvas/core';
 
-import pubInterior from './scenes/pub-interior?scene';
+import pubExterior from './scenes/pub-exterior?scene';
 
 export default makeProject({
-  scenes: [pubInterior],
+  scenes: [pubExterior],
 });
