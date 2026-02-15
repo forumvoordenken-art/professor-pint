@@ -6,36 +6,33 @@
 
 ---
 
-## Status: Scene-split workflow — zwarte elementen fixen (document-order fix + re-vectorize nodig)
+## Status: Rive character animation integratie
 
-### Grote verandering deze sessie: Scene-split vervangt element-voor-element
+### Scene-split workflow: WERKEND
+De scene-split pipeline werkt volledig. Pub exterior scene rendert correct met alle lagen.
 
-**Oud (v6):** Elk element apart genereren → vectorizen → cleanen → handmatig positioneren met pixel-berekeningen (480+ regels code).
-
-**Nieuw (v9):** Eén complete scene-PNG → vectorize → split in lagen via `split-scene-svg.js` → alle lagen delen dezelfde viewBox → `position: absolute; inset: 0`. Geen handmatige positionering meer.
+### Character animatie: Rive gekozen
+Statische SVG characters kunnen niet lopen/bewegen (hele laag beweegt mee inclusief achtergrond). Rive gekozen als oplossing voor skeletal character animatie.
 
 ### Wat is AF:
-- ✅ Project opgeschoond (oude docs verwijderd)
-- ✅ `split-scene-svg.js` geschreven — splitst scene SVG in lagen via spatial regions
-- ✅ `scenes/pub-exterior-regions.json` — region config voor pub exterior
-- ✅ `PubExteriorScene.tsx` herschreven naar v9 (scene-split, SCENE_LAYERS array)
-- ✅ Git workflow geüpdated: `git checkout` ipv `git merge` (voorkomt merge conflicts)
-- ✅ CLAUDE.md geüpdated met scene-split workflow + vectorizer.ai valkuilen
-- ✅ 3 stroke groups bug gefixt (script vond alleen de eerste)
-- ✅ Fill-group extractie met depth tracking (nested `<g>` support)
-- ✅ `preserveAspectRatio="none"` voor aspect ratio mismatch
-- ✅ Brede elementen (>60% viewBox) → automatisch "base" layer
+- ✅ Scene-split pipeline volledig werkend (split-scene-svg.js + regions)
+- ✅ Zwarte elementen bug opgelost (document-order fix + "Group By: None" re-vectorize)
+- ✅ PubExteriorScene.tsx v9 met procedurele animatie overlays (stars, glow, smoke, fog)
+- ✅ `@remotion/rive` geïnstalleerd (v4.0.422, matcht Remotion versie)
+- ✅ `RiveCharacter` component aangemaakt (`src/components/RiveCharacter.tsx`)
+- ✅ Kapotte walk animatie verwijderd (bewoog hele characters laag)
 
 ### Nog te doen:
-- ⚠️ **Zwarte elementen — twee oorzaken gevonden:**
-  1. **Document-volgorde** (GEFIXT): `buildLayerSvg` zette alle strokes eerst, dan alle fills. Maar vectorizer.ai interleaved stroke→fill→stroke→fill voor correcte z-layering. Fix: single-pass extractie met `docOrder` counter, output respecteert originele volgorde.
-  2. **"Group By: Color" in vectorizer.ai** (NOG TE DOEN): Paths met dezelfde kleur over hele scene worden als één `<g fill>` groep toegewezen aan één regio → paths in verkeerde laag. Oplossing: opnieuw vectorizen met **"Group By: None"** zodat elke path eigen `fill=` attribuut heeft.
-- 🔄 **Wacht op:** Gebruiker moet `pub-exterior-full.svg` opnieuw vectorizen met "Group By: None" en uploaden naar main. Dan split script opnieuw runnen.
-
-### Wat MOET NOG (na bugfixes):
-- Meer scenes maken voor complete video (5-10 scenes)
-- Audio toevoegen (voice-over, music, SFX)
-- YouTube upload pipeline
+- 🔄 **Eerste Rive character maken:**
+  1. Genereer character parts (body, head, arms, legs) als losse PNGs via ChatGPT
+  2. Upload naar [rive.app](https://rive.app) (gratis account)
+  3. Zet bones/skeletal animation op (walk cycle, idle, etc.)
+  4. Export als `.riv` bestand
+  5. Zet in `public/assets/characters/`
+  6. Integreer in PubExteriorScene met `<RiveCharacter>` component
+- 🔄 **Meer scenes maken** voor complete video (5-10 scenes)
+- 🔄 **Audio toevoegen** (voice-over, music, SFX)
+- 🔄 **YouTube upload pipeline**
 
 ---
 
@@ -45,17 +42,42 @@
 public/assets/scenes/
 ├── pub-exterior-full.svg          (1536×1024, bron SVG van vectorizer.ai)
 └── pub-exterior/                  (gegenereerd door split-scene-svg.js)
-    ├── base.svg                   (26 elements — brede achtergronden)
-    ├── sky.svg                    (14 elements)
-    ├── pub.svg                    (459 elements)
-    ├── lamp-left.svg              (102 elements)
-    ├── lamp-right.svg             (61 elements)
-    ├── characters.svg             (22 elements)
-    ├── sidewalk.svg               (24 elements)
-    └── street.svg                 (2 elements)
+    ├── base.svg                   (brede achtergronden)
+    ├── sky.svg                    (lucht, maan, sterren)
+    ├── pub.svg                    (pub gebouw)
+    ├── lamp-left.svg              (linker lantaarnpaal)
+    ├── lamp-right.svg             (rechter lantaarnpaal)
+    ├── characters.svg             (man + hond — statisch, wordt vervangen door Rive)
+    ├── sidewalk.svg               (stoep)
+    └── street.svg                 (straat)
 ```
 
-Totaal: 710 elements, 0 uncategorized.
+---
+
+## Character Animatie (Rive)
+
+**Package:** `@remotion/rive` v4.0.422
+**Component:** `src/components/RiveCharacter.tsx`
+
+### Hoe het werkt:
+```tsx
+import { RiveCharacter } from '../components/RiveCharacter';
+
+// In je scene component:
+<RiveCharacter
+  src="assets/characters/boy-walking.riv"
+  animation="walk"
+  style={{ position: 'absolute', left: '60%', bottom: '20%', width: 200, height: 300 }}
+/>
+```
+
+`RemotionRiveCanvas` synct automatisch met `useCurrentFrame()` — de Rive animatie volgt exact het Remotion frame, geen timing issues.
+
+### Rive workflow:
+1. **Character parts genereren** → ChatGPT met flat-color prompt (losse body parts)
+2. **Rive editor** → bones opzetten, animaties maken (walk, idle, talk)
+3. **Export** → `.riv` bestand in `public/assets/characters/`
+4. **Gebruik** → `<RiveCharacter>` in scene component
 
 ---
 
@@ -80,33 +102,20 @@ const SCENE_LAYERS = [
 **Animatie overlays (procedureel):**
 - Stars (40 twinkeling circles)
 - Moon glow (radial gradient)
+- Chimney smoke (18 rising puffs)
 - Lamp glow (halos bij lampen)
+- Pub lantern glow (flickering warmte)
 - Window light (glow achter ramen)
 - Dust motes (deeltjes bij lampen)
 - Ground fog (drijvende ellipsen)
 
 ---
 
-## Bugfix Geschiedenis (deze sessie)
-
-| Bug | Oorzaak | Fix |
-|-----|---------|-----|
-| Zwarte gebieden (sidewalk/street) | Brede achtergronden toegewezen aan "pub" door centroid | `assignToRegion()`: >60% width → "base" layer |
-| `base` bucket crash | `buckets['base']` niet geïnitialiseerd | `buckets['base'] = []` toevoegen |
-| Zwarte rand onderkant | SVG 3:2 vs canvas 16:9 | `preserveAspectRatio="none"` |
-| Veel zwarte elementen | Paths in `<g fill>` dubbel geëxtraheerd | Extract groups EERST, remove uit remaining |
-| Nested `<g>` fout | Lazy regex `[\s\S]*?</g>` stopt bij eerste `</g>` | Depth-tracking functie |
-| Alle `<g>` geëxtraheerd | Script pakte ook `<g transform>`, `<g opacity>` | Filter op `<g fill="(?!none)">` |
-| Nog meer zwarte elementen | 3 stroke groups, script vond alleen eerste | Loop met depth tracking ipv `.match()` |
-| Zwarte details (stenen, ramen, borden) | `buildLayerSvg` zette alle strokes eerst, dan fills → brak z-volgorde | Single-pass extractie met `docOrder`, output behoudt originele interleaving |
-| Kleuren in verkeerde laag | vectorizer.ai "Group By: Color" groepeert paths per kleur over hele scene | Opnieuw vectorizen met "Group By: None" |
-
----
-
 ## Tech Stack
 
 - **Video**: Remotion v4.0.422 (React-based, renders to MP4)
-- **Assets**: ChatGPT (PNG) → vectorizer.ai (SVG) → split-scene-svg.js (lagen) → Remotion (animatie)
+- **Character animatie**: Rive via `@remotion/rive` (skeletal/bone animation)
+- **Assets**: ChatGPT (PNG) → vectorizer.ai (SVG, "Group By: None") → split-scene-svg.js (lagen) → Remotion (animatie)
 - **Code**: TypeScript, React
 - **Testing**: Codespace (npx remotion studio)
 - **Git**: Feature branches → main (via `git checkout origin/branch -- files`)

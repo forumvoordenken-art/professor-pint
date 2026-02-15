@@ -95,9 +95,6 @@ const ANCHORS = {
   // Pub lanterns on facade
   pubLanternLeft: { x: W * 0.381, y: H * 0.610 },
   pubLanternRight: { x: W * 0.509, y: H * 0.626 },
-
-  // Characters (boy+dog): center and walk range
-  characters: { cx: W * 0.671, cy: H * 0.783, walkRange: W * 0.06 },
 };
 
 // ---------------------------------------------------------------------------
@@ -312,8 +309,7 @@ export const PubExteriorScene: React.FC = () => {
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
         {/* ─── Scene layers (from split-scene-svg.js) ─── */}
-        {/* Characters rendered separately for walk animation */}
-        {SCENE_LAYERS.filter((l) => l.id !== 'characters').map((layer) => (
+        {SCENE_LAYERS.map((layer) => (
           <AbsoluteFill key={layer.id} style={{ zIndex: layer.zIndex }}>
             <Img
               src={staticFile(layer.src)}
@@ -321,25 +317,6 @@ export const PubExteriorScene: React.FC = () => {
             />
           </AbsoluteFill>
         ))}
-
-        {/* ─── Characters with walk animation ─── */}
-        {(() => {
-          const charLayer = SCENE_LAYERS.find((l) => l.id === 'characters')!;
-          // Slow walk: gentle horizontal sway + subtle bob
-          const walkX = Math.sin(frame * 0.015) * ANCHORS.characters.walkRange;
-          const walkBob = Math.abs(Math.sin(frame * 0.06)) * 3; // subtle up-down
-          return (
-            <AbsoluteFill key="characters" style={{ zIndex: charLayer.zIndex }}>
-              <Img
-                src={staticFile(charLayer.src)}
-                style={{
-                  ...LAYER_STYLE,
-                  transform: `translateX(${walkX}px) translateY(${walkBob}px)`,
-                }}
-              />
-            </AbsoluteFill>
-          );
-        })()}
 
         {/* ─── Animation overlays ─── */}
 

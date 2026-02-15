@@ -8,9 +8,9 @@
 
 **Professor Pint** — Educational YouTube videos (10-20 min) over filosofie, geschiedenis, wetenschap. Stijl: casual pub-sfeer, Nederlandse communicatie, Engelse content.
 
-**Huidige status:** Eerste test scene werkend (Pub Exterior Night met man+dog).
+**Huidige status:** Eerste scene werkend (Pub Exterior Night). Rive integratie opgezet voor character animatie.
 
-**Volgende:** Meer scenes maken → complete video samenstellen → audio toevoegen → YouTube upload.
+**Volgende:** Eerste Rive character maken → meer scenes → audio → YouTube upload.
 
 ---
 
@@ -217,6 +217,8 @@ SVGs van vectorizer.ai hebben een specifieke structuur. Het split script (`split
 - `scripts/clean-svg-backgrounds.js` — verwijdert witte achtergrond-paths
 - `scripts/crop-svg-viewbox.js` — cropped viewBox naar echte content
 
-**Status:** Zwarte elementen bug wordt nog gefixt (stroke group extractie herschreven, nog niet visueel geverifieerd door gebruiker)
+**Character animatie:** Rive via `@remotion/rive` — component: `src/components/RiveCharacter.tsx`
+
+**Status:** Scene werkend, Rive opgezet, wacht op eerste `.riv` bestand van gebruiker.
 
 **Volgende stappen:** Zie `docs/PROJECT-STATE.md`
