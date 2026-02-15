@@ -1,28 +1,9 @@
 /**
- * PubExteriorScene — Night pub exterior (v9 — split-scene layers)
+ * PubExteriorScene — Night pub exterior (v10 — single full-scene SVG)
  *
- * NEW APPROACH: Eén scene-PNG → vectorizer.ai → split-scene-svg.js → aparte lagen.
- * Alle lagen hebben DEZELFDE viewBox → perfect uitgelijn met inset: 0.
- * Geen handmatige positionering meer.
- *
- * Workflow:
- *   1. Genereer volledige scene als PNG (ChatGPT)
- *   2. Vectorize (vectorizer.ai)
- *   3. node scripts/clean-svg-backgrounds.js
- *   4. node scripts/split-scene-svg.js <input.svg> --config scenes/pub-exterior-regions.json
- *   5. Output → public/assets/scenes/pub-exterior/*.svg
- *
- * Animation overlays (stars, glow, fog) worden procedureel gegenereerd
- * op basis van anchor points die per scene worden ingesteld.
- *
- * Assets (public/assets/scenes/pub-exterior/):
- *   - sky.svg         Lucht, maan, sterren
- *   - pub.svg         Pub gebouw
- *   - lamp-left.svg   Linker lantaarnpaal
- *   - lamp-right.svg  Rechter lantaarnpaal
- *   - characters.svg  Man + hond
- *   - sidewalk.svg    Stoep
- *   - street.svg      Straat (cobblestone)
+ * Uses pub-exterior-full.svg as single background layer.
+ * Character (boy + dog) is baked into the scene.
+ * Animation overlays (stars, glow, fog) are procedurally generated.
  */
 
 import React from 'react';
@@ -41,20 +22,8 @@ const H = 1080;
 // Scene layers — alle SVGs hebben dezelfde viewBox, dus inset: 0 = perfect align
 // ---------------------------------------------------------------------------
 
-const SCENE_DIR = 'assets/scenes';
-
-// Background scene (without characters) — full scene as single SVG
-const BG_SRC = `${SCENE_DIR}/pub-exterior-bg.svg`;
-
-// Character (boy + dog) — separate SVG, can be freely animated
-const CHAR_SRC = `${SCENE_DIR}/pub-exterior-boy-dog.svg`;
-// Character SVG dimensions (from cropped viewBox)
-const CHAR_W = 1274;
-const CHAR_H = 873;
-// Character display size and position on canvas
-const CHAR_SCALE = 0.32; // scale to fit scene proportions
-const CHAR_DISPLAY_W = CHAR_W * CHAR_SCALE;
-const CHAR_DISPLAY_H = CHAR_H * CHAR_SCALE;
+// Full scene as single SVG (character baked in)
+const BG_SRC = 'assets/scenes/pub-exterior-full.svg';
 
 // Full-canvas style for scene layers (shared viewBox = no positioning needed)
 const LAYER_STYLE: React.CSSProperties = {
@@ -310,44 +279,6 @@ export const PubExteriorScene: React.FC = () => {
             style={{ ...LAYER_STYLE, objectFit: 'cover' as const }}
           />
         </AbsoluteFill>
-
-        {/* ─── Character (boy + dog) — walks across the sidewalk ─── */}
-        {(() => {
-          // Walk from right to left over the scene duration
-          const startX = W * 0.65;
-          const endX = W * 0.35;
-          const charX = interpolate(frame, [0, PUB_EXTERIOR_FRAMES], [startX, endX], { extrapolateRight: 'clamp' });
-
-          // Walk cycle — step frequency ~2 steps/sec
-          const stepPhase = frame * 0.21;
-          // Vertical bob: up at mid-step, down at foot-plant
-          const stepBob = Math.abs(Math.sin(stepPhase)) * 4;
-          // Body lean: negative = lean left (forward for left-walking char)
-          const lean = -1.0 + Math.sin(stepPhase) * 1.2;
-          // Lateral sway: slight side-to-side shift
-          const sway = Math.sin(stepPhase * 0.5) * 2;
-
-          // Position: feet on the sidewalk
-          const charY = H * 0.58;
-          return (
-            <div style={{
-              position: 'absolute',
-              left: charX - CHAR_DISPLAY_W / 2 + sway,
-              top: charY - stepBob,
-              width: CHAR_DISPLAY_W,
-              height: CHAR_DISPLAY_H,
-              zIndex: 10,
-              mixBlendMode: 'multiply' as const,
-              transformOrigin: 'bottom center',
-              transform: `rotate(${lean}deg)`,
-            }}>
-              <Img
-                src={staticFile(CHAR_SRC)}
-                style={{ width: '100%', height: '100%' }}
-              />
-            </div>
-          );
-        })()}
 
         {/* ─── Animation overlays ─── */}
 
