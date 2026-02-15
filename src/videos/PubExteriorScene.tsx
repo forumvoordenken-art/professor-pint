@@ -27,7 +27,6 @@
 
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, Img, staticFile, interpolate } from 'remotion';
-import { WalkingCharacter } from '../components/WalkingCharacter';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -310,7 +309,8 @@ export const PubExteriorScene: React.FC = () => {
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
         {/* ─── Scene layers (from split-scene-svg.js) ─── */}
-        {SCENE_LAYERS.map((layer) => (
+        {/* Characters layer rendered separately with walk animation */}
+        {SCENE_LAYERS.filter((l) => l.id !== 'characters').map((layer) => (
           <AbsoluteFill key={layer.id} style={{ zIndex: layer.zIndex }}>
             <Img
               src={staticFile(layer.src)}
@@ -318,6 +318,26 @@ export const PubExteriorScene: React.FC = () => {
             />
           </AbsoluteFill>
         ))}
+
+        {/* Characters layer with gentle walk: slow drift left + subtle bob */}
+        {(() => {
+          const charLayer = SCENE_LAYERS.find((l) => l.id === 'characters')!;
+          // Slow walk to the left over the scene duration
+          const walkX = interpolate(frame, [0, PUB_EXTERIOR_FRAMES], [0, -35], { extrapolateRight: 'clamp' });
+          // Subtle step bob (up-down per step cycle)
+          const stepBob = Math.sin(frame * 0.25) * 1.5;
+          return (
+            <AbsoluteFill key="characters" style={{ zIndex: charLayer.zIndex }}>
+              <Img
+                src={staticFile(charLayer.src)}
+                style={{
+                  ...LAYER_STYLE,
+                  transform: `translateX(${walkX}px) translateY(${stepBob}px)`,
+                }}
+              />
+            </AbsoluteFill>
+          );
+        })()}
 
         {/* ─── Animation overlays ─── */}
 
@@ -355,20 +375,6 @@ export const PubExteriorScene: React.FC = () => {
         <AbsoluteFill style={{ zIndex: 7, mixBlendMode: 'screen' }}>
           <PubLanternGlow frame={frame} cx={ANCHORS.pubLanternLeft.x} cy={ANCHORS.pubLanternLeft.y} id="pub-left" />
           <PubLanternGlow frame={frame} cx={ANCHORS.pubLanternRight.x} cy={ANCHORS.pubLanternRight.y} id="pub-right" />
-        </AbsoluteFill>
-
-        {/* ─── Walking character animation ─── */}
-        <AbsoluteFill style={{ zIndex: 10 }}>
-          <svg viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}>
-            <WalkingCharacter
-              frame={frame}
-              x={interpolate(frame, [0, PUB_EXTERIOR_FRAMES], [W * 0.85, W * 0.15], { extrapolateRight: 'clamp' })}
-              y={H * 0.78}
-              scale={0.85}
-              direction={-1}
-              speed={1.2}
-            />
-          </svg>
         </AbsoluteFill>
 
         {/* Street lamp glow halos */}
