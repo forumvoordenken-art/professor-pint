@@ -85,9 +85,19 @@ const ANCHORS = {
   // Ground line: where sidewalk starts (for fog, horizon blend)
   groundLine: H * 0.73,
 
-  // Lamp tops: where glow emanates from
-  lampLeft: { x: W * 0.22, y: H * 0.35 },
-  lampRight: { x: W * 0.78, y: H * 0.35 },
+  // Street lamp tops: where glow emanates from (updated from SVG analysis)
+  lampLeft: { x: W * 0.245, y: H * 0.20 },
+  lampRight: { x: W * 0.755, y: H * 0.20 },
+
+  // Chimney: top-center for smoke origin
+  chimney: { x: W * 0.262, y: H * 0.128 },
+
+  // Pub lanterns on facade
+  pubLanternLeft: { x: W * 0.381, y: H * 0.610 },
+  pubLanternRight: { x: W * 0.509, y: H * 0.626 },
+
+  // Characters (boy+dog): center and walk range
+  characters: { cx: W * 0.671, cy: H * 0.783, walkRange: W * 0.06 },
 };
 
 // ---------------------------------------------------------------------------
@@ -134,6 +144,17 @@ const dustRight = makeParticles(15, 20, {
 const fogParticles = makeParticles(25, 30, {
   x1: 0, y1: ANCHORS.groundLine, x2: W, y2: H,
 });
+// Smoke particles for chimney
+const smokeParticles = Array.from({ length: 18 }, (_, i) => ({
+  xOff: (rand(700 + i) - 0.5) * 30,     // horizontal spread
+  size: 6 + rand(800 + i) * 14,          // puff size
+  speed: 0.3 + rand(900 + i) * 0.5,      // rise speed
+  drift: (rand(1000 + i) - 0.5) * 0.4,   // wind drift
+  opacity: 0.12 + rand(1100 + i) * 0.18,
+  phase: rand(1200 + i) * Math.PI * 2,
+  lifetime: 80 + rand(1300 + i) * 60,     // frames before reset
+}));
+
 const stars = Array.from({ length: 40 }, (_, i) => ({
   cx: 40 + rand(100 + i) * (W - 80),
   cy: 15 + rand(200 + i) * (H * 0.45),
@@ -232,6 +253,52 @@ const GroundFog: React.FC<{ frame: number }> = ({ frame }) => (
   </svg>
 );
 
+const ChimneySmoke: React.FC<{ frame: number }> = ({ frame }) => (
+  <svg viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}>
+    {smokeParticles.map((p, i) => {
+      // Each puff rises, expands, drifts, and fades over its lifetime
+      const t = ((frame * p.speed + p.phase * 50) % p.lifetime) / p.lifetime; // 0→1 over lifetime
+      const rise = t * 180;         // pixels upward
+      const expand = 1 + t * 2.5;   // grows as it rises
+      const fadeOut = 1 - t * t;     // quadratic fade
+      const drift = t * p.drift * 100 + Math.sin(frame * 0.03 + p.phase) * 8; // wind + wobble
+
+      const px = ANCHORS.chimney.x + p.xOff + drift;
+      const py = ANCHORS.chimney.y - rise;
+      const r = p.size * expand;
+      const o = p.opacity * fadeOut * 0.7;
+
+      return o > 0.01 ? (
+        <ellipse
+          key={`smoke-${i}`}
+          cx={px} cy={py}
+          rx={r * 1.2} ry={r * 0.8}
+          fill="#8888AA"
+          opacity={Math.max(0, o)}
+        />
+      ) : null;
+    })}
+  </svg>
+);
+
+const PubLanternGlow: React.FC<{ frame: number; cx: number; cy: number; id: string }> = ({ frame, cx, cy, id }) => {
+  const f = 0.8 + sin(frame, 0.04, 0.5) * 0.08 + sin(frame, 0.09, 2.0) * 0.05 + sin(frame, 0.17, 3.5) * 0.03;
+  const r = 55 + sin(frame, 0.035, 1.0) * 8;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}>
+      <defs>
+        <radialGradient id={`plg-${id}`} cx="50%" cy="40%" r="50%">
+          <stop offset="0%" stopColor="#FFE0A0" stopOpacity={0.5 * f} />
+          <stop offset="25%" stopColor="#FFD060" stopOpacity={0.3 * f} />
+          <stop offset="60%" stopColor="#FFAA33" stopOpacity={0.1 * f} />
+          <stop offset="100%" stopColor="#FF8800" stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      <ellipse cx={cx} cy={cy} rx={r} ry={r * 1.4} fill={`url(#plg-${id})`} />
+    </svg>
+  );
+};
+
 // ---------------------------------------------------------------------------
 // Main Composition
 // ---------------------------------------------------------------------------
@@ -245,8 +312,8 @@ export const PubExteriorScene: React.FC = () => {
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
         {/* ─── Scene layers (from split-scene-svg.js) ─── */}
-        {/* Alle lagen hebben dezelfde viewBox → inset: 0 = perfect align */}
-        {SCENE_LAYERS.map((layer) => (
+        {/* Characters rendered separately for walk animation */}
+        {SCENE_LAYERS.filter((l) => l.id !== 'characters').map((layer) => (
           <AbsoluteFill key={layer.id} style={{ zIndex: layer.zIndex }}>
             <Img
               src={staticFile(layer.src)}
@@ -254,6 +321,25 @@ export const PubExteriorScene: React.FC = () => {
             />
           </AbsoluteFill>
         ))}
+
+        {/* ─── Characters with walk animation ─── */}
+        {(() => {
+          const charLayer = SCENE_LAYERS.find((l) => l.id === 'characters')!;
+          // Slow walk: gentle horizontal sway + subtle bob
+          const walkX = Math.sin(frame * 0.015) * ANCHORS.characters.walkRange;
+          const walkBob = Math.abs(Math.sin(frame * 0.06)) * 3; // subtle up-down
+          return (
+            <AbsoluteFill key="characters" style={{ zIndex: charLayer.zIndex }}>
+              <Img
+                src={staticFile(charLayer.src)}
+                style={{
+                  ...LAYER_STYLE,
+                  transform: `translateX(${walkX}px) translateY(${walkBob}px)`,
+                }}
+              />
+            </AbsoluteFill>
+          );
+        })()}
 
         {/* ─── Animation overlays ─── */}
 
@@ -277,12 +363,23 @@ export const PubExteriorScene: React.FC = () => {
           }} />
         </AbsoluteFill>
 
+        {/* Chimney smoke */}
+        <AbsoluteFill style={{ zIndex: 5, opacity: 0.6 }}>
+          <ChimneySmoke frame={frame} />
+        </AbsoluteFill>
+
         {/* Window light glow */}
         <AbsoluteFill style={{ zIndex: 7, mixBlendMode: 'screen' }}>
           <WindowLight frame={frame} />
         </AbsoluteFill>
 
-        {/* Lamp glow halos */}
+        {/* Pub lantern glow */}
+        <AbsoluteFill style={{ zIndex: 7, mixBlendMode: 'screen' }}>
+          <PubLanternGlow frame={frame} cx={ANCHORS.pubLanternLeft.x} cy={ANCHORS.pubLanternLeft.y} id="pub-left" />
+          <PubLanternGlow frame={frame} cx={ANCHORS.pubLanternRight.x} cy={ANCHORS.pubLanternRight.y} id="pub-right" />
+        </AbsoluteFill>
+
+        {/* Street lamp glow halos */}
         <AbsoluteFill style={{ zIndex: 12, mixBlendMode: 'screen' }}>
           <LampGlow frame={frame} cx={ANCHORS.lampLeft.x} cy={ANCHORS.lampLeft.y} id="left" />
           <LampGlow frame={frame} cx={ANCHORS.lampRight.x} cy={ANCHORS.lampRight.y} id="right" />
