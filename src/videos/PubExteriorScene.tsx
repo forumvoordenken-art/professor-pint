@@ -309,8 +309,7 @@ export const PubExteriorScene: React.FC = () => {
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
         {/* ─── Scene layers (from split-scene-svg.js) ─── */}
-        {/* Characters layer rendered separately with walk animation */}
-        {SCENE_LAYERS.filter((l) => l.id !== 'characters').map((layer) => (
+        {SCENE_LAYERS.map((layer) => (
           <AbsoluteFill key={layer.id} style={{ zIndex: layer.zIndex }}>
             <Img
               src={staticFile(layer.src)}
@@ -319,19 +318,25 @@ export const PubExteriorScene: React.FC = () => {
           </AbsoluteFill>
         ))}
 
-        {/* Characters layer with gentle walk: slow drift left + subtle bob */}
+        {/* ─── Character walk: clip-path isolates figure from ground ─── */}
+        {/* Renders characters.svg AGAIN with clip-path showing only the
+            boy+dog area. The static layer above shows the full scene (ground
+            included). This animated overlay moves only the visible figure. */}
         {(() => {
           const charLayer = SCENE_LAYERS.find((l) => l.id === 'characters')!;
-          // Slow walk to the left over the scene duration
-          const walkX = interpolate(frame, [0, PUB_EXTERIOR_FRAMES], [0, -35], { extrapolateRight: 'clamp' });
-          // Subtle step bob (up-down per step cycle)
-          const stepBob = Math.sin(frame * 0.25) * 1.5;
+          // Walk: drift left over scene duration + step bob
+          const walkX = interpolate(frame, [0, PUB_EXTERIOR_FRAMES], [0, -40], { extrapolateRight: 'clamp' });
+          const stepBob = Math.sin(frame * 0.25) * 1.8;
+          // Clip-path: boy+dog area in the 1536×1024 viewBox
+          // Boy body: ~x:1000-1210, y:745-815. With margin for movement.
+          // As percentages of canvas: x:63%-80%, y:70%-80%
           return (
-            <AbsoluteFill key="characters" style={{ zIndex: charLayer.zIndex }}>
+            <AbsoluteFill key="characters-walk" style={{ zIndex: charLayer.zIndex + 1 }}>
               <Img
                 src={staticFile(charLayer.src)}
                 style={{
                   ...LAYER_STYLE,
+                  clipPath: 'polygon(63% 70%, 80% 70%, 80% 80%, 63% 80%)',
                   transform: `translateX(${walkX}px) translateY(${stepBob}px)`,
                 }}
               />
