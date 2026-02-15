@@ -1,0 +1,93 @@
+import React from 'react';
+import {Sequence} from 'remotion';
+import {Scene01} from './scenes/Scene01';
+import {Scene02} from './scenes/Scene02';
+import {Scene03} from './scenes/Scene03';
+import {Scene04} from './scenes/Scene04';
+import {Scene05} from './scenes/Scene05';
+import {Scene06} from './scenes/Scene06';
+import {Scene07} from './scenes/Scene07';
+import {Scene08} from './scenes/Scene08';
+import {Scene09} from './scenes/Scene09';
+import {Scene10} from './scenes/Scene10';
+import {Scene11} from './scenes/Scene11';
+import {Scene12} from './scenes/Scene12';
+import {Scene13} from './scenes/Scene13';
+import {Scene14} from './scenes/Scene14';
+import {Scene15} from './scenes/Scene15';
+import {Scene16} from './scenes/Scene16';
+import {Scene17} from './scenes/Scene17';
+import {Scene18} from './scenes/Scene18';
+import {Scene19} from './scenes/Scene19';
+import {Scene20} from './scenes/Scene20';
+import {Scene21} from './scenes/Scene21';
+import {Scene22} from './scenes/Scene22';
+import {Scene23} from './scenes/Scene23';
+import {Scene24} from './scenes/Scene24';
+import {Scene25} from './scenes/Scene25';
+import {Scene26} from './scenes/Scene26';
+import {Scene27} from './scenes/Scene27';
+import {Scene28} from './scenes/Scene28';
+import {Scene29} from './scenes/Scene29';
+import {Scene30} from './scenes/Scene30';
+import {Scene31} from './scenes/Scene31';
+import {Scene32} from './scenes/Scene32';
+import {Scene33} from './scenes/Scene33';
+import {Scene34} from './scenes/Scene34';
+import {Scene35} from './scenes/Scene35';
+import {Scene36} from './scenes/Scene36';
+import {Scene37} from './scenes/Scene37';
+import {Scene38} from './scenes/Scene38';
+import {Scene39} from './scenes/Scene39';
+import {Scene40} from './scenes/Scene40';
+import {Scene41} from './scenes/Scene41';
+import {Scene42} from './scenes/Scene42';
+
+export const HistoryOfMoneyFull: React.FC = () => {
+  return (
+    <>
+      <Sequence from={0} durationInFrames={300}><Scene01 /></Sequence>
+      <Sequence from={300} durationInFrames={300}><Scene02 /></Sequence>
+      <Sequence from={600} durationInFrames={300}><Scene03 /></Sequence>
+      <Sequence from={900} durationInFrames={300}><Scene04 /></Sequence>
+      <Sequence from={1200} durationInFrames={300}><Scene05 /></Sequence>
+      <Sequence from={1500} durationInFrames={300}><Scene06 /></Sequence>
+      <Sequence from={1800} durationInFrames={300}><Scene07 /></Sequence>
+      <Sequence from={2100} durationInFrames={300}><Scene08 /></Sequence>
+      <Sequence from={2400} durationInFrames={300}><Scene09 /></Sequence>
+      <Sequence from={2700} durationInFrames={300}><Scene10 /></Sequence>
+      <Sequence from={3000} durationInFrames={300}><Scene11 /></Sequence>
+      <Sequence from={3300} durationInFrames={300}><Scene12 /></Sequence>
+      <Sequence from={3600} durationInFrames={300}><Scene13 /></Sequence>
+      <Sequence from={3900} durationInFrames={300}><Scene14 /></Sequence>
+      <Sequence from={4200} durationInFrames={300}><Scene15 /></Sequence>
+      <Sequence from={4500} durationInFrames={300}><Scene16 /></Sequence>
+      <Sequence from={4800} durationInFrames={300}><Scene17 /></Sequence>
+      <Sequence from={5100} durationInFrames={300}><Scene18 /></Sequence>
+      <Sequence from={5400} durationInFrames={300}><Scene19 /></Sequence>
+      <Sequence from={5700} durationInFrames={300}><Scene20 /></Sequence>
+      <Sequence from={6000} durationInFrames={300}><Scene21 /></Sequence>
+      <Sequence from={6300} durationInFrames={300}><Scene22 /></Sequence>
+      <Sequence from={6600} durationInFrames={300}><Scene23 /></Sequence>
+      <Sequence from={6900} durationInFrames={300}><Scene24 /></Sequence>
+      <Sequence from={7200} durationInFrames={300}><Scene25 /></Sequence>
+      <Sequence from={7500} durationInFrames={300}><Scene26 /></Sequence>
+      <Sequence from={7800} durationInFrames={300}><Scene27 /></Sequence>
+      <Sequence from={8100} durationInFrames={300}><Scene28 /></Sequence>
+      <Sequence from={8400} durationInFrames={300}><Scene29 /></Sequence>
+      <Sequence from={8700} durationInFrames={300}><Scene30 /></Sequence>
+      <Sequence from={9000} durationInFrames={300}><Scene31 /></Sequence>
+      <Sequence from={9300} durationInFrames={300}><Scene32 /></Sequence>
+      <Sequence from={9600} durationInFrames={300}><Scene33 /></Sequence>
+      <Sequence from={9900} durationInFrames={300}><Scene34 /></Sequence>
+      <Sequence from={10200} durationInFrames={300}><Scene35 /></Sequence>
+      <Sequence from={10500} durationInFrames={300}><Scene36 /></Sequence>
+      <Sequence from={10800} durationInFrames={300}><Scene37 /></Sequence>
+      <Sequence from={11100} durationInFrames={300}><Scene38 /></Sequence>
+      <Sequence from={11400} durationInFrames={300}><Scene39 /></Sequence>
+      <Sequence from={11700} durationInFrames={300}><Scene40 /></Sequence>
+      <Sequence from={12000} durationInFrames={300}><Scene41 /></Sequence>
+      <Sequence from={12300} durationInFrames={300}><Scene42 /></Sequence>
+    </>
+  );
+};
