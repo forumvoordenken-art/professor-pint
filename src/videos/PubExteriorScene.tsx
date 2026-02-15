@@ -41,25 +41,20 @@ const H = 1080;
 // Scene layers — alle SVGs hebben dezelfde viewBox, dus inset: 0 = perfect align
 // ---------------------------------------------------------------------------
 
-const SCENE_DIR = 'assets/scenes/pub-exterior';
+const SCENE_DIR = 'assets/scenes';
 
-/** Scene layer definition — rendered in z-index order */
-interface SceneLayer {
-  id: string;
-  src: string;
-  zIndex: number;
-}
+// Background scene (without characters) — full scene as single SVG
+const BG_SRC = `${SCENE_DIR}/pub-exterior-bg.svg`;
 
-const SCENE_LAYERS: SceneLayer[] = [
-  { id: 'base',       src: `${SCENE_DIR}/base.svg`,       zIndex: 0 },
-  { id: 'sky',        src: `${SCENE_DIR}/sky.svg`,        zIndex: 1 },
-  { id: 'pub',        src: `${SCENE_DIR}/pub.svg`,        zIndex: 6 },
-  { id: 'sidewalk',   src: `${SCENE_DIR}/sidewalk.svg`,   zIndex: 8 },
-  { id: 'street',     src: `${SCENE_DIR}/street.svg`,     zIndex: 9 },
-  { id: 'characters', src: `${SCENE_DIR}/characters.svg`, zIndex: 10 },
-  { id: 'lamp-left',  src: `${SCENE_DIR}/lamp-left.svg`,  zIndex: 11 },
-  { id: 'lamp-right', src: `${SCENE_DIR}/lamp-right.svg`, zIndex: 11 },
-];
+// Character (boy + dog) — separate SVG, can be freely animated
+const CHAR_SRC = `${SCENE_DIR}/pub-exterior-boy-dog.svg`;
+// Character SVG dimensions (from cropped viewBox)
+const CHAR_W = 1274;
+const CHAR_H = 873;
+// Character display size and position on canvas
+const CHAR_SCALE = 0.22; // scale to fit scene proportions
+const CHAR_DISPLAY_W = CHAR_W * CHAR_SCALE;
+const CHAR_DISPLAY_H = CHAR_H * CHAR_SCALE;
 
 // Full-canvas style for scene layers (shared viewBox = no positioning needed)
 const LAYER_STYLE: React.CSSProperties = {
@@ -308,39 +303,38 @@ export const PubExteriorScene: React.FC = () => {
     <AbsoluteFill style={{ backgroundColor: '#0a0e1a' }}>
       <AbsoluteFill style={{ opacity: fadeIn }}>
 
-        {/* ─── Scene layers (from split-scene-svg.js) ─── */}
-        {SCENE_LAYERS.map((layer) => (
-          <AbsoluteFill key={layer.id} style={{ zIndex: layer.zIndex }}>
-            <Img
-              src={staticFile(layer.src)}
-              style={LAYER_STYLE}
-            />
-          </AbsoluteFill>
-        ))}
+        {/* ─── Background scene (pub exterior without characters) ─── */}
+        <AbsoluteFill style={{ zIndex: 0 }}>
+          <Img
+            src={staticFile(BG_SRC)}
+            style={{ ...LAYER_STYLE, objectFit: 'cover' as const }}
+          />
+        </AbsoluteFill>
 
-        {/* ─── Character walk: clip-path isolates figure from ground ─── */}
-        {/* Renders characters.svg AGAIN with clip-path showing only the
-            boy+dog area. The static layer above shows the full scene (ground
-            included). This animated overlay moves only the visible figure. */}
+        {/* ─── Character (boy + dog) — walks across the sidewalk ─── */}
         {(() => {
-          const charLayer = SCENE_LAYERS.find((l) => l.id === 'characters')!;
-          // Walk: drift left over scene duration + step bob
-          const walkX = interpolate(frame, [0, PUB_EXTERIOR_FRAMES], [0, -40], { extrapolateRight: 'clamp' });
-          const stepBob = Math.sin(frame * 0.25) * 1.8;
-          // Clip-path: boy+dog area in the 1536×1024 viewBox
-          // Boy body: ~x:1000-1210, y:745-815. With margin for movement.
-          // As percentages of canvas: x:63%-80%, y:70%-80%
+          // Walk from right to left over the scene duration
+          const startX = W * 0.65;
+          const endX = W * 0.35;
+          const charX = interpolate(frame, [0, PUB_EXTERIOR_FRAMES], [startX, endX], { extrapolateRight: 'clamp' });
+          // Subtle step bob
+          const stepBob = Math.sin(frame * 0.25) * 2;
+          // Position: feet on the sidewalk
+          const charY = H * 0.58;
           return (
-            <AbsoluteFill key="characters-walk" style={{ zIndex: charLayer.zIndex + 1 }}>
+            <div style={{
+              position: 'absolute',
+              left: charX - CHAR_DISPLAY_W / 2,
+              top: charY + stepBob,
+              width: CHAR_DISPLAY_W,
+              height: CHAR_DISPLAY_H,
+              zIndex: 10,
+            }}>
               <Img
-                src={staticFile(charLayer.src)}
-                style={{
-                  ...LAYER_STYLE,
-                  clipPath: 'polygon(63% 70%, 80% 70%, 80% 80%, 63% 80%)',
-                  transform: `translateX(${walkX}px) translateY(${stepBob}px)`,
-                }}
+                src={staticFile(CHAR_SRC)}
+                style={{ width: '100%', height: '100%' }}
               />
-            </AbsoluteFill>
+            </div>
           );
         })()}
 
