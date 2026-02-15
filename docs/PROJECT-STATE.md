@@ -6,33 +6,55 @@
 
 ---
 
-## Status: Rive character animation integratie
+## STATUS: CRISIS — Geen productie, alleen technische experimenten
 
-### Scene-split workflow: WERKEND
-De scene-split pipeline werkt volledig. Pub exterior scene rendert correct met alle lagen.
+### Het probleem
 
-### Character animatie: Rive gekozen
-Statische SVG characters kunnen niet lopen/bewegen (hele laag beweegt mee inclusief achtergrond). Rive gekozen als oplossing voor skeletal character animatie.
+**Doel:** Educational YouTube-kanaal bouwen met volledig geanimeerde 10-20 min video's. Characters die bewegen, praten, gebaren. Props die verschijnen. Camera's die zoomen. Kurzgesagt visuele kwaliteit.
 
-### Wat is AF:
-- ✅ Scene-split pipeline volledig werkend (split-scene-svg.js + regions)
-- ✅ Zwarte elementen bug opgelost (document-order fix + "Group By: None" re-vectorize)
-- ✅ PubExteriorScene.tsx v9 met procedurele animatie overlays (stars, glow, smoke, fog)
-- ✅ `@remotion/rive` geïnstalleerd (v4.0.422, matcht Remotion versie)
-- ✅ `RiveCharacter` component aangemaakt (`src/components/RiveCharacter.tsx`)
-- ✅ Kapotte walk animatie verwijderd (bewoog hele characters laag)
+**Realiteit:** Weken besteed aan technische experimenten zonder één enkele geanimeerde scene te produceren. Huidige scenes zijn statische SVG achtergronden met alleen procedurele overlays (twinkeling sterren, flikkering lichten). Geen character animatie. Geen prop beweging. Geen camera werk.
 
-### Nog te doen:
-- 🔄 **Eerste Rive character maken:**
-  1. Genereer character parts (body, head, arms, legs) als losse PNGs via ChatGPT
-  2. Upload naar [rive.app](https://rive.app) (gratis account)
-  3. Zet bones/skeletal animation op (walk cycle, idle, etc.)
-  4. Export als `.riv` bestand
-  5. Zet in `public/assets/characters/`
-  6. Integreer in PubExteriorScene met `<RiveCharacter>` component
-- 🔄 **Meer scenes maken** voor complete video (5-10 scenes)
-- 🔄 **Audio toevoegen** (voice-over, music, SFX)
-- 🔄 **YouTube upload pipeline**
+**Wat we hebben getest zonder te implementeren:**
+1. **Element-voor-element SVG generatie** — Werkt maar te omslachtig
+2. **Scene-split methode** — Sneller maar nog steeds statisch
+3. **Motion Canvas vs Remotion** — Twee codebases, geen keuze gemaakt
+4. **Rive character animatie** — Component gebouwd, geen character geanimeerd
+5. **Sprite walkers** — Tests draaien, niet gebruikt in productie
+
+**Het kernprobleem:** Elke keer als er vooruitgang mogelijk is, stappen we over naar een nieuw technisch experiment. Tools worden gebouwd maar niet gebruikt. Methodes worden getest maar geen keuze wordt gemaakt.
+
+---
+
+## Huidige Video: "The History of Money"
+
+**Script:** `docs/videos/001-history-of-money.md`
+- Duur: 10:50 minuten
+- Scenes: 42 (van prehistorie tot Bitcoin)
+- Gesproken woorden: ~1400
+- Unieke assets: ~105
+
+**Huidige status:** Scene 1 (Pub Exterior) en Scene 2 (Pub Interior) bestaan als statische backgrounds. Scene 3-42 zijn niet gebouwd. Geen audio. Geen character animatie. Geen echte productie.
+
+---
+
+## Wat er WERKEND is
+
+### Remotion setup
+- ✅ `History-of-Money` compositie met Scene 1 → Transition → Scene 2 sequencing
+- ✅ `PubExteriorScene.tsx` (v10) — statische achtergrond + procedurele overlays
+- ✅ `PubInteriorScene.tsx` — statische achtergrond + procedurele overlays
+- ✅ Door-zoom transition tussen scenes
+
+### Scene-split pipeline
+- ✅ `split-scene-svg.js` splitst volledige scene-SVG in lagen
+- ✅ Region-based layer extraction met `scenes/[scene]-regions.json`
+- ✅ Document-order preservation voor correcte z-layering
+
+### Rive integratie (NIET GEBRUIKT)
+- ✅ `@remotion/rive` v4.0.422 geïnstalleerd
+- ✅ `RiveCharacter.tsx` component aangemaakt
+- ❌ Geen enkel character is daadwerkelijk in Rive geanimeerd
+- ❌ Geen `.riv` bestanden bestaan
 
 ---
 
@@ -40,110 +62,120 @@ Statische SVG characters kunnen niet lopen/bewegen (hele laag beweegt mee inclus
 
 ```
 public/assets/scenes/
-├── pub-exterior-full.svg          (1536×1024, bron SVG van vectorizer.ai)
-└── pub-exterior/                  (gegenereerd door split-scene-svg.js)
-    ├── base.svg                   (brede achtergronden)
-    ├── sky.svg                    (lucht, maan, sterren)
-    ├── pub.svg                    (pub gebouw)
-    ├── lamp-left.svg              (linker lantaarnpaal)
-    ├── lamp-right.svg             (rechter lantaarnpaal)
-    ├── characters.svg             (man + hond — statisch, wordt vervangen door Rive)
-    ├── sidewalk.svg               (stoep)
-    └── street.svg                 (straat)
+├── pub-exterior-full.svg       (volledig statisch)
+├── pub-interior-full.svg       (volledig statisch)
+└── pub-exterior/               (gesplitte lagen, characters baked-in)
+    ├── base.svg
+    ├── sky.svg
+    ├── pub.svg
+    ├── lamp-left.svg
+    ├── lamp-right.svg
+    ├── characters.svg          (STATISCH — geen animatie)
+    ├── sidewalk.svg
+    └── street.svg
 ```
+
+**Geen animeerbare characters. Geen losse props. Geen bewegende elementen.**
 
 ---
 
-## Character Animatie (Rive)
+## Wat er MOET gebeuren
 
-**Package:** `@remotion/rive` v4.0.422
-**Component:** `src/components/RiveCharacter.tsx`
+### Immediate next steps
 
-### Hoe het werkt:
-```tsx
-import { RiveCharacter } from '../components/RiveCharacter';
+**STOP met technische experimenten. START met produceren.**
 
-// In je scene component:
-<RiveCharacter
-  src="assets/characters/boy-walking.riv"
-  animation="walk"
-  style={{ position: 'absolute', left: '60%', bottom: '20%', width: 200, height: 300 }}
-/>
-```
+1. **Kies ONE animatie methode** en gebruik die consequent:
+   - Rive voor bone-based character animatie (praten, lopen, gebaren)
+   - Remotion interpolation voor props/camera (verschijnen, bewegen, zoomen)
 
-`RemotionRiveCanvas` synct automatisch met `useCurrentFrame()` — de Rive animatie volgt exact het Remotion frame, geen timing issues.
+2. **Maak Scene 2 volledig geanimeerd:**
+   - Professor Pint character in Rive (idle → talk → gesture naar bankbiljet)
+   - Bankbiljet prop animated (fade in, rotate, zoom)
+   - Camera slow push in
+   - Sync met voice-over timing
 
-### Rive workflow:
-1. **Character parts genereren** → ChatGPT met flat-color prompt (losse body parts)
-2. **Rive editor** → bones opzetten, animaties maken (walk, idle, talk)
-3. **Export** → `.riv` bestand in `public/assets/characters/`
-4. **Gebruik** → `<RiveCharacter>` in scene component
+3. **Herhaal voor Scene 3-42:**
+   - Één scene per keer
+   - Geen nieuwe tools bouwen
+   - Gebruik bestaande pipeline
 
 ---
 
-## Scene Code
+## Bewezen Workflow (moet consequent worden gebruikt)
 
-**File:** `src/videos/PubExteriorScene.tsx` (v9)
+### Asset generatie
 
-**Lagen (scene-split):**
-```typescript
-const SCENE_LAYERS = [
-  { id: 'base',       zIndex: 0 },
-  { id: 'sky',        zIndex: 1 },
-  { id: 'pub',        zIndex: 6 },
-  { id: 'sidewalk',   zIndex: 8 },
-  { id: 'street',     zIndex: 9 },
-  { id: 'characters', zIndex: 10 },
-  { id: 'lamp-left',  zIndex: 11 },
-  { id: 'lamp-right', zIndex: 11 },
-];
-```
+1. **ChatGPT:** Genereer complete scene-PNG (1920×1080, flat colors, Kurzgesagt stijl)
+2. **vectorizer.ai:** Converteer naar SVG ("Group By: None" instelling)
+3. **Upload:** Zet op main via GitHub web UI → `public/assets/scenes/[naam]-full.svg`
+4. **(Optioneel) Split:** Voor aparte animeerbare lagen:
+   ```bash
+   node scripts/split-scene-svg.js public/assets/scenes/[scene]-full.svg \
+     --config scenes/[scene]-regions.json
+   ```
 
-**Animatie overlays (procedureel):**
-- Stars (40 twinkeling circles)
-- Moon glow (radial gradient)
-- Chimney smoke (18 rising puffs)
-- Lamp glow (halos bij lampen)
-- Pub lantern glow (flickering warmte)
-- Window light (glow achter ramen)
-- Dust motes (deeltjes bij lampen)
-- Ground fog (drijvende ellipsen)
+### Character animatie (Rive) — NOG NIET GEBRUIKT
+
+1. Genereer character parts (body, head, arms, legs) als losse PNGs via ChatGPT
+2. Upload naar rive.app, zet bones op, maak animaties (walk, idle, talk)
+3. Export als `.riv` → `public/assets/characters/`
+4. Gebruik `<RiveCharacter>` in scene:
+   ```tsx
+   <RiveCharacter
+     src="assets/characters/professor-pint.riv"
+     animation="talk-gesture"
+     style={{ position: 'absolute', left: '38%', top: '45%', width: 300, height: 400 }}
+   />
+   ```
 
 ---
 
 ## Tech Stack
 
-- **Video**: Remotion v4.0.422 (React-based, renders to MP4)
-- **Character animatie**: Rive via `@remotion/rive` (skeletal/bone animation)
-- **Assets**: ChatGPT (PNG) → vectorizer.ai (SVG, "Group By: None") → split-scene-svg.js (lagen) → Remotion (animatie)
-- **Code**: TypeScript, React
-- **Testing**: Codespace (npx remotion studio)
-- **Git**: Feature branches → main (via `git checkout origin/branch -- files`)
+- **Video rendering:** Remotion v4.0.422
+- **Character animatie:** Rive via `@remotion/rive` (NOG NIET GEÏMPLEMENTEERD)
+- **Asset pipeline:** ChatGPT (PNG) → vectorizer.ai (SVG) → split-scene-svg.js (lagen)
+- **Code:** TypeScript, React
+- **Testing:** GitHub Codespace + `npx remotion studio`
 
 ---
 
 ## Quick Commands
 
 ```bash
-# Scene splitten in lagen
-node scripts/split-scene-svg.js public/assets/scenes/[scene]-full.svg \
-  --config scenes/[scene]-regions.json \
-  --output-dir public/assets/scenes/[scene]
-
-# SVG cleanup (voor element-voor-element workflow)
-node scripts/clean-svg-backgrounds.js
-node scripts/crop-svg-viewbox.js
-
-# Preview in Codespace browser
+# Preview in Codespace
 npx remotion studio
 
+# Type check
+npx tsc --noEmit
+
 # Render scene naar MP4
-npx remotion render src/index.ts Pub-Exterior out/pub-exterior.mp4
+npx remotion render src/index.ts History-of-Money out/history-of-money.mp4
+
+# Split scene in lagen
+node scripts/split-scene-svg.js public/assets/scenes/[scene]-full.svg \
+  --config scenes/[scene]-regions.json
 
 # Merge van feature branch (in Codespace)
 git pull origin main
 git fetch origin [branch-naam]
-git checkout origin/[branch-naam] -- [bestanden]
-git add -A && git commit -m "[beschrijving]" || true
+git checkout origin/[branch-naam] -- [exacte bestandspaden]
+git add -A && git commit -m "[beschrijving]"
 git push origin main
 ```
+
+---
+
+## CRITICAL: Next Session Instructions
+
+**Als je deze chat leest aan het begin van een nieuwe sessie:**
+
+1. **Vraag NIET** wat de gebruiker wil doen
+2. **Geef GEEN** opties of keuzes
+3. **Stel VOOR:** "Zal ik Scene 2 volledig animeren met Professor Pint als bewegend character?"
+4. **Als ja:** Geef direct de ChatGPT prompt voor character parts, geen uitleg
+5. **Bouw daarna** de geanimeerde scene met Rive character + props
+6. **Push werkende code** met kant-en-klare merge commando's
+
+**GEEN nieuwe technische experimenten. ALLEEN produceren.**
