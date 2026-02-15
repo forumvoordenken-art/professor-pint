@@ -1,0 +1,25 @@
+export const PROFESSOR_PINT_SPEC = {
+  colors: {
+    skinBase: '#F2AD6A',
+    skinShade: '#D98E54',
+    hairGray: '#8B847E',
+    glasses: '#111111',
+    jacketBase: '#7A4B24',
+    jacketShade: '#5B3417',
+    jacketPattern: '#3F2715',
+    shirt: '#F5F0DE',
+    tie: '#7A1D16',
+    vest: '#A8843E',
+    pants: '#38444E',
+    shoes: '#121920',
+    beer: '#D98600',
+    beerFoam: '#F2E8CB',
+    mugGlass: '#F8F3E2',
+    mugOutline: '#B39B70',
+  },
+  strokeWidth: 6,
+  viewBox: {
+    width: 600,
+    height: 900,
+  },
+} as const;
