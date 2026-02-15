@@ -50,13 +50,15 @@ export const SpriteWalker: React.FC<SpriteWalkerProps> = ({
   const col = spriteIndex % COLS;
   const row = Math.floor(spriteIndex / COLS);
 
-  // Source rectangle on the spritesheet
-  const srcX = col * FRAME_W;
-  const srcY = row * FRAME_H;
-
   // Display size
   const w = displayWidth ?? FRAME_W * scale;
   const h = displayWidth ? (displayWidth / FRAME_W) * FRAME_H : FRAME_H * scale;
+
+  // Calculate background-position as percentage
+  // For an 8-column grid: col 0 = 0%, col 1 = 14.28%, col 7 = 100%
+  // For a 6-row grid: row 0 = 0%, row 1 = 20%, row 5 = 100%
+  const bgPosX = COLS > 1 ? (col / (COLS - 1)) * 100 : 0;
+  const bgPosY = ROWS > 1 ? (row / (ROWS - 1)) * 100 : 0;
 
   return (
     <div
@@ -66,21 +68,13 @@ export const SpriteWalker: React.FC<SpriteWalkerProps> = ({
         top: y - h,
         width: w,
         height: h,
-        overflow: 'hidden',
+        backgroundImage: `url(${staticFile('assets/boy-dog-walking-spritesheet.png')})`,
+        backgroundSize: `${COLS * 100}% ${ROWS * 100}%`,
+        backgroundPosition: `${bgPosX}% ${bgPosY}%`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'auto',
         transform: direction === -1 ? 'scaleX(-1)' : undefined,
       }}
-    >
-      <Img
-        src={staticFile('assets/boy-dog-walking-spritesheet.png')}
-        style={{
-          position: 'absolute',
-          width: SHEET_WIDTH * (w / FRAME_W),
-          height: SHEET_HEIGHT * (h / FRAME_H),
-          left: -srcX * (w / FRAME_W),
-          top: -srcY * (h / FRAME_H),
-          imageRendering: 'auto',
-        }}
-      />
-    </div>
+    />
   );
 };

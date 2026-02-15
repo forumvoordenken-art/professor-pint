@@ -47,7 +47,7 @@ export const SpriteWalkerTest: React.FC = () => {
         x={xPos}
         y={H - 300}
         displayWidth={300}
-        holdFrames={2}
+        holdFrames={4}
         direction={1}
       />
     </div>
