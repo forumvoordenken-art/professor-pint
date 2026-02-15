@@ -117,7 +117,7 @@ export default makeScene2D(function* (view) {
   view.add(
     <Img
       ref={bg}
-      src={'/assets/scenes/pub-exterior-full.svg'}
+      src={'/assets/scenes/pub-exterior-bg.svg'}
       width={1920}
       height={1080}
       opacity={0}
@@ -318,7 +318,8 @@ export default makeScene2D(function* (view) {
         fontFamily={'serif'}
         fontWeight={700}
         fill={'#f5e6c8'}
-        y={-360}  // On the roof
+        x={-120}   // Left of center
+        y={-300}   // Lower on roof
         opacity={0}
         letterSpacing={8}
         shadowColor={'#000000'}
@@ -332,7 +333,8 @@ export default makeScene2D(function* (view) {
         fontFamily={'serif'}
         fontStyle={'italic'}
         fill={'#ffb74d'}
-        y={-310}  // Below title
+        x={-120}   // Aligned with title
+        y={-250}   // Below title
         opacity={0}
         shadowColor={'#000000'}
         shadowBlur={10}
