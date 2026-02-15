@@ -317,18 +317,28 @@ export const PubExteriorScene: React.FC = () => {
           const startX = W * 0.65;
           const endX = W * 0.35;
           const charX = interpolate(frame, [0, PUB_EXTERIOR_FRAMES], [startX, endX], { extrapolateRight: 'clamp' });
-          // Subtle step bob
-          const stepBob = Math.sin(frame * 0.25) * 2;
+
+          // Walk cycle — step frequency ~2 steps/sec
+          const stepPhase = frame * 0.21;
+          // Vertical bob: up at mid-step, down at foot-plant
+          const stepBob = Math.abs(Math.sin(stepPhase)) * 4;
+          // Body lean: tilt forward/back with each step
+          const lean = Math.sin(stepPhase) * 1.8;
+          // Lateral sway: slight side-to-side shift
+          const sway = Math.sin(stepPhase * 0.5) * 2;
+
           // Position: feet on the sidewalk
           const charY = H * 0.58;
           return (
             <div style={{
               position: 'absolute',
-              left: charX - CHAR_DISPLAY_W / 2,
-              top: charY + stepBob,
+              left: charX - CHAR_DISPLAY_W / 2 + sway,
+              top: charY - stepBob,
               width: CHAR_DISPLAY_W,
               height: CHAR_DISPLAY_H,
               zIndex: 10,
+              transformOrigin: 'bottom center',
+              transform: `rotate(${lean}deg)`,
             }}>
               <Img
                 src={staticFile(CHAR_SRC)}
