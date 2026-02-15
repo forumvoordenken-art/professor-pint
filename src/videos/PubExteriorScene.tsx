@@ -322,8 +322,8 @@ export const PubExteriorScene: React.FC = () => {
           const stepPhase = frame * 0.21;
           // Vertical bob: up at mid-step, down at foot-plant
           const stepBob = Math.abs(Math.sin(stepPhase)) * 4;
-          // Body lean: tilt forward/back with each step
-          const lean = Math.sin(stepPhase) * 1.8;
+          // Body lean: negative = lean left (forward for left-walking char)
+          const lean = -1.0 + Math.sin(stepPhase) * 1.2;
           // Lateral sway: slight side-to-side shift
           const sway = Math.sin(stepPhase * 0.5) * 2;
 
@@ -337,12 +337,13 @@ export const PubExteriorScene: React.FC = () => {
               width: CHAR_DISPLAY_W,
               height: CHAR_DISPLAY_H,
               zIndex: 10,
+              mixBlendMode: 'multiply' as const,
               transformOrigin: 'bottom center',
               transform: `rotate(${lean}deg)`,
             }}>
               <Img
                 src={staticFile(CHAR_SRC)}
-                style={{ width: '100%', height: '100%', mixBlendMode: 'multiply' }}
+                style={{ width: '100%', height: '100%' }}
               />
             </div>
           );
