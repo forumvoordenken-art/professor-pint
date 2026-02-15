@@ -2,11 +2,11 @@
 
 > **Lees dit aan het begin van elke nieuwe chat**
 
-**Laatste update:** 2026-02-14
+**Laatste update:** 2026-02-15
 
 ---
 
-## Status: Scene-split workflow — zwarte elementen fixen
+## Status: Scene-split workflow — zwarte elementen fixen (document-order fix + re-vectorize nodig)
 
 ### Grote verandering deze sessie: Scene-split vervangt element-voor-element
 
@@ -26,8 +26,11 @@
 - ✅ `preserveAspectRatio="none"` voor aspect ratio mismatch
 - ✅ Brede elementen (>60% viewBox) → automatisch "base" layer
 
-### Nog te verifiëren:
-- ⚠️ **Zwarte elementen**: De 3-stroke-groups fix is gecommit maar nog NIET visueel geverifieerd door gebruiker. Vorige sessie waren nog zwart: pub stenen, uithangborden, maanvlekken, kat, schoorsteen, zijbord. De fix zou dit moeten oplossen maar moet getest worden in Remotion studio.
+### Nog te doen:
+- ⚠️ **Zwarte elementen — twee oorzaken gevonden:**
+  1. **Document-volgorde** (GEFIXT): `buildLayerSvg` zette alle strokes eerst, dan alle fills. Maar vectorizer.ai interleaved stroke→fill→stroke→fill voor correcte z-layering. Fix: single-pass extractie met `docOrder` counter, output respecteert originele volgorde.
+  2. **"Group By: Color" in vectorizer.ai** (NOG TE DOEN): Paths met dezelfde kleur over hele scene worden als één `<g fill>` groep toegewezen aan één regio → paths in verkeerde laag. Oplossing: opnieuw vectorizen met **"Group By: None"** zodat elke path eigen `fill=` attribuut heeft.
+- 🔄 **Wacht op:** Gebruiker moet `pub-exterior-full.svg` opnieuw vectorizen met "Group By: None" en uploaden naar main. Dan split script opnieuw runnen.
 
 ### Wat MOET NOG (na bugfixes):
 - Meer scenes maken voor complete video (5-10 scenes)
@@ -95,6 +98,8 @@ const SCENE_LAYERS = [
 | Nested `<g>` fout | Lazy regex `[\s\S]*?</g>` stopt bij eerste `</g>` | Depth-tracking functie |
 | Alle `<g>` geëxtraheerd | Script pakte ook `<g transform>`, `<g opacity>` | Filter op `<g fill="(?!none)">` |
 | Nog meer zwarte elementen | 3 stroke groups, script vond alleen eerste | Loop met depth tracking ipv `.match()` |
+| Zwarte details (stenen, ramen, borden) | `buildLayerSvg` zette alle strokes eerst, dan fills → brak z-volgorde | Single-pass extractie met `docOrder`, output behoudt originele interleaving |
+| Kleuren in verkeerde laag | vectorizer.ai "Group By: Color" groepeert paths per kleur over hele scene | Opnieuw vectorizen met "Group By: None" |
 
 ---
 

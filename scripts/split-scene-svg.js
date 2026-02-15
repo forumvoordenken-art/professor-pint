@@ -174,85 +174,40 @@ function computeElementBounds(elementStr) {
 }
 
 // ---------------------------------------------------------------------------
-// Group extraction with proper nesting
+// Depth-tracked </g> finder
 // ---------------------------------------------------------------------------
 
 /**
- * Find all top-level <g> groups with correct depth tracking.
- * Returns the remaining string with groups removed.
- *
- * The old lazy regex /<g ...>[\s\S]*?<\/g>/ broke on nested groups:
- *   <g fill="#abc">
- *     <g transform="...">    ← nested
- *       <path d="..." />
- *     </g>                   ← lazy regex stopped HERE (wrong!)
- *     <path d="..." />       ← orphaned, no fill → black
- *   </g>
+ * Starting right after the opening tag's '>', find the matching </g> index.
+ * Returns the index of the character AFTER '</g>' (i.e. endIdx for substring).
+ * Returns -1 if not found.
  */
-function extractAndRemoveGroups(content, elements) {
-  // ONLY match <g fill="..."> groups (not <g transform>, <g opacity>, etc.)
-  // The fill attribute means children inherit color from the group.
-  // Extracting non-fill groups would break document order and lose context.
-  const openTagRegex = /<g\s+fill="(?!none)[^"]*"/g;
-  const groupRanges = []; // { start, end } of each top-level fill group
+function findMatchingCloseG(content, startAfterOpenTag) {
+  let depth = 1;
+  let i = startAfterOpenTag;
 
-  let match;
-  while ((match = openTagRegex.exec(content)) !== null) {
-    const startIdx = match.index;
+  while (depth > 0 && i < content.length) {
+    const nextOpen = content.indexOf('<g', i);
+    const nextClose = content.indexOf('</g>', i);
 
-    // Find the end of the opening tag
-    const tagEnd = content.indexOf('>', startIdx);
-    if (tagEnd === -1) continue;
+    if (nextClose === -1) return -1; // malformed SVG
 
-    // Track nesting depth to find matching </g>
-    let depth = 1;
-    let i = tagEnd + 1;
-
-    while (depth > 0 && i < content.length) {
-      const nextOpen = content.indexOf('<g', i);
-      const nextClose = content.indexOf('</g>', i);
-
-      if (nextClose === -1) break; // malformed SVG
-
-      if (nextOpen !== -1 && nextOpen < nextClose) {
-        // Check it's actually a <g tag (not <gradient, <glyph, etc.)
-        const charAfterG = content[nextOpen + 2];
-        if (charAfterG === ' ' || charAfterG === '>' || charAfterG === '\n' || charAfterG === '\r' || charAfterG === '\t') {
-          depth++;
-        }
-        i = nextOpen + 2;
-      } else {
-        depth--;
-        if (depth === 0) {
-          const endIdx = nextClose + 4; // '</g>'.length
-          groupRanges.push({ start: startIdx, end: endIdx });
-        }
-        i = nextClose + 4;
+    if (nextOpen !== -1 && nextOpen < nextClose) {
+      const charAfterG = content[nextOpen + 2];
+      if (charAfterG === ' ' || charAfterG === '>' || charAfterG === '\n' || charAfterG === '\r' || charAfterG === '\t') {
+        depth++;
       }
-    }
-
-    // Skip past this group so we don't find nested <g> as top-level
-    if (groupRanges.length > 0) {
-      const lastRange = groupRanges[groupRanges.length - 1];
-      if (lastRange.start === startIdx) {
-        openTagRegex.lastIndex = lastRange.end;
+      i = nextOpen + 2;
+    } else {
+      depth--;
+      if (depth === 0) {
+        return nextClose + 4; // '</g>'.length
       }
+      i = nextClose + 4;
     }
   }
 
-  // Extract groups (reverse order to preserve indices) and remove from content
-  let result = content;
-  for (let i = groupRanges.length - 1; i >= 0; i--) {
-    const range = groupRanges[i];
-    const groupStr = content.substring(range.start, range.end);
-    const bounds = computeElementBounds(groupStr);
-    if (bounds) {
-      elements.push({ type: 'fill-group', content: groupStr, bounds });
-    }
-    result = result.substring(0, range.start) + result.substring(range.end);
-  }
-
-  return result;
+  return -1;
 }
 
 // ---------------------------------------------------------------------------
@@ -260,129 +215,142 @@ function extractAndRemoveGroups(content, elements) {
 // ---------------------------------------------------------------------------
 
 /**
- * Extract top-level SVG elements as separate strings.
- * Returns array of { type, content, bounds }.
+ * Extract top-level SVG elements in DOCUMENT ORDER.
+ * Returns array of { type, content, bounds, docOrder, strokeGroupAttrs? }.
  *
- * Handles vectorizer.ai structure:
- *   <svg>
- *     <g stroke-width="..." fill="none">   ← stroke group (children extracted individually)
- *       <path stroke="..." d="..." />
- *       ...
- *     </g>
- *     <path fill="..." d="..." />           ← fill paths
- *     <g fill="...">                        ← fill groups
- *       <path d="..." />
- *       <ellipse ... />
- *     </g>
- *   </svg>
+ * CRITICAL: Elements must preserve their original document order because
+ * vectorizer.ai interleaves stroke groups and fill elements:
+ *   STROKE-GROUP-1 → fills → STROKE-GROUP-2 → fills → STROKE-GROUP-3 → fills
+ * This interleaving creates the correct z-layering. If we put all strokes
+ * first and all fills after, dark fills cover lighter stroke details → black.
+ *
+ * This function does a single pass through the SVG content, extracting
+ * elements in the order they appear, with a sequential docOrder counter.
  */
 function extractElements(svgContent) {
   const elements = [];
+  let docOrder = 0;
 
-  // Find ALL stroke groups (SVG can have multiple!) using depth tracking.
-  // Previous code used .match() which only found the FIRST group, leaving
-  // the 2nd and 3rd stroke groups in `remaining` where their paths got
-  // re-extracted individually without stroke context → rendered black.
-  let remaining = svgContent;
-  const strokeGroupRegex = /<g\s+stroke-width="[^"]*"\s+fill="none"[^>]*>/g;
-  const strokeGroupRanges = [];
+  // Strip XML/DOCTYPE headers and SVG wrapper to get inner content
+  let content = svgContent;
+  content = content.replace(/<\?xml[^>]*\?>/, '');
+  content = content.replace(/<!DOCTYPE[^>]*>/, '');
 
-  let sgMatch;
-  while ((sgMatch = strokeGroupRegex.exec(remaining)) !== null) {
-    const startIdx = sgMatch.index;
-    const tagEnd = remaining.indexOf('>', startIdx);
-    if (tagEnd === -1) continue;
+  const svgOpenMatch = content.match(/<svg[^>]*>/);
+  if (!svgOpenMatch) return elements;
+  const svgOpenEnd = content.indexOf('>', content.indexOf('<svg')) + 1;
+  const svgCloseIdx = content.lastIndexOf('</svg>');
+  content = content.substring(svgOpenEnd, svgCloseIdx);
 
-    // Extract attributes from the opening tag
-    const attrsMatch = sgMatch[0].match(/<g\s+(.*?)>/s);
-    const strokeAttrs = attrsMatch ? attrsMatch[1] : 'stroke-width="2.00" fill="none"';
+  let strokeGroupCount = 0;
 
-    // Depth tracking to find matching </g>
-    let depth = 1;
-    let i = tagEnd + 1;
+  // Single pass: walk through content finding top-level elements
+  let pos = 0;
+  while (pos < content.length) {
+    const nextTag = content.indexOf('<', pos);
+    if (nextTag === -1) break;
 
-    while (depth > 0 && i < remaining.length) {
-      const nextOpen = remaining.indexOf('<g', i);
-      const nextClose = remaining.indexOf('</g>', i);
+    // Skip comments
+    if (content.substring(nextTag, nextTag + 4) === '<!--') {
+      const commentEnd = content.indexOf('-->', nextTag);
+      pos = commentEnd === -1 ? content.length : commentEnd + 3;
+      continue;
+    }
 
-      if (nextClose === -1) break;
+    // Skip closing tags and whitespace
+    if (content[nextTag + 1] === '/' || content[nextTag + 1] === '!') {
+      pos = content.indexOf('>', nextTag) + 1;
+      continue;
+    }
 
-      if (nextOpen !== -1 && nextOpen < nextClose) {
-        const charAfterG = remaining[nextOpen + 2];
-        if (charAfterG === ' ' || charAfterG === '>' || charAfterG === '\n' || charAfterG === '\r' || charAfterG === '\t') {
-          depth++;
-        }
-        i = nextOpen + 2;
-      } else {
-        depth--;
-        if (depth === 0) {
-          const endIdx = nextClose + 4; // '</g>'.length
-          const innerContent = remaining.substring(tagEnd + 1, nextClose);
+    // Get tag name
+    const tagNameMatch = content.substring(nextTag).match(/^<(\w+)/);
+    if (!tagNameMatch) { pos = nextTag + 1; continue; }
+    const tagName = tagNameMatch[1];
 
-          // Extract individual stroke paths from this group
-          for (const pm of innerContent.matchAll(/<path\s[^>]*\/>/g)) {
-            const bounds = computeElementBounds(pm[0]);
-            if (bounds) {
-              elements.push({
-                type: 'stroke-path',
-                content: pm[0],
-                bounds,
-                strokeGroupAttrs: strokeAttrs,
-              });
-            }
+    if (tagName === 'g') {
+      const openTagEnd = content.indexOf('>', nextTag);
+      if (openTagEnd === -1) { pos = nextTag + 1; continue; }
+      const openTag = content.substring(nextTag, openTagEnd + 1);
+
+      // Find matching </g> with depth tracking
+      const endIdx = findMatchingCloseG(content, openTagEnd + 1);
+      if (endIdx === -1) { pos = content.length; break; }
+
+      const fullGroup = content.substring(nextTag, endIdx);
+      const innerContent = content.substring(openTagEnd + 1, endIdx - 4); // before </g>
+
+      if (/stroke-width=/.test(openTag) && /fill="none"/.test(openTag)) {
+        // ── Stroke group: extract individual paths ──
+        strokeGroupCount++;
+        const attrsMatch = openTag.match(/<g\s+(.*?)>/s);
+        const strokeAttrs = attrsMatch ? attrsMatch[1] : 'stroke-width="2.00" fill="none"';
+
+        for (const pm of innerContent.matchAll(/<path\s[^>]*\/>/g)) {
+          const bounds = computeElementBounds(pm[0]);
+          if (bounds) {
+            elements.push({
+              type: 'stroke-path',
+              content: pm[0],
+              bounds,
+              strokeGroupAttrs: strokeAttrs,
+              docOrder,
+            });
           }
-
-          strokeGroupRanges.push({ start: startIdx, end: endIdx });
         }
-        i = nextClose + 4;
+        docOrder++;
+      } else if (/fill="(?!none)/.test(openTag)) {
+        // ── Fill group: keep as whole (children inherit fill from parent) ──
+        const bounds = computeElementBounds(fullGroup);
+        if (bounds) {
+          elements.push({ type: 'fill-group', content: fullGroup, bounds, docOrder: docOrder++ });
+        }
+      } else {
+        // ── Other group (transform, opacity, etc.): keep as whole ──
+        const bounds = computeElementBounds(fullGroup);
+        if (bounds) {
+          elements.push({ type: 'other-group', content: fullGroup, bounds, docOrder: docOrder++ });
+        }
       }
-    }
 
-    // Skip past this group
-    if (strokeGroupRanges.length > 0) {
-      const lastRange = strokeGroupRanges[strokeGroupRanges.length - 1];
-      if (lastRange.start === startIdx) {
-        strokeGroupRegex.lastIndex = lastRange.end;
+      pos = endIdx;
+    } else if (tagName === 'path') {
+      // Self-closing <path .../> or <path ...>...</path>
+      const selfClose = content.indexOf('/>', nextTag);
+      const pathClose = content.indexOf('</path>', nextTag);
+      let endIdx;
+
+      if (selfClose !== -1 && (pathClose === -1 || selfClose < pathClose)) {
+        endIdx = selfClose + 2;
+      } else if (pathClose !== -1) {
+        endIdx = pathClose + 7;
+      } else {
+        pos = nextTag + 1; continue;
       }
+
+      const pathStr = content.substring(nextTag, endIdx);
+      const bounds = computeElementBounds(pathStr);
+      if (bounds) {
+        elements.push({ type: 'fill-path', content: pathStr, bounds, docOrder: docOrder++ });
+      }
+      pos = endIdx;
+    } else if (tagName === 'ellipse' || tagName === 'circle' || tagName === 'rect') {
+      const endIdx = content.indexOf('/>', nextTag);
+      if (endIdx === -1) { pos = nextTag + 1; continue; }
+      const elStr = content.substring(nextTag, endIdx + 2);
+      const bounds = computeElementBounds(elStr);
+      if (bounds) {
+        elements.push({ type: tagName, content: elStr, bounds, docOrder: docOrder++ });
+      }
+      pos = endIdx + 2;
+    } else {
+      // Skip unknown tags
+      pos = nextTag + 1;
     }
   }
 
-  // Remove all stroke groups from remaining (reverse order to preserve indices)
-  for (let i = strokeGroupRanges.length - 1; i >= 0; i--) {
-    const range = strokeGroupRanges[i];
-    remaining = remaining.substring(0, range.start) + remaining.substring(range.end);
-  }
-
-  if (strokeGroupRanges.length > 0) {
-    console.log(`  Found ${strokeGroupRanges.length} stroke group(s)`);
-  }
-
-  // Strip SVG wrapper
-  remaining = remaining.replace(/<\?xml[^>]*\?>/, '');
-  remaining = remaining.replace(/<!DOCTYPE[^>]*>/, '');
-  remaining = remaining.replace(/<svg[^>]*>/, '');
-  remaining = remaining.replace(/<\/svg>/, '');
-
-  // Step 1: Extract ALL <g>...</g> groups with proper nesting depth.
-  // Previous lazy regex [\s\S]*?</g> broke on nested groups — it stopped
-  // at the first </g> instead of the matching one. This left orphaned
-  // children without their parent's fill → rendered black.
-  remaining = extractAndRemoveGroups(remaining, elements);
-
-  // Step 2: Extract remaining paths (only top-level ones now, groups are gone)
-  for (const match of remaining.matchAll(/<path\s[^>]*?(?:\/>|>[\s\S]*?<\/path>)/g)) {
-    const bounds = computeElementBounds(match[0]);
-    if (bounds) {
-      elements.push({ type: 'fill-path', content: match[0], bounds });
-    }
-  }
-
-  // Step 3: Extract remaining standalone <ellipse>, <circle>, <rect>
-  for (const match of remaining.matchAll(/<(ellipse|circle|rect)\s[^>]*\/>/g)) {
-    const bounds = computeElementBounds(match[0]);
-    if (bounds) {
-      elements.push({ type: match[1], content: match[0], bounds });
-    }
+  if (strokeGroupCount > 0) {
+    console.log(`  Found ${strokeGroupCount} stroke group(s)`);
   }
 
   return elements;
@@ -425,31 +393,43 @@ function assignToRegion(bounds, regions, viewBox) {
 // SVG output builder
 // ---------------------------------------------------------------------------
 
+/**
+ * Build a layer SVG preserving ORIGINAL DOCUMENT ORDER.
+ *
+ * Elements are sorted by docOrder. Consecutive stroke-paths with the same
+ * docOrder (= from the same original stroke group) are wrapped in a single
+ * <g stroke-width="..." fill="none"> group. Fill elements are emitted as-is.
+ *
+ * This preserves the interleaved stroke→fill→stroke→fill layering that
+ * vectorizer.ai uses for correct visual z-ordering.
+ */
 function buildLayerSvg(viewBoxStr, elements) {
+  // Sort by original document order
+  const sorted = [...elements].sort((a, b) => a.docOrder - b.docOrder);
+
   const lines = [];
   lines.push(`<?xml version="1.0" encoding="UTF-8" standalone="no"?>`);
   lines.push(`<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">`);
   lines.push(`<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="${viewBoxStr}" preserveAspectRatio="none">`);
   lines.push('');
 
-  // Gather stroke paths (they need their own <g> wrapper)
-  const strokePaths = elements.filter(e => e.type === 'stroke-path');
-  const otherElements = elements.filter(e => e.type !== 'stroke-path');
-
-  // Stroke group first (if any)
-  if (strokePaths.length > 0) {
-    const attrs = strokePaths[0].strokeGroupAttrs || 'stroke-width="2.00" fill="none" stroke-linecap="butt"';
-    lines.push(`<g ${attrs}>`);
-    for (const el of strokePaths) {
-      lines.push(el.content);
+  let i = 0;
+  while (i < sorted.length) {
+    if (sorted[i].type === 'stroke-path') {
+      // Group consecutive stroke paths with the same docOrder into one <g>
+      const attrs = sorted[i].strokeGroupAttrs || 'stroke-width="2.00" fill="none" stroke-linecap="butt"';
+      const currentOrder = sorted[i].docOrder;
+      lines.push(`<g ${attrs}>`);
+      while (i < sorted.length && sorted[i].type === 'stroke-path' && sorted[i].docOrder === currentOrder) {
+        lines.push(sorted[i].content);
+        i++;
+      }
+      lines.push('</g>');
+      lines.push('');
+    } else {
+      lines.push(sorted[i].content);
+      i++;
     }
-    lines.push('</g>');
-    lines.push('');
-  }
-
-  // Then fill elements
-  for (const el of otherElements) {
-    lines.push(el.content);
   }
 
   lines.push('');
