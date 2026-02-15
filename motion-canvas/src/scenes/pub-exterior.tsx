@@ -117,25 +117,10 @@ export default makeScene2D(function* (view) {
   view.add(
     <Img
       ref={bg}
-      src={'/assets/scenes/pub-exterior-bg.svg'}
+      src={'/assets/scenes/pub-exterior-full.svg'}
       width={1920}
       height={1080}
       opacity={0}
-    />,
-  );
-
-  // ── Character (boy + dog walking) ────────────────────────────────────────
-  const character = createRef<Img>();
-  view.add(
-    <Img
-      ref={character}
-      src={'/assets/scenes/pub-exterior-boy-dog.svg'}
-      width={CHAR_DISPLAY_W}
-      height={CHAR_DISPLAY_H}
-      x={W * 0.15}  // Start position (right side)
-      y={H * 0.08}  // Feet on sidewalk (MC center origin, so positive y)
-      opacity={0}
-      compositeOperation={'multiply'}
     />,
   );
 
@@ -319,7 +304,7 @@ export default makeScene2D(function* (view) {
         fontWeight={700}
         fill={'#f5e6c8'}
         x={-120}   // Left of center
-        y={-300}   // Lower on roof
+        y={-255}   // Lower on roof
         opacity={0}
         letterSpacing={8}
         shadowColor={'#000000'}
@@ -334,7 +319,7 @@ export default makeScene2D(function* (view) {
         fontStyle={'italic'}
         fill={'#ffb74d'}
         x={-120}   // Aligned with title
-        y={-250}   // Below title
+        y={-205}   // Below title
         opacity={0}
         shadowColor={'#000000'}
         shadowBlur={10}
@@ -392,7 +377,6 @@ export default makeScene2D(function* (view) {
     ...dustLeftRefs.map((d, i) => d.opacity(dustLeft[i].opacity * 0.7, 1.5, easeInOutCubic)),
     ...dustRightRefs.map((d, i) => d.opacity(dustRight[i].opacity * 0.7, 1.5, easeInOutCubic)),
     ...fogRefs.map((f, i) => f.opacity(fogParticles[i].opacity * 0.5, 2, easeInOutCubic)),
-    character().opacity(1, 1.5, easeInOutCubic),
   );
 
   yield* waitFor(0.5);
@@ -425,49 +409,6 @@ export default makeScene2D(function* (view) {
     yield* all(
       // Frame counter
       frameSignal(loopStart + 150, 5, linear),
-
-      // Character walk cycle (right to left, ~10 seconds per pass)
-      loop(1, function* () {
-        const walkDuration = 10;
-        const startX = W * 0.15;
-        const endX = -W * 0.15;
-
-        // Walk across with step animation
-        yield* all(
-          // Horizontal walk
-          character().x(endX, walkDuration, linear),
-
-          // Step cycle (bob + lean + sway)
-          // Using nested loop for continuous stepping
-          loop(Math.ceil(walkDuration * 2), function* () {
-            const stepDur = 0.5; // ~2 steps per second
-
-            // Step down → step up
-            yield* all(
-              // Vertical bob
-              character().y(H * 0.08 + 4, stepDur / 2, easeInOutSine),
-              // Body lean forward
-              character().rotation(-1.5, stepDur / 2, easeInOutSine),
-              // Lateral sway right
-              character().x(character().x() + 2, stepDur / 2, easeInOutSine),
-            );
-
-            yield* all(
-              // Return to ground
-              character().y(H * 0.08, stepDur / 2, easeInOutSine),
-              // Lean back
-              character().rotation(0.5, stepDur / 2, easeInOutSine),
-              // Sway left
-              character().x(character().x() - 2, stepDur / 2, easeInOutSine),
-            );
-          }),
-        );
-
-        // Reset position for next loop
-        character().x(startX);
-        character().y(H * 0.08);
-        character().rotation(0);
-      }),
 
       // Stars twinkle at individual frequencies
       ...starRefs.map((star, i) => {
