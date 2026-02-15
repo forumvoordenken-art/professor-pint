@@ -1,14 +1,12 @@
 {
-  "name": "temp-project",
-  "version": "1.0.0",
-  "description": "My Remotion video",
+  "name": "professor-pint",
+  "version": "2.0.0",
+  "description": "Professor Pint — Educational YouTube videos (Digital Puppet architecture)",
   "repository": {},
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
     "@remotion/cli": "4.0.422",
-    "@remotion/rive": "^4.0.422",
-    "gsap": "^3.14.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.422"
