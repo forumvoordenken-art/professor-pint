@@ -27,6 +27,7 @@
 
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, Img, staticFile, interpolate } from 'remotion';
+import { WalkingCharacter } from '../components/WalkingCharacter';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -354,6 +355,20 @@ export const PubExteriorScene: React.FC = () => {
         <AbsoluteFill style={{ zIndex: 7, mixBlendMode: 'screen' }}>
           <PubLanternGlow frame={frame} cx={ANCHORS.pubLanternLeft.x} cy={ANCHORS.pubLanternLeft.y} id="pub-left" />
           <PubLanternGlow frame={frame} cx={ANCHORS.pubLanternRight.x} cy={ANCHORS.pubLanternRight.y} id="pub-right" />
+        </AbsoluteFill>
+
+        {/* ─── Walking character animation ─── */}
+        <AbsoluteFill style={{ zIndex: 10 }}>
+          <svg viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}>
+            <WalkingCharacter
+              frame={frame}
+              x={interpolate(frame, [0, PUB_EXTERIOR_FRAMES], [W * 0.85, W * 0.15], { extrapolateRight: 'clamp' })}
+              y={H * 0.78}
+              scale={0.85}
+              direction={-1}
+              speed={1.2}
+            />
+          </svg>
         </AbsoluteFill>
 
         {/* Street lamp glow halos */}
