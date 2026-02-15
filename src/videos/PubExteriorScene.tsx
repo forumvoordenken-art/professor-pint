@@ -52,7 +52,7 @@ const CHAR_SRC = `${SCENE_DIR}/pub-exterior-boy-dog.svg`;
 const CHAR_W = 1274;
 const CHAR_H = 873;
 // Character display size and position on canvas
-const CHAR_SCALE = 0.22; // scale to fit scene proportions
+const CHAR_SCALE = 0.32; // scale to fit scene proportions
 const CHAR_DISPLAY_W = CHAR_W * CHAR_SCALE;
 const CHAR_DISPLAY_H = CHAR_H * CHAR_SCALE;
 
@@ -342,7 +342,7 @@ export const PubExteriorScene: React.FC = () => {
             }}>
               <Img
                 src={staticFile(CHAR_SRC)}
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: '100%', height: '100%', mixBlendMode: 'multiply' }}
               />
             </div>
           );
